@@ -1,0 +1,2325 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SmartHome Pro – Futuristic IoT Dashboard</title>
+
+  <!-- Bootstrap CSS -->
+  <link
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+    rel="stylesheet"
+  />
+  <!-- FontAwesome -->
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+  />
+  <!-- Animate.css -->
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"
+  />
+  <!-- Google Fonts -->
+  <link
+    href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Space+Grotesk:wght@300;400;500;600;700&family=Rajdhani:wght@300;400;500;600;700&display=swap"
+    rel="stylesheet"
+  />
+  <!-- Chart.js (nếu cần) -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Particles.js -->
+  <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
+  <!-- E-Ra Widget -->
+  <script src="https://www.unpkg.com/@eohjsc/era-widget@1.1.3/src/index.js"></script>
+
+  <!-- Custom CSS (rất nhiều để làm dashboard "futuristic") -->
+  <style>
+    /* --- Biến CSS --- */
+    :root {
+      --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      --success-gradient: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+      --danger-gradient: linear-gradient(135deg, #ee0979 0%, #ff6a00 100%);
+      --warning-gradient: linear-gradient(135deg, #f2994a 0%, #f2c94c 100%);
+      --info-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+      --dark-gradient: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+      --glass-bg: rgba(255, 255, 255, 0.1);
+      --glass-border: rgba(255, 255, 255, 0.2);
+      --neon-blue: #00d4ff;
+      --neon-purple: #9d00ff;
+      --neon-pink: #ff0099;
+      --neon-green: #00ff88;
+      --cyber-yellow: #ffff00;
+      --hologram-blue: #00ffff;
+      --card-radius: 20px;
+      --glow-size: 20px;
+      --animation-duration: 0.3s;
+      --float-distance: 10px;
+    }
+
+    /* --- Reset & Global --- */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: "Space Grotesk", sans-serif;
+      background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+      color: #fff;
+      min-height: 100vh;
+      overflow-x: hidden;
+      position: relative;
+    }
+    #particles-js {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+    }
+    body::before {
+      content: "";
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-image:
+        repeating-linear-gradient(
+          45deg,
+          transparent,
+          transparent 35px,
+          rgba(255, 255, 255, 0.05) 35px,
+          rgba(255, 255, 255, 0.05) 70px
+        ),
+        repeating-linear-gradient(
+          -45deg,
+          transparent,
+          transparent 35px,
+          rgba(255, 255, 255, 0.03) 35px,
+          rgba(255, 255, 255, 0.03) 70px
+        );
+      z-index: -1;
+      animation: backgroundMove 20s linear infinite;
+    }
+    @keyframes backgroundMove {
+      0% {
+        transform: translate(0, 0);
+      }
+      100% {
+        transform: translate(70px, 70px);
+      }
+    }
+
+    /* --- Dark Mode --- */
+    body.dark-mode {
+      background: var(--dark-gradient);
+    }
+    body.dark-mode .glass-card {
+      background: rgba(0, 0, 0, 0.6);
+      border-color: rgba(255, 255, 255, 0.1);
+    }
+
+    /* --- Glassmorphism Card --- */
+    .glass-card {
+      background: var(--glass-bg);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border-radius: var(--card-radius);
+      border: 1px solid var(--glass-border);
+      box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    .glass-card::before {
+      content: "";
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(
+        circle,
+        rgba(255, 255, 255, 0.1) 0%,
+        transparent 70%
+      );
+      transform: rotate(45deg);
+      transition: all 0.5s ease;
+      opacity: 0;
+    }
+    .glass-card:hover::before {
+      opacity: 1;
+    }
+    .glass-card:hover {
+      transform: translateY(-5px) scale(1.02);
+      box-shadow: 0 15px 35px 0 rgba(31, 38, 135, 0.5);
+    }
+
+    /* --- Navbar Futuristic --- */
+    .futuristic-navbar {
+      background: linear-gradient(
+        90deg,
+        rgba(0, 0, 0, 0.8) 0%,
+        rgba(0, 0, 0, 0.6) 50%,
+        rgba(0, 0, 0, 0.8) 100%
+      );
+      backdrop-filter: blur(10px);
+      border-bottom: 2px solid var(--neon-blue);
+      padding: 1rem 0;
+      position: fixed;
+      width: 100%;
+      top: 0;
+      z-index: 1000;
+      animation: navGlow 3s ease-in-out infinite;
+    }
+    @keyframes navGlow {
+      0%,
+      100% {
+        box-shadow: 0 0 20px rgba(0, 212, 255, 0.5);
+      }
+      50% {
+        box-shadow: 0 0 40px rgba(0, 212, 255, 0.8);
+      }
+    }
+    .navbar-brand {
+      font-family: "Orbitron", monospace;
+      font-weight: 900;
+      font-size: 2rem;
+      background: linear-gradient(45deg, var(--neon-blue), var(--neon-purple));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-transform: uppercase;
+      letter-spacing: 3px;
+      position: relative;
+    }
+    .navbar-brand::after {
+      content: "PRO";
+      position: absolute;
+      right: -40px;
+      top: -5px;
+      font-size: 0.8rem;
+      background: var(--warning-gradient);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: pulse 2s infinite;
+    }
+
+    /* --- Theme Toggle --- */
+    .theme-switch-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .theme-switch {
+      position: relative;
+      display: inline-block;
+      width: 60px;
+      height: 30px;
+    }
+    .theme-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(90deg, #2196f3 0%, #21cbf3 100%);
+      transition: 0.4s;
+      border-radius: 34px;
+      box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.2);
+    }
+    .slider::before {
+      position: absolute;
+      content: "🌙";
+      height: 22px;
+      width: 22px;
+      left: 4px;
+      bottom: 4px;
+      background-color: white;
+      transition: 0.4s;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+    }
+    input:checked + .slider {
+      background: linear-gradient(90deg, #232526 0%, #414345 100%);
+    }
+    input:checked + .slider::before {
+      transform: translateX(30px);
+      content: "☀️";
+    }
+
+    /* --- Animated Section Header --- */
+    .section-header {
+      font-family: "Orbitron", monospace;
+      font-weight: 700;
+      font-size: 1.2rem;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      margin-bottom: 1.5rem;
+      position: relative;
+      padding-left: 20px;
+    }
+    .section-header::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 5px;
+      height: 80%;
+      background: var(--primary-gradient);
+      border-radius: 3px;
+      animation: heightPulse 2s ease-in-out infinite;
+    }
+    @keyframes heightPulse {
+      0%,
+      100% {
+        height: 80%;
+      }
+      50% {
+        height: 100%;
+      }
+    }
+
+    /* --- Cyber Buttons --- */
+    .cyber-btn {
+      position: relative;
+      padding: 12px 30px;
+      border: none;
+      background: transparent;
+      color: #fff;
+      font-family: "Rajdhani", sans-serif;
+      font-weight: 600;
+      font-size: 1rem;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      overflow: hidden;
+      margin: 5px;
+    }
+    .cyber-btn::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: var(--primary-gradient);
+      z-index: -2;
+      border-radius: 50px;
+      transition: all 0.3s ease;
+    }
+    .cyber-btn::after {
+      content: "";
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: calc(100% - 4px);
+      height: calc(100% - 4px);
+      background: #1a1a2e;
+      border-radius: 48px;
+      z-index: -1;
+      transition: all 0.3s ease;
+    }
+    .cyber-btn:hover {
+      transform: translateY(-3px);
+      color: #fff;
+      text-shadow: 0 0 10px currentColor;
+    }
+    .cyber-btn:hover::after {
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+    }
+    .cyber-btn.success::before {
+      background: var(--success-gradient);
+    }
+    .cyber-btn.danger::before {
+      background: var(--danger-gradient);
+    }
+    .cyber-btn.warning::before {
+      background: var(--warning-gradient);
+    }
+    .cyber-btn.info::before {
+      background: var(--info-gradient);
+    }
+
+    /* --- Ripple Effect --- */
+    .ripple {
+      position: absolute;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.5);
+      transform: scale(0);
+      animation: ripple-animation 0.6s ease-out;
+    }
+    @keyframes ripple-animation {
+      to {
+        transform: scale(4);
+        opacity: 0;
+      }
+    }
+
+    /* --- 3D Door Animation --- */
+    .door-3d-container {
+      width: 100%;
+      height: 350px;
+      perspective: 1200px;
+      margin: 2rem 0;
+      position: relative;
+    }
+    .door-3d-scene {
+      width: 250px;
+      height: 300px;
+      margin: 0 auto;
+      position: relative;
+      transform-style: preserve-3d;
+      transition: transform 0.6s ease;
+    }
+    .door-3d-frame {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+      border-radius: 10px;
+      box-shadow:
+        inset 0 0 50px rgba(0, 0, 0, 0.5),
+        0 20px 40px rgba(0, 0, 0, 0.4);
+      transform: translateZ(-25px);
+    }
+    .door-3d {
+      position: absolute;
+      width: 90%;
+      height: 90%;
+      top: 5%;
+      left: 5%;
+      background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+      border-radius: 5px;
+      transform-origin: left center;
+      transform-style: preserve-3d;
+      transition: transform 1s cubic-bezier(0.645, 0.045, 0.355, 1);
+      box-shadow:
+        0 10px 30px rgba(0, 0, 0, 0.3),
+        inset 0 0 20px rgba(255, 255, 255, 0.1);
+    }
+    .door-3d::before {
+      content: "";
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      background: repeating-linear-gradient(
+        90deg,
+        transparent,
+        transparent 20%,
+        rgba(255, 255, 255, 0.03) 20%,
+        rgba(255, 255, 255, 0.03) 21%,
+        transparent 21%
+      );
+      border-radius: inherit;
+    }
+    .door-3d-handle {
+      position: absolute;
+      right: 20px;
+      top: 50%;
+      transform: translateY(-50%) translateZ(5px);
+      width: 30px;
+      height: 60px;
+      background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+      border-radius: 30px;
+      box-shadow:
+        0 5px 15px rgba(0, 0, 0, 0.3),
+        inset 0 -5px 10px rgba(0, 0, 0, 0.2);
+    }
+    .door-3d-handle::after {
+      content: "";
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 10px;
+      height: 10px;
+      background: radial-gradient(circle, #fff 0%, #f39c12 100%);
+      border-radius: 50%;
+    }
+    .door-open .door-3d {
+      transform: rotateY(-85deg);
+    }
+    .door-status-display {
+      text-align: center;
+      margin-top: 2rem;
+    }
+    .door-status-text {
+      font-family: "Orbitron", monospace;
+      font-size: 1.5rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 3px;
+      position: relative;
+      display: inline-block;
+      padding: 10px 30px;
+      background: rgba(0, 0, 0, 0.5);
+      border-radius: 50px;
+      overflow: hidden;
+    }
+    .door-status-text::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(255, 255, 255, 0.2),
+        transparent
+      );
+      transition: left 0.5s ease;
+    }
+    .door-status-text:hover::before {
+      left: 100%;
+    }
+    .door-open .door-status-text {
+      color: var(--neon-green);
+      text-shadow: 0 0 20px var(--neon-green);
+      animation: neonFlicker 1.5s infinite;
+    }
+    .door-closed .door-status-text {
+      color: var(--neon-pink);
+      text-shadow: 0 0 20px var(--neon-pink);
+    }
+    @keyframes neonFlicker {
+      0%,
+      100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.8;
+      }
+    }
+
+    /* --- Holo List --- */
+    .holo-list {
+      background: linear-gradient(
+        135deg,
+        rgba(0, 255, 255, 0.1) 0%,
+        rgba(255, 0, 255, 0.1) 100%
+      );
+      border: 1px solid rgba(0, 255, 255, 0.3);
+      border-radius: 10px;
+      padding: 15px;
+      position: relative;
+      overflow: hidden;
+    }
+    .holo-list::before {
+      content: "";
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: linear-gradient(
+        45deg,
+        transparent 30%,
+        rgba(0, 255, 255, 0.1) 50%,
+        transparent 70%
+      );
+      animation: hologramScan 4s linear infinite;
+    }
+    @keyframes hologramScan {
+      0% {
+        transform: translateX(-100%) translateY(-100%) rotate(45deg);
+      }
+      100% {
+        transform: translateX(100%) translateY(100%) rotate(45deg);
+      }
+    }
+    .holo-list-item {
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid rgba(0, 255, 255, 0.2);
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 10px;
+      position: relative;
+      transition: all 0.3s ease;
+      font-family: "Rajdhani", sans-serif;
+      font-weight: 500;
+      letter-spacing: 1px;
+    }
+    .holo-list-item:hover {
+      background: rgba(0, 255, 255, 0.1);
+      transform: translateX(5px);
+      border-color: var(--neon-blue);
+      box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
+    }
+    .holo-list-item i {
+      color: var(--neon-blue);
+      margin-right: 10px;
+      animation: iconPulse 2s ease-in-out infinite;
+    }
+    @keyframes iconPulse {
+      0%,
+      100% {
+        transform: scale(1);
+      }
+      50% {
+        transform: scale(1.2);
+      }
+    }
+
+    /* --- Futuristic Table --- */
+    .cyber-table {
+      width: 100%;
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid rgba(0, 255, 255, 0.3);
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 0 30px rgba(0, 255, 255, 0.2);
+    }
+    .cyber-table thead {
+      background: linear-gradient(
+        90deg,
+        rgba(0, 255, 255, 0.2) 0%,
+        rgba(255, 0, 255, 0.2) 100%
+      );
+    }
+    .cyber-table th {
+      padding: 15px;
+      font-family: "Orbitron", monospace;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      border-bottom: 2px solid var(--neon-blue);
+      position: relative;
+    }
+    .cyber-table th::after {
+      content: "";
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 2px;
+      background: var(--neon-blue);
+      animation: tableHeaderGlow 3s linear infinite;
+    }
+    @keyframes tableHeaderGlow {
+      0%,
+      100% {
+        opacity: 0.3;
+        transform: scaleX(0.5);
+      }
+      50% {
+        opacity: 1;
+        transform: scaleX(1);
+      }
+    }
+    .cyber-table td {
+      padding: 12px;
+      border-bottom: 1px solid rgba(0, 255, 255, 0.1);
+      transition: all 0.3s ease;
+    }
+    .cyber-table tr:hover td {
+      background: rgba(0, 255, 255, 0.05);
+      transform: scale(1.02);
+    }
+
+    /* --- Motion Detector --- */
+    .motion-detector {
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      border-radius: 20px;
+      padding: 20px;
+      position: relative;
+      overflow: hidden;
+      box-shadow:
+        0 0 50px rgba(0, 0, 0, 0.5),
+        inset 0 0 50px rgba(0, 255, 255, 0.1);
+    }
+    .motion-radar {
+      width: 200px;
+      height: 200px;
+      margin: 0 auto;
+      position: relative;
+      background: radial-gradient(
+        circle,
+        rgba(0, 255, 255, 0.1) 0%,
+        transparent 70%
+      );
+      border-radius: 50%;
+      overflow: hidden;
+    }
+    .motion-radar::before {
+      content: "";
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 100%;
+      height: 2px;
+      background: linear-gradient(90deg, transparent 50%, var(--neon-green) 100%);
+      transform-origin: left center;
+      animation: radarScan 4s linear infinite;
+    }
+    @keyframes radarScan {
+      0% {
+        transform: translate(-50%, -50%) rotate(0deg);
+      }
+      100% {
+        transform: translate(-50%, -50%) rotate(360deg);
+      }
+    }
+    .motion-radar::after {
+      content: "";
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 10px;
+      height: 10px;
+      background: var(--neon-green);
+      border-radius: 50%;
+      box-shadow: 0 0 20px var(--neon-green);
+    }
+    .motion-grid {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-image:
+        linear-gradient(0deg, rgba(0, 255, 255, 0.1) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 255, 255, 0.1) 1px, transparent 1px);
+      background-size: 20px 20px;
+    }
+    .motion-detected .motion-radar::before {
+      background: linear-gradient(90deg, transparent 50%, var(--neon-pink) 100%);
+      animation-duration: 1s;
+    }
+    .motion-detected .motion-radar::after {
+      background: var(--neon-pink);
+      box-shadow: 0 0 30px var(--neon-pink);
+      animation: alertPulse 0.5s ease-in-out infinite;
+    }
+    @keyframes alertPulse {
+      0%,
+      100% {
+        transform: translate(-50%, -50%) scale(1);
+      }
+      50% {
+        transform: translate(-50%, -50%) scale(1.5);
+      }
+    }
+
+    /* --- Camera Preview --- */
+    .camera-container {
+      background: #000;
+      border-radius: 15px;
+      padding: 20px;
+      position: relative;
+      overflow: hidden;
+      box-shadow:
+        0 0 50px rgba(0, 0, 0, 0.5),
+        inset 0 0 50px rgba(255, 255, 255, 0.05);
+    }
+    .camera-container::before {
+      content: "LIVE";
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      padding: 5px 15px;
+      background: var(--danger-gradient);
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      letter-spacing: 2px;
+      animation: liveIndicator 1.5s ease-in-out infinite;
+      z-index: 10;
+    }
+    @keyframes liveIndicator {
+      0%,
+      100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+    .camera-preview-wrapper {
+      position: relative;
+      width: 100%;
+      padding-bottom: 75%;
+      background: #111;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    .camera-preview-img {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      filter: contrast(1.1) brightness(1.05);
+    }
+    .camera-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      background:
+        repeating-linear-gradient(
+          0deg,
+          transparent,
+          transparent 2px,
+          rgba(0, 255, 255, 0.03) 2px,
+          rgba(0, 255, 255, 0.03) 4px
+        );
+      animation: scanlines 8s linear infinite;
+    }
+    @keyframes scanlines {
+      0% {
+        transform: translateY(0);
+      }
+      100% {
+        transform: translateY(10px);
+      }
+    }
+
+    /* --- Notification System --- */
+    .notification-container {
+      position: fixed;
+      top: 100px;
+      right: 20px;
+      z-index: 9999;
+      max-width: 350px;
+    }
+    .notification {
+      background: rgba(0, 0, 0, 0.9);
+      backdrop-filter: blur(10px);
+      border-radius: 10px;
+      padding: 20px;
+      margin-bottom: 15px;
+      position: relative;
+      overflow: hidden;
+      animation: slideInRight 0.5s ease-out;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    }
+    @keyframes slideInRight {
+      from {
+        transform: translateX(400px);
+        opacity: 0;
+      }
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+    .notification::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 5px;
+      height: 100%;
+      background: var(--primary-gradient);
+    }
+    .notification.success::before {
+      background: var(--success-gradient);
+    }
+    .notification.danger::before {
+      background: var(--danger-gradient);
+    }
+    .notification.warning::before {
+      background: var(--warning-gradient);
+    }
+    .notification.info::before {
+      background: var(--info-gradient);
+    }
+    .notification-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .notification-icon {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(255, 255, 255, 0.1);
+    }
+    .notification-close {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: none;
+      border: none;
+      color: #fff;
+      font-size: 1.2rem;
+      cursor: pointer;
+      opacity: 0.5;
+      transition: opacity 0.3s ease;
+    }
+    .notification-close:hover {
+      opacity: 1;
+    }
+
+    /* --- Loading Skeleton --- */
+    .skeleton-loader {
+      background: linear-gradient(
+        90deg,
+        rgba(255, 255, 255, 0.05) 25%,
+        rgba(255, 255, 255, 0.1) 50%,
+        rgba(255, 255, 255, 0.05) 75%
+      );
+      background-size: 200% 100%;
+      animation: loading 1.5s infinite;
+      border-radius: 5px;
+      height: 20px;
+      margin: 10px 0;
+    }
+    @keyframes loading {
+      0% {
+        background-position: 200% 0;
+      }
+      100% {
+        background-position: -200% 0;
+      }
+    }
+
+    /* --- Floating Action Button --- */
+    .fab-container {
+      position: fixed;
+      bottom: 30px;
+      right: 30px;
+      z-index: 999;
+    }
+    .fab {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: var(--primary-gradient);
+      border: none;
+      color: #fff;
+      font-size: 1.5rem;
+      cursor: pointer;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    .fab:hover {
+      transform: scale(1.1) rotate(90deg);
+      box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
+    }
+    .fab::before {
+      content: "";
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 0;
+      height: 0;
+      background: rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+      transition: width 0.6s ease, height 0.6s ease;
+    }
+    .fab:active::before {
+      width: 300px;
+      height: 300px;
+    }
+
+    /* --- Stats Cards --- */
+    .stat-card {
+      background: linear-gradient(
+        135deg,
+        rgba(255, 255, 255, 0.05) 0%,
+        rgba(255, 255, 255, 0.02) 100%
+      );
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 15px;
+      padding: 25px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+      transition: all 0.3s ease;
+    }
+    .stat-card::before {
+      content: "";
+      position: absolute;
+      top: -50%;
+      right: -50%;
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(
+        circle,
+        rgba(255, 255, 255, 0.1) 0%,
+        transparent 70%
+      );
+      transform: rotate(45deg);
+      transition: all 0.5s ease;
+      opacity: 0;
+    }
+    .stat-card:hover::before {
+      opacity: 1;
+      top: -25%;
+      right: -25%;
+    }
+    .stat-card:hover {
+      transform: translateY(-5px);
+      border-color: var(--neon-blue);
+      box-shadow: 0 10px 30px rgba(0, 212, 255, 0.3);
+    }
+    .stat-number {
+      font-family: "Orbitron", monospace;
+      font-size: 3rem;
+      font-weight: 900;
+      background: var(--primary-gradient);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin: 10px 0;
+      line-height: 1;
+    }
+    .stat-label {
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      opacity: 0.8;
+    }
+    .stat-icon {
+      font-size: 2rem;
+      color: var(--neon-blue);
+      margin-bottom: 10px;
+    }
+
+    /* --- Progress Bars --- */
+    .progress-wrapper {
+      margin: 20px 0;
+    }
+    .progress-label {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 10px;
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .progress-bar-custom {
+      height: 10px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 50px;
+      overflow: hidden;
+      position: relative;
+    }
+    .progress-fill {
+      height: 100%;
+      background: var(--primary-gradient);
+      border-radius: inherit;
+      position: relative;
+      overflow: hidden;
+      transition: width 1s ease;
+    }
+    .progress-fill::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(255, 255, 255, 0.3),
+        transparent
+      );
+      animation: progressShine 2s linear infinite;
+    }
+    @keyframes progressShine {
+      0% {
+        transform: translateX(-100%);
+      }
+      100% {
+        transform: translateX(100%);
+      }
+    }
+
+    /* --- Animated Counter --- */
+    .counter {
+      font-family: "Orbitron", monospace;
+      font-size: 2.5rem;
+      font-weight: 900;
+      color: var(--neon-green);
+      text-shadow: 0 0 20px currentColor;
+    }
+
+    /* --- Alert Badge --- */
+    .alert-badge-enhanced {
+      position: absolute;
+      top: -15px;
+      right: -15px;
+      background: var(--danger-gradient);
+      color: #fff;
+      padding: 10px 20px;
+      border-radius: 30px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      font-size: 0.8rem;
+      box-shadow: 0 5px 20px rgba(238, 9, 121, 0.5);
+      animation:
+        badgePulse 1.5s ease-in-out infinite,
+        badgeRotate 10s linear infinite;
+      z-index: 10;
+    }
+    @keyframes badgePulse {
+      0%,
+      100% {
+        transform: scale(1);
+        box-shadow: 0 5px 20px rgba(238, 9, 121, 0.5);
+      }
+      50% {
+        transform: scale(1.1);
+        box-shadow: 0 8px 30px rgba(238, 9, 121, 0.8);
+      }
+    }
+    @keyframes badgeRotate {
+      0% {
+        transform: rotate(0deg);
+      }
+      100% {
+        transform: rotate(360deg);
+      }
+    }
+
+    /* --- Modal Enhancements --- */
+    .modal-content {
+      background: rgba(16, 15, 41, 0.95);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 20px;
+      color: #fff;
+      animation: modalEntry 0.5s ease-out;
+    }
+    @keyframes modalEntry {
+      from {
+        transform: scale(0.8) rotate(5deg);
+        opacity: 0;
+      }
+      to {
+        transform: scale(1) rotate(0);
+        opacity: 1;
+      }
+    }
+    .modal-header {
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      background: linear-gradient(
+        90deg,
+        rgba(102, 126, 234, 0.1) 0%,
+        rgba(118, 75, 162, 0.1) 100%
+      );
+    }
+    .modal-title {
+      font-family: "Orbitron", monospace;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+    .form-control,
+    .form-select {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: #fff;
+      border-radius: 10px;
+      padding: 12px 20px;
+      transition: all 0.3s ease;
+    }
+    .form-control:focus,
+    .form-select:focus {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: var(--neon-blue);
+      box-shadow: 0 0 20px rgba(0, 212, 255, 0.3);
+      color: #fff;
+    }
+
+    /* --- Responsive --- */
+    @media (max-width: 768px) {
+      .navbar-brand {
+        font-size: 1.5rem;
+      }
+      .door-3d-container {
+        height: 280px;
+      }
+      .door-3d-scene {
+        width: 200px;
+        height: 250px;
+      }
+      .stat-number {
+        font-size: 2rem;
+      }
+      .notification-container {
+        right: 10px;
+        left: 10px;
+        max-width: none;
+      }
+    }
+
+    /* --- Custom Scrollbar --- */
+    ::-webkit-scrollbar {
+      width: 10px;
+      height: 10px;
+    }
+    ::-webkit-scrollbar-track {
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 5px;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: linear-gradient(135deg, var(--neon-blue) 0%, var(--neon-purple) 100%);
+      border-radius: 5px;
+      box-shadow: 0 0 10px rgba(0, 212, 255, 0.3);
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: linear-gradient(135deg, var(--neon-purple) 0%, var(--neon-blue) 100%);
+    }
+
+    /* --- Glow Text --- */
+    .glow-text {
+      animation: textGlow 2s ease-in-out infinite alternate;
+    }
+    @keyframes textGlow {
+      from {
+        text-shadow:
+          0 0 10px currentColor,
+          0 0 20px currentColor,
+          0 0 30px currentColor;
+      }
+      to {
+        text-shadow:
+          0 0 20px currentColor,
+          0 0 30px currentColor,
+          0 0 40px currentColor;
+      }
+    }
+
+    /* --- Matrix Rain --- */
+    .matrix-rain {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      opacity: 0.05;
+      z-index: -1;
+    }
+    .matrix-column {
+      position: absolute;
+      top: -100%;
+      font-family: monospace;
+      font-size: 14px;
+      color: var(--neon-green);
+      animation: matrixFall linear infinite;
+    }
+    @keyframes matrixFall {
+      to {
+        transform: translateY(calc(100vh + 100%));
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Particle Background -->
+  <div id="particles-js"></div>
+  <!-- Matrix Rain Effect -->
+  <div class="matrix-rain" id="matrix-rain"></div>
+
+  <!-- Navbar -->
+  <nav class="futuristic-navbar">
+    <div class="container">
+      <div class="d-flex justify-content-between align-items-center">
+        <div class="navbar-brand">
+          <i class="fas fa-home me-2"></i>SmartHome
+        </div>
+        <div class="theme-switch-wrapper">
+          <label class="theme-switch">
+            <input type="checkbox" id="theme-toggle" />
+            <span class="slider"></span>
+          </label>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <div class="container mt-5 pt-5">
+    <!-- Stats Row -->
+    <div class="row mb-4 mt-5">
+      <div class="col-md-3 col-6 mb-3">
+        <div class="stat-card animate__animated animate__fadeInDown" style="animation-delay: 0.1s;">
+          <i class="fas fa-fingerprint stat-icon"></i>
+          <div class="stat-number" id="fingerprint-count">0</div>
+          <div class="stat-label">Vân tay</div>
+        </div>
+      </div>
+      <div class="col-md-3 col-6 mb-3">
+        <div class="stat-card animate__animated animate__fadeInDown" style="animation-delay: 0.2s;">
+          <i class="fas fa-id-card stat-icon"></i>
+          <div class="stat-number" id="rfid-count">0</div>
+          <div class="stat-label">Thẻ RFID</div>
+        </div>
+      </div>
+      <div class="col-md-3 col-6 mb-3">
+        <div class="stat-card animate__animated animate__fadeInDown" style="animation-delay: 0.3s;">
+          <i class="fas fa-chart-line stat-icon"></i>
+          <div class="stat-number" id="access-count">0</div>
+          <div class="stat-label">Lượt truy cập</div>
+        </div>
+      </div>
+      <div class="col-md-3 col-6 mb-3">
+        <div class="stat-card animate__animated animate__fadeInDown" style="animation-delay: 0.4s;">
+          <i class="fas fa-shield-alt stat-icon"></i>
+          <div class="stat-number" id="security-level">100</div>
+          <div class="stat-label">Độ an toàn</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Dashboard Row -->
+    <div class="row">
+      <!-- Column 1: Quản lý xác thực -->
+      <div class="col-lg-4 mb-4">
+        <div class="glass-card animate__animated animate__fadeInLeft">
+          <div class="card-body">
+            <h5 class="section-header">
+              <i class="fas fa-fingerprint me-2"></i>Quản lý xác thực
+            </h5>
+            <!-- Nút enroll/delete -->
+            <div class="row g-2 mb-4">
+              <div class="col-6">
+                <button class="cyber-btn success w-100" onclick="showEnrollModal('fingerprint')">
+                  <span><i class="fas fa-plus"></i> Vân tay</span>
+                </button>
+              </div>
+              <div class="col-6">
+                <button class="cyber-btn danger w-100" onclick="showDeleteModal('fingerprint')">
+                  <span><i class="fas fa-trash"></i> Xóa VT</span>
+                </button>
+              </div>
+              <div class="col-6">
+                <button class="cyber-btn info w-100" onclick="showEnrollModal('rfid')">
+                  <span><i class="fas fa-id-card"></i> Thẻ RFID</span>
+                </button>
+              </div>
+              <div class="col-6">
+                <button class="cyber-btn warning w-100" onclick="showDeleteModal('rfid')">
+                  <span><i class="fas fa-times"></i> Xóa RFID</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Progress Bars -->
+            <div class="progress-wrapper">
+              <div class="progress-label">
+                <span>Dung lượng Vân tay</span>
+                <span id="fingerprint-usage">0/50</span>
+              </div>
+              <div class="progress-bar-custom">
+                <div class="progress-fill" id="fingerprint-progress" style="width: 0%"></div>
+              </div>
+            </div>
+            <div class="progress-wrapper mb-4">
+              <div class="progress-label">
+                <span>Dung lượng RFID</span>
+                <span id="rfid-usage">0/100</span>
+              </div>
+              <div class="progress-bar-custom">
+                <div class="progress-fill" id="rfid-progress" style="width: 0%"></div>
+              </div>
+            </div>
+
+            <!-- Danh sách vân tay / RFID -->
+            <div class="row">
+              <div class="col-12 mb-3">
+                <h6 class="text-uppercase mb-3" style="letter-spacing: 2px;">
+                  <i class="fas fa-fingerprint me-2 glow-text" style="color: var(--neon-blue);"></i>
+                  Danh sách vân tay
+                </h6>
+                <div class="holo-list" style="max-height: 200px; overflow-y: auto;">
+                  <div id="fingerprint-list">
+                    <div class="skeleton-loader"></div>
+                    <div class="skeleton-loader"></div>
+                    <div class="skeleton-loader"></div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-12">
+                <h6 class="text-uppercase mb-3" style="letter-spacing: 2px;">
+                  <i class="fas fa-id-card me-2 glow-text" style="color: var(--neon-purple);"></i>
+                  Danh sách thẻ RFID
+                </h6>
+                <div class="holo-list" style="max-height: 200px; overflow-y: auto;">
+                  <div id="rfid-list">
+                    <div class="skeleton-loader"></div>
+                    <div class="skeleton-loader"></div>
+                    <div class="skeleton-loader"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Column 2: Điều khiển cửa & status -->
+      <div class="col-lg-4 mb-4">
+        <div class="glass-card animate__animated animate__fadeInUp position-relative">
+          <!-- Alert Badge -->
+          <div class="alert-badge-enhanced" id="intruder-alert" style="display: none;">
+            <i class="fas fa-exclamation-triangle me-1"></i>CẢNH BÁO
+          </div>
+          <div class="card-body">
+            <h5 class="section-header">
+              <i class="fas fa-door-open me-2"></i>Điều khiển cửa
+            </h5>
+
+            <!-- 3D Door Animation -->
+            <div class="door-3d-container">
+              <div class="door-3d-scene" id="door-scene">
+                <div class="door-3d-frame"></div>
+                <div class="door-3d" id="door-3d">
+                  <div class="door-3d-handle"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Status Text -->
+            <div class="door-status-display">
+              <div class="door-status-text door-closed" id="door-status">
+                <i class="fas fa-lock me-2"></i>KHÓA
+              </div>
+            </div>
+
+            <!-- Failed Attempts -->
+            <div class="text-center mt-4 mb-4">
+              <div class="d-inline-block">
+                <div
+                  class="text-uppercase mb-2"
+                  style="font-size: 0.8rem; letter-spacing: 2px; opacity: 0.8;"
+                >
+                  Số lần thử sai
+                </div>
+                <div class="counter" id="failed-counter">0</div>
+                <div class="progress-bar-custom mt-2" style="width: 200px; margin: 0 auto;">
+                  <div
+                    class="progress-fill"
+                    id="failed-progress"
+                    style="width: 0%; background: var(--danger-gradient);"
+                  ></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Buttons: Mở/Đóng -->
+            <div class="row g-3">
+              <div class="col-6">
+                <button class="cyber-btn success w-100" onclick="controlDoor(1)">
+                  <span><i class="fas fa-unlock"></i> MỞ CỬA</span>
+                </button>
+              </div>
+              <div class="col-6">
+                <button class="cyber-btn danger w-100" onclick="controlDoor(0)">
+                  <span><i class="fas fa-lock"></i> ĐÓNG CỬA</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Access Log Table -->
+            <h6 class="text-uppercase mt-4 mb-3" style="letter-spacing: 2px;">
+              <i class="fas fa-history me-2 glow-text" style="color: var(--cyber-yellow);"></i>
+              Nhật ký truy cập
+            </h6>
+            <div class="table-responsive" style="max-height: 250px; overflow-y: auto;">
+              <table class="cyber-table">
+                <thead>
+                  <tr>
+                    <th>Thời gian</th>
+                    <th>Loại</th>
+                    <th>ID</th>
+                    <th>Tên</th>
+                  </tr>
+                </thead>
+                <tbody id="access-log">
+                  <tr>
+                    <td colspan="4" class="text-center" style="padding: 30px;">
+                      <i class="fas fa-inbox fa-2x mb-2" style="opacity: 0.3;"></i>
+                      <p style="opacity: 0.5;">Chưa có dữ liệu</p>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Column 3: Camera & Motion -->
+      <div class="col-lg-4 mb-4">
+        <div class="glass-card animate__animated animate__fadeInRight">
+          <div class="card-body">
+            <h5 class="section-header">
+              <i class="fas fa-video me-2"></i>Giám sát an ninh
+            </h5>
+
+            <!-- Motion Detector -->
+            <div class="motion-detector mb-4" id="motion-detector">
+              <h6 class="text-center text-uppercase mb-3" style="letter-spacing: 2px;">
+                <i class="fas fa-radar me-2"></i>Cảm biến chuyển động
+              </h6>
+              <div class="motion-radar">
+                <div class="motion-grid"></div>
+              </div>
+              <div class="text-center mt-3">
+                <span class="badge bg-dark px-3 py-2" id="motion-status">
+                  <i class="fas fa-check-circle me-2"></i>Không phát hiện
+                </span>
+              </div>
+            </div>
+
+            <!-- Camera Controls -->
+            <div class="camera-controls mb-4">
+              <button class="cyber-btn info" onclick="testCapture()">
+                <span><i class="fas fa-camera"></i> CHỤP THỬ</span>
+              </button>
+              <button class="cyber-btn warning" onclick="toggleNightVision()">
+                <span><i class="fas fa-moon"></i> NIGHT</span>
+              </button>
+            </div>
+
+            <!-- Camera Preview -->
+            <div class="camera-container">
+              <div class="camera-preview-wrapper">
+                <div id="camera-preview" class="d-flex align-items-center justify-content-center h-100">
+                  <div class="text-center">
+                    <i class="fas fa-camera fa-4x mb-3" style="opacity: 0.3;"></i>
+                    <p style="opacity: 0.5;">Đang chờ hình ảnh...</p>
+                  </div>
+                </div>
+                <div class="camera-overlay"></div>
+              </div>
+            </div>
+
+            <!-- Email Alert Info -->
+            <div
+              class="alert alert-dark mt-4 mb-0"
+              style="background: rgba(0, 0, 0, 0.3); border: 1px solid rgba(255, 255, 255, 0.1);"
+            >
+              <small>
+                <i class="fas fa-envelope me-2"></i>
+                Cảnh báo email: <strong>phamquocthien17@gmail.com</strong>
+              </small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Notification Container -->
+  <div class="notification-container" id="notification-container"></div>
+
+  <!-- Floating Action Button -->
+  <div class="fab-container">
+    <button class="fab" onclick="showSystemInfo()">
+      <i class="fas fa-info"></i>
+    </button>
+  </div>
+
+  <!-- Modals: Enroll / Delete -->
+  <div class="modal fade" id="enrollModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="enrollModalTitle">
+            <i class="fas fa-plus-circle me-2"></i>Thêm mới
+          </h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <form id="enrollForm">
+            <div class="mb-4">
+              <label for="enrollId" class="form-label text-uppercase" style="letter-spacing: 1px;">
+                <i class="fas fa-hashtag me-2"></i><span id="enrollIdLabel">ID</span>
+              </label>
+              <input
+                type="text"
+                class="form-control"
+                id="enrollId"
+                required
+                placeholder="Nhập ID..."
+              />
+            </div>
+            <div class="mb-4">
+              <label for="enrollName" class="form-label text-uppercase" style="letter-spacing: 1px;">
+                <i class="fas fa-user me-2"></i>Tên người dùng
+              </label>
+              <input
+                type="text"
+                class="form-control"
+                id="enrollName"
+                required
+                placeholder="Nhập tên..."
+              />
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+            <i class="fas fa-times me-2"></i>Hủy
+          </button>
+          <button type="button" class="cyber-btn success" onclick="submitEnroll()">
+            <span><i class="fas fa-check me-2"></i>Xác nhận</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="deleteModalTitle">
+            <i class="fas fa-trash-alt me-2"></i>Xóa
+          </h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="alert alert-warning mb-4">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            Hành động này không thể hoàn tác!
+          </div>
+          <form id="deleteForm">
+            <div class="mb-4">
+              <label for="deleteId" class="form-label text-uppercase" style="letter-spacing: 1px;">
+                <i class="fas fa-hashtag me-2"></i><span id="deleteIdLabel">ID</span>
+              </label>
+              <input
+                type="text"
+                class="form-control"
+                id="deleteId"
+                required
+                placeholder="Nhập ID cần xóa..."
+              />
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+            <i class="fas fa-times me-2"></i>Hủy
+          </button>
+          <button type="button" class="cyber-btn danger" onclick="submitDelete()">
+            <span><i class="fas fa-trash me-2"></i>Xóa</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+  <!-- Main JavaScript -->
+  <script>
+    // === Cấu hình E-Ra ===
+    const ERA_API_KEY = "<YOUR_ERA_API_KEY>";   // Thay đúng API Key
+    const ERA_FEED_ID = "<YOUR_FEED_ID>";      // Thay đúng Feed ID
+
+    // === Biến Toàn cục ===
+    let eraWidget = null;
+    let currentModal = "";
+    let currentModalType = "";
+    let fingerprintList = [];
+    let rfidList = [];
+    let accessLogs = [];
+    let nightVisionEnabled = false;
+
+    // === Virtual Pin Mapping ===
+    let vpDoorStatus = null;     // V0 (realtime)
+    let vpDoorControl = null;    // V1 (action)
+    let vpIntruderAlert = null;  // V2 (realtime)
+    let vpFailedAttempts = null; // V3 (realtime)
+    let vpFingerprintEnroll = null;  // V4 (action)
+    let vpFingerprintDelete = null;  // V5 (action)
+    let vpRfidEnroll = null;    // V6 (action)
+    let vpRfidDelete = null;    // V7 (action)
+    let vpFingerprintList = null; // V8 (realtime)
+    let vpRfidList = null;       // V9 (realtime)
+    let vpAccessLog = null;     // V10 (realtime)
+    let vpCameraImage = null;   // V11 (realtime)
+    let vpMotionStatus = null;  // V12 (realtime)
+
+    // === Khởi Particles.js ===
+    function initParticles() {
+      particlesJS("particles-js", {
+        particles: {
+          number: {
+            value: 80,
+            density: { enable: true, value_area: 800 },
+          },
+          color: { value: "#00d4ff" },
+          shape: { type: "circle" },
+          opacity: { value: 0.5, random: false },
+          size: { value: 3, random: true },
+          line_linked: {
+            enable: true,
+            distance: 150,
+            color: "#00d4ff",
+            opacity: 0.4,
+            width: 1,
+          },
+          move: {
+            enable: true,
+            speed: 6,
+            direction: "none",
+            random: false,
+            straight: false,
+            out_mode: "out",
+            bounce: false,
+          },
+        },
+        interactivity: {
+          detect_on: "canvas",
+          events: {
+            onhover: { enable: true, mode: "repulse" },
+            onclick: { enable: true, mode: "push" },
+            resize: true,
+          },
+          modes: {
+            grab: { distance: 400, line_linked: { opacity: 1 } },
+            bubble: { distance: 400, size: 40, duration: 2, opacity: 8, speed: 3 },
+            repulse: { distance: 200, duration: 0.4 },
+            push: { particles_nb: 4 },
+            remove: { particles_nb: 2 },
+          },
+        },
+        retina_detect: true,
+      });
+    }
+
+    // === Khởi Matrix Rain ===
+    function initMatrixRain() {
+      const matrixContainer = document.getElementById("matrix-rain");
+      const columns = Math.floor(window.innerWidth / 20);
+      for (let i = 0; i < columns; i++) {
+        const column = document.createElement("div");
+        column.className = "matrix-column";
+        column.style.left = i * 20 + "px";
+        column.style.animationDuration = Math.random() * 5 + 5 + "s";
+        column.style.animationDelay = Math.random() * 5 + "s";
+
+        const chars = "01アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン";
+        let text = "";
+        for (let j = 0; j < 50; j++) {
+          text += chars[Math.floor(Math.random() * chars.length)] + "<br>";
+        }
+        column.innerHTML = text;
+        matrixContainer.appendChild(column);
+      }
+    }
+
+    // === Khởi E-Ra Widget ===
+    function initializeEra() {
+      eraWidget = new EraWidget();
+      eraWidget.init({
+        onConfiguration: (configuration) => {
+          console.log("E-Ra Configuration received:", configuration);
+
+          // Ánh xạ các pin dựa trên <pin> (đảm bảo đúng V0…V12)
+          vpDoorStatus      = configuration.realtime_configs.find((c) => c.pin === "V0");
+          vpDoorControl     = configuration.actions.find((c) => c.pin === "V1");
+          vpIntruderAlert   = configuration.realtime_configs.find((c) => c.pin === "V2");
+          vpFailedAttempts  = configuration.realtime_configs.find((c) => c.pin === "V3");
+          vpFingerprintEnroll  = configuration.actions.find((c) => c.pin === "V4");
+          vpFingerprintDelete  = configuration.actions.find((c) => c.pin === "V5");
+          vpRfidEnroll      = configuration.actions.find((c) => c.pin === "V6");
+          vpRfidDelete      = configuration.actions.find((c) => c.pin === "V7");
+          vpFingerprintList = configuration.realtime_configs.find((c) => c.pin === "V8");
+          vpRfidList        = configuration.realtime_configs.find((c) => c.pin === "V9");
+          vpAccessLog       = configuration.realtime_configs.find((c) => c.pin === "V10");
+          vpCameraImage     = configuration.realtime_configs.find((c) => c.pin === "V11");
+          vpMotionStatus    = configuration.realtime_configs.find((c) => c.pin === "V12");
+
+          // Chờ vài chục ms cho ESP32 Door gửi dữ liệu ban đầu
+          setTimeout(() => {
+            console.log("Request nothing – chờ ESP32 Door tự gửi V8, V9, V0, V3,...");
+          }, 500);
+        },
+
+        onValues: (values) => {
+          console.log("E-Ra Values received:", values);
+
+          // ----- CẬP NHẬT CỬA (V0) -----
+          if (vpDoorStatus && values[vpDoorStatus.id]) {
+            updateDoorStatus(values[vpDoorStatus.id].value);
+          }
+
+          // ----- INTRUDER ALERT (V2) -----
+          if (vpIntruderAlert && values[vpIntruderAlert.id]) {
+            updateIntruderAlert(values[vpIntruderAlert.id].value);
+          }
+
+          // ----- FAILED ATTEMPTS (V3) -----
+          if (vpFailedAttempts && values[vpFailedAttempts.id]) {
+            updateFailedAttempts(values[vpFailedAttempts.id].value);
+          }
+
+          // ----- PHẢN HỒI ENROLL/DELETE (V4…V7) -----
+          if (vpFingerprintEnroll && values[vpFingerprintEnroll.id]) {
+            handleCommandResponse("fingerprint", "enroll", values[vpFingerprintEnroll.id].value);
+          }
+          if (vpFingerprintDelete && values[vpFingerprintDelete.id]) {
+            handleCommandResponse("fingerprint", "delete", values[vpFingerprintDelete.id].value);
+          }
+          if (vpRfidEnroll && values[vpRfidEnroll.id]) {
+            handleCommandResponse("rfid", "enroll", values[vpRfidEnroll.id].value);
+          }
+          if (vpRfidDelete && values[vpRfidDelete.id]) {
+            handleCommandResponse("rfid", "delete", values[vpRfidDelete.id].value);
+          }
+
+          // ----- DANH SÁCH VÂN TAY (V8) -----
+          if (vpFingerprintList && values[vpFingerprintList.id]) {
+            updateFingerprintList(values[vpFingerprintList.id].value);
+          }
+
+          // ----- DANH SÁCH RFID (V9) -----
+          if (vpRfidList && values[vpRfidList.id]) {
+            updateRfidList(values[vpRfidList.id].value);
+          }
+
+          // ----- ACCESS LOG (V10) -----
+          if (vpAccessLog && values[vpAccessLog.id]) {
+            addAccessLog(values[vpAccessLog.id].value);
+          }
+
+          // ----- CAMERA IMAGE (V11) -----
+          if (vpCameraImage && values[vpCameraImage.id]) {
+            updateCameraImage(values[vpCameraImage.id].value);
+          }
+
+          // ----- MOTION STATUS (V12) -----
+          if (vpMotionStatus && values[vpMotionStatus.id]) {
+            updateMotionStatus(values[vpMotionStatus.id].value);
+          }
+        },
+      });
+    }
+
+    // === CẬP NHẬT TRẠNG THÁI CỬA ===
+    function updateDoorStatus(status) {
+      const doorScene = document.getElementById("door-scene");
+      const doorStatus = document.getElementById("door-status");
+
+      if (status === 1) {
+        doorScene.parentElement.classList.add("door-open");
+        doorStatus.className = "door-status-text door-open";
+        doorStatus.innerHTML = '<i class="fas fa-unlock me-2"></i>MỞ';
+        playSound("door-open");
+      } else {
+        doorScene.parentElement.classList.remove("door-open");
+        doorStatus.className = "door-status-text door-closed";
+        doorStatus.innerHTML = '<i class="fas fa-lock me-2"></i>KHÓA';
+        playSound("door-close");
+      }
+    }
+
+    // === CẬP NHẬT INTRUDER ALERT ===
+    function updateIntruderAlert(status) {
+      const alert = document.getElementById("intruder-alert");
+      if (status === 1) {
+        alert.style.display = "block";
+        showNotification(
+          "Cảnh báo bảo mật",
+          "Phát hiện người lạ! Đã có ≥5 lần thử sai.",
+          "danger"
+        );
+        playSound("alert");
+      } else {
+        alert.style.display = "none";
+      }
+    }
+
+    // === CẬP NHẬT FAILED ATTEMPTS ===
+    function updateFailedAttempts(count) {
+      const counter = document.getElementById("failed-counter");
+      const progress = document.getElementById("failed-progress");
+      animateCounter(counter, parseInt(counter.textContent), count);
+      const percentage = (count / 5) * 100;
+      progress.style.width = percentage + "%";
+
+      const securityLevel = 100 - count * 20;
+      animateCounter(
+        document.getElementById("security-level"),
+        parseInt(document.getElementById("security-level").textContent),
+        securityLevel
+      );
+    }
+
+    // === CẬP NHẬT DANH SÁCH VÂN TAY (V8) ===
+    function updateFingerprintList(data) {
+      try {
+        const list = JSON.parse(data);
+        fingerprintList = list;
+
+        const listElement = document.getElementById("fingerprint-list");
+        const countElement = document.getElementById("fingerprint-count");
+        const usageElement = document.getElementById("fingerprint-usage");
+        const progressElement = document.getElementById("fingerprint-progress");
+
+        animateCounter(countElement, parseInt(countElement.textContent), list.length);
+        usageElement.textContent = `${list.length}/50`;
+        progressElement.style.width = `${(list.length / 50) * 100}%`;
+
+        listElement.innerHTML = "";
+        if (list.length === 0) {
+          listElement.innerHTML =
+            '<div class="text-center p-3" style="opacity: 0.5;"><i class="fas fa-fingerprint fa-2x mb-2"></i><br>Chưa có vân tay</div>';
+        } else {
+          list.forEach((item, index) => {
+            const div = document.createElement("div");
+            div.className = "holo-list-item animate__animated animate__fadeIn";
+            div.style.animationDelay = `${index * 0.1}s`;
+            div.innerHTML = `
+              <i class="fas fa-fingerprint"></i>
+              <span>ID: ${item.id}</span>
+              <span class="float-end">${item.name}</span>
+            `;
+            listElement.appendChild(div);
+          });
+        }
+      } catch (e) {
+        console.error("Error parsing fingerprint list:", e);
+      }
+    }
+
+    // === CẬP NHẬT DANH SÁCH RFID (V9) ===
+    function updateRfidList(data) {
+      try {
+        const list = JSON.parse(data);
+        rfidList = list;
+
+        const listElement = document.getElementById("rfid-list");
+        const countElement = document.getElementById("rfid-count");
+        const usageElement = document.getElementById("rfid-usage");
+        const progressElement = document.getElementById("rfid-progress");
+
+        animateCounter(countElement, parseInt(countElement.textContent), list.length);
+        usageElement.textContent = `${list.length}/100`;
+        progressElement.style.width = `${(list.length / 100) * 100}%`;
+
+        listElement.innerHTML = "";
+        if (list.length === 0) {
+          listElement.innerHTML =
+            '<div class="text-center p-3" style="opacity: 0.5;"><i class="fas fa-id-card fa-2x mb-2"></i><br>Chưa có thẻ RFID</div>';
+        } else {
+          list.forEach((item, index) => {
+            const div = document.createElement("div");
+            div.className = "holo-list-item animate__animated animate__fadeIn";
+            div.style.animationDelay = `${index * 0.1}s`;
+            div.innerHTML = `
+              <i class="fas fa-id-card"></i>
+              <span>UID: ${item.uid}</span>
+              <span class="float-end">${item.name}</span>
+            `;
+            listElement.appendChild(div);
+          });
+        }
+      } catch (e) {
+        console.error("Error parsing RFID list:", e);
+      }
+    }
+
+    // === CẬP NHẬT ACCESS LOG (V10) ===
+    function addAccessLog(data) {
+      try {
+        const log = JSON.parse(data);
+        accessLogs.unshift(log);
+        if (accessLogs.length > 100) {
+          accessLogs = accessLogs.slice(0, 100);
+        }
+        const countElement = document.getElementById("access-count");
+        animateCounter(countElement, parseInt(countElement.textContent), accessLogs.length);
+        updateAccessLogTable();
+
+        const typeText = log.type === "FINGERPRINT" ? "Vân tay" : "Thẻ RFID";
+        showNotification(
+          "Truy cập thành công",
+          `${typeText}: ${log.name} (ID: ${log.id})`,
+          "success"
+        );
+        playSound("access-granted");
+      } catch (e) {
+        console.error("Error parsing access log:", e);
+      }
+    }
+
+    function updateAccessLogTable() {
+      const tbody = document.getElementById("access-log");
+      tbody.innerHTML = "";
+      if (accessLogs.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="4" class="text-center" style="padding: 30px;">
+              <i class="fas fa-inbox fa-2x mb-2" style="opacity: 0.3;"></i>
+              <p style="opacity: 0.5;">Chưa có dữ liệu</p>
+            </td>
+          </tr>
+        `;
+      } else {
+        accessLogs.forEach((log, index) => {
+          const tr = document.createElement("tr");
+          const date = new Date(log.time * 1000);
+          const formattedDate = date.toLocaleString("vi-VN", {
+            day: "2-digit",
+            month: "2-digit",
+            hour: "2-digit",
+            minute: "2-digit",
+          });
+          tr.className = "animate__animated animate__fadeIn";
+          tr.style.animationDelay = `${index * 0.05}s`;
+          tr.innerHTML = `
+            <td>${formattedDate}</td>
+            <td>
+              ${
+                log.type === "FINGERPRINT"
+                  ? '<span class="badge" style="background: var(--primary-gradient);">VÂN TAY</span>'
+                  : '<span class="badge" style="background: var(--info-gradient);">RFID</span>'
+              }
+            </td>
+            <td>${log.id}</td>
+            <td>${log.name}</td>
+          `;
+          tbody.appendChild(tr);
+        });
+      }
+    }
+
+    // === CẬP NHẬT CAMERA IMAGE (V11) ===
+    function updateCameraImage(base64) {
+      const preview = document.getElementById("camera-preview");
+      if (base64 && base64.length > 100) {
+        preview.innerHTML = `
+          <img src="data:image/jpeg;base64,${base64}" class="camera-preview-img animate__animated animate__fadeIn" alt="Camera capture">
+        `;
+        showNotification("Camera", "Đã chụp ảnh mới", "info");
+      }
+    }
+
+    // === CẬP NHẬT MOTION STATUS (V12) ===
+    function updateMotionStatus(status) {
+      const detector = document.getElementById("motion-detector");
+      const statusBadge = document.getElementById("motion-status");
+      if (status === 1) {
+        detector.classList.add("motion-detected");
+        statusBadge.className =
+          "badge bg-danger px-3 py-2 animate__animated animate__flash animate__infinite";
+        statusBadge.innerHTML = '<i class="fas fa-exclamation-triangle me-2"></i>Phát hiện chuyển động!'; 
+        showNotification("Cảm biến chuyển động", "Phát hiện chuyển động tại cửa chính!", "warning");
+        playSound("motion-detected");
+      } else {
+        detector.classList.remove("motion-detected");
+        statusBadge.className = "badge bg-dark px-3 py-2";
+        statusBadge.innerHTML = '<i class="fas fa-check-circle me-2"></i>Không phát hiện'; 
+      }
+    }
+
+    // === ĐIỀU KHIỂN CỬA (V1) ===
+    function controlDoor(action) {
+      // 1) Animate ngay lập tức
+      updateDoorStatus(action);
+
+      // 2) Gửi lệnh lên ESP32 Door
+      if (vpDoorControl) {
+        eraWidget.triggerAction(vpDoorControl.action, action);
+      }
+
+      // 3) Thông báo & hiệu ứng button
+      const msg = action === 1 ? "Đang mở cửa..." : "Đang đóng cửa...";
+      showNotification("Điều khiển cửa", msg, "info");
+      const btn = event.target.closest(".cyber-btn");
+      if (btn) {
+        btn.classList.add("animate__animated", "animate__pulse");
+        setTimeout(() => {
+          btn.classList.remove("animate__animated", "animate__pulse");
+        }, 1000);
+      }
+    }
+
+    // === CHỤP THỬ TỪ CAMERA (hễ V12=1) ===
+    function testCapture() {
+      if (vpMotionStatus) {
+        eraWidget.triggerAction(vpMotionStatus.action, 1);
+        setTimeout(() => {
+          eraWidget.triggerAction(vpMotionStatus.action, 0);
+        }, 2000);
+        showNotification("Camera", "Đang kích hoạt chụp ảnh thử...", "info");
+        const btn = event.target.closest(".cyber-btn");
+        if (btn) {
+          btn.classList.add("animate__animated", "animate__rubberBand");
+          setTimeout(() => {
+            btn.classList.remove("animate__animated", "animate__rubberBand");
+          }, 1000);
+        }
+      }
+    }
+
+    // === Toggle Night Vision (Giả lập) ===
+    function toggleNightVision() {
+      nightVisionEnabled = !nightVisionEnabled;
+      const preview = document.querySelector(".camera-preview-img");
+      if (!preview) return;
+      if (nightVisionEnabled) {
+        preview.style.filter = "contrast(1.5) brightness(1.2) hue-rotate(120deg)";
+        showNotification("Night Vision", "Đã bật chế độ ban đêm", "success");
+      } else {
+        preview.style.filter = "contrast(1.1) brightness(1.05)";
+        showNotification("Night Vision", "Đã tắt chế độ ban đêm", "info");
+      }
+    }
+
+    // === Hiển thị Enroll Modal ===
+    function showEnrollModal(type) {
+      currentModal = "enroll";
+      currentModalType = type;
+      const modal = new bootstrap.Modal(document.getElementById("enrollModal"));
+      const title = document.getElementById("enrollModalTitle");
+      const idLabel = document.getElementById("enrollIdLabel");
+      if (type === "fingerprint") {
+        title.innerHTML = '<i class="fas fa-fingerprint me-2"></i>Thêm vân tay mới';
+        idLabel.textContent = "ID Vân tay";
+        document.getElementById("enrollId").placeholder = "Nhập ID vân tay (1-50)...";
+      } else {
+        title.innerHTML = '<i class="fas fa-id-card me-2"></i>Thêm thẻ RFID mới';
+        idLabel.textContent = "UID thẻ (HEX)";
+        document.getElementById("enrollId").placeholder = "Nhập UID thẻ (VD: A1B2C3D4)...";
+      }
+      document.getElementById("enrollId").value = "";
+      document.getElementById("enrollName").value = "";
+      modal.show();
+    }
+
+    // === Hiển thị Delete Modal ===
+    function showDeleteModal(type) {
+      currentModal = "delete";
+      currentModalType = type;
+      const modal = new bootstrap.Modal(document.getElementById("deleteModal"));
+      const title = document.getElementById("deleteModalTitle");
+      const idLabel = document.getElementById("deleteIdLabel");
+      if (type === "fingerprint") {
+        title.innerHTML = '<i class="fas fa-trash-alt me-2"></i>Xóa vân tay';
+        idLabel.textContent = "ID Vân tay cần xóa";
+        document.getElementById("deleteId").placeholder = "Nhập ID vân tay...";
+      } else {
+        title.innerHTML = '<i class="fas fa-trash-alt me-2"></i>Xóa thẻ RFID';
+        idLabel.textContent = "UID thẻ cần xóa";
+        document.getElementById("deleteId").placeholder = "Nhập UID thẻ...";
+      }
+      document.getElementById("deleteId").value = "";
+      modal.show();
+    }
+
+    // === Submit Enroll ===
+    function submitEnroll() {
+      const id = document.getElementById("enrollId").value.trim();
+      const name = document.getElementById("enrollName").value.trim();
+      if (!id || !name) {
+        showNotification("Lỗi", "Vui lòng nhập đầy đủ thông tin", "warning");
+        return;
+      }
+      const command = `ADD:${id}:${name}`;
+      if (currentModalType === "fingerprint" && vpFingerprintEnroll) {
+        eraWidget.triggerAction(vpFingerprintEnroll.action, command);
+      } else if (currentModalType === "rfid" && vpRfidEnroll) {
+        eraWidget.triggerAction(vpRfidEnroll.action, command);
+      }
+      bootstrap.Modal.getInstance(document.getElementById("enrollModal")).hide();
+      showNotification("Đang xử lý", "Đang thêm dữ liệu mới...", "info");
+    }
+
+    // === Submit Delete ===
+    function submitDelete() {
+      const id = document.getElementById("deleteId").value.trim();
+      if (!id) {
+        showNotification("Lỗi", "Vui lòng nhập ID/UID cần xóa", "warning");
+        return;
+      }
+      const command = `DEL:${id}`;
+      if (currentModalType === "fingerprint" && vpFingerprintDelete) {
+        eraWidget.triggerAction(vpFingerprintDelete.action, command);
+      } else if (currentModalType === "rfid" && vpRfidDelete) {
+        eraWidget.triggerAction(vpRfidDelete.action, command);
+      }
+      bootstrap.Modal.getInstance(document.getElementById("deleteModal")).hide();
+      showNotification("Đang xử lý", "Đang xóa dữ liệu...", "info");
+    }
+
+    // === Xử lý Response Sau Khi Enroll/Delete Thành Công/Thất Bại ===
+    function handleCommandResponse(type, action, response) {
+      if (response === "SUCCESS") {
+        const typeText = type === "fingerprint" ? "vân tay" : "RFID";
+        const actionText = action === "enroll" ? "Thêm" : "Xóa";
+        showNotification("Thành công", `${actionText} ${typeText} thành công!`, "success");
+        // Chờ 500ms để ESP32 Door gửi list mới
+        setTimeout(() => {
+          console.log("Waiting for updated list from ESP32 Door...");
+        }, 500);
+      } else if (response === "FAILED") {
+        const typeText = type === "fingerprint" ? "vân tay" : "RFID";
+        const actionText = action === "enroll" ? "Thêm" : "Xóa";
+        showNotification("Thất bại", `${actionText} ${typeText} thất bại! Vui lòng thử lại.`, "danger");
+      }
+    }
+
+    // === Show System Info ===
+    function showSystemInfo() {
+      const info = `
+        <h6 class="mb-3">Thông tin hệ thống</h6>
+        <p class="mb-2"><strong>Phiên bản:</strong> SmartHome Pro v2.0</p>
+        <p class="mb-2"><strong>Kết nối:</strong> E-Ra IoT Platform</p>
+        <p class="mb-2"><strong>Trạng thái:</strong> <span class="text-success">Hoạt động</span></p>
+        <p class="mb-2"><strong>API Key:</strong> ${ERA_API_KEY.substring(0, 10)}...</p>
+        <p class="mb-0"><strong>Feed ID:</strong> ${ERA_FEED_ID}</p>
+      `;
+      showNotification("Thông tin hệ thống", info, "info", 10000);
+    }
+
+    // === Theme Toggle ===
+    document.getElementById("theme-toggle").addEventListener("change", function () {
+      document.body.classList.toggle("dark-mode");
+      if (window.pJSDom && window.pJSDom[0]) {
+        const isDarkMode = document.body.classList.contains("dark-mode");
+        window.pJSDom[0].pJS.particles.color.value = isDarkMode ? "#9d00ff" : "#00d4ff";
+        window.pJSDom[0].pJS.particles.line_linked.color = isDarkMode ? "#9d00ff" : "#00d4ff";
+        window.pJSDom[0].pJS.fn.particlesRefresh();
+      }
+    });
+
+    // === Show Notification ===
+    function showNotification(title, message, type = "info", duration = 5000) {
+      const container = document.getElementById("notification-container");
+      const notification = document.createElement("div");
+      notification.className = `notification ${type}`;
+      const icons = {
+        success: "fas fa-check-circle",
+        danger: "fas fa-exclamation-circle",
+        warning: "fas fa-exclamation-triangle",
+        info: "fas fa-info-circle",
+      };
+      notification.innerHTML = `
+        <div class="notification-header">
+          <div class="notification-icon">
+            <i class="${icons[type]}"></i>
+          </div>
+          <span>${title}</span>
+        </div>
+        <div class="notification-body">${message}</div>
+        <button class="notification-close" onclick="this.parentElement.remove()">
+          <i class="fas fa-times"></i>
+        </button>
+      `;
+      container.appendChild(notification);
+      setTimeout(() => {
+        notification.style.animation = "slideOutRight 0.5s ease-out";
+        setTimeout(() => {
+          notification.remove();
+        }, 500);
+      }, duration);
+    }
+
+    // === Animate Counter ===
+    function animateCounter(element, start, end, duration = 1000) {
+      const range = end - start;
+      const increment = range / (duration / 16);
+      let current = start;
+      const timer = setInterval(() => {
+        current += increment;
+        if ((increment > 0 && current >= end) || (increment < 0 && current <= end)) {
+          current = end;
+          clearInterval(timer);
+        }
+        element.textContent = Math.round(current);
+      }, 16);
+    }
+
+    // === Play Sound (chỉ log console, chưa có file thực) ===
+    function playSound(soundName) {
+      console.log(`Playing sound: ${soundName}`);
+    }
+
+    // === Ripple Effect cho Cyber Buttons ===
+    document.addEventListener("click", function (e) {
+      const targetBtn = e.target.closest(".cyber-btn");
+      if (targetBtn) {
+        const ripple = document.createElement("span");
+        ripple.className = "ripple";
+        const rect = targetBtn.getBoundingClientRect();
+        const size = Math.max(rect.width, rect.height);
+        const x = e.clientX - rect.left - size / 2;
+        const y = e.clientY - rect.top - size / 2;
+        ripple.style.width = ripple.style.height = size + "px";
+        ripple.style.left = x + "px";
+        ripple.style.top = y + "px";
+        targetBtn.appendChild(ripple);
+        setTimeout(() => {
+          ripple.remove();
+        }, 600);
+      }
+    });
+
+    // === Khởi chạy khi DOM loaded ===
+    document.addEventListener("DOMContentLoaded", function () {
+      initParticles();
+      initMatrixRain();
+      initializeEra();
+      document.querySelectorAll(".glass-card").forEach((card, index) => {
+        card.style.animationDelay = `${index * 0.2}s`;
+      });
+      document.getElementById("enrollForm").addEventListener("submit", (e) => {
+        e.preventDefault();
+        submitEnroll();
+      });
+      document.getElementById("deleteForm").addEventListener("submit", (e) => {
+        e.preventDefault();
+        submitDelete();
+      });
+      setTimeout(() => {
+        showNotification("Chào mừng", "SmartHome Pro Dashboard đã sẵn sàng!", "success");
+      }, 1000);
+    });
+
+    // === Reinit Particles khi resize ===
+    window.addEventListener("resize", function () {
+      if (window.pJSDom && window.pJSDom[0]) {
+        window.pJSDom[0].pJS.fn.vendors.destroypJS();
+        window.pJSDom = [];
+        initParticles();
+      }
+    });
+  </script>
+</body>
+</html>
