@@ -725,6 +725,39 @@
       box-shadow: 0 5px 20px rgba(238, 9, 121, 0.5);
       animation: badgePulse 1.5s ease-in-out infinite;
       z-index: 10;
+    }/* --- Alert Badge --- */
+    .alert-badge-enhanced {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: var(--danger-gradient);
+      color: #fff;
+      padding: 10px 20px;
+      border-radius: 30px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      font-size: 0.8rem;
+      box-shadow: 0 5px 20px rgba(238, 9, 121, 0.5);
+      animation: badgePulse 1.5s ease-in-out infinite;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .alert-badge-enhanced .close-alert {
+      background: none;
+      border: none;
+      color: white;
+      font-size: 1.2rem;
+      cursor: pointer;
+      padding: 0;
+      margin-left: 10px;
+      opacity: 0.8;
+      transition: opacity 0.3s;
+    }
+    .alert-badge-enhanced .close-alert:hover {
+      opacity: 1;
     }
     @keyframes badgePulse {
       0%, 100% {
@@ -921,7 +954,7 @@
               </div>
               <div class="col-6">
                 <button class="cyber-btn warning w-100" onclick="clearFailedAttempts()">
-                  <span><i class="fas fa-eraser"></i> Xóa lỗi</span>
+                  <span><i class="fas fa-eraser"></i> DELETE </span>
                 </button>
               </div>
               <div class="col-6">
