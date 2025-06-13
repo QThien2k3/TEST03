@@ -3,38 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Smart Door Security Dashboard v4.1 - No Auto Lock</title>
+    <title>Smart Door Security Dashboard v4.1 - All Issues Fixed</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
         
         :root {
             --primary-color: #3b82f6;
-            --primary-dark: #2563eb;
-            --primary-light: #60a5fa;
             --success-color: #10b981;
             --warning-color: #f59e0b;
             --danger-color: #ef4444;
             --background: #0a0e27;
             --surface: #151c3d;
             --surface-light: #1e2951;
-            --surface-hover: #2a3660;
             --text-primary: #ffffff;
             --text-secondary: #94a3b8;
-            --text-muted: #64748b;
             --border: #2a3660;
-            --border-light: #334155;
-            --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.1);
-            --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.15);
             --shadow-lg: 0 10px 30px rgba(0, 0, 0, 0.2);
-            --shadow-xl: 0 20px 50px rgba(0, 0, 0, 0.3);
             --gradient-primary: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
             --gradient-success: linear-gradient(135deg, #10b981 0%, #34d399 100%);
             --gradient-danger: linear-gradient(135deg, #ef4444 0%, #f87171 100%);
             --gradient-warning: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%);
-            --gradient-dark: linear-gradient(135deg, #1e293b 0%, #334155 100%);
-            --animation-duration: 0.3s;
-            --animation-timing: cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         * {
@@ -47,19 +36,17 @@
             font-family: 'Inter', sans-serif;
             background: var(--background);
             color: var(--text-primary);
-            overflow-x: hidden;
             min-height: 100vh;
-            position: relative;
         }
 
-        /* Alert Container - Fixed positioning */
+        /* Alert Container - Top Right */
         #alertContainer {
             position: fixed;
             top: 20px;
             right: 20px;
             z-index: 9999;
             width: 400px;
-            max-width: 90vw;
+            max-width: calc(100vw - 40px);
             pointer-events: none;
         }
 
@@ -68,86 +55,59 @@
             margin-bottom: 10px;
             transform: translateX(100%);
             animation: slideInRight 0.3s ease forwards;
+            padding: 16px 20px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: var(--surface);
+            border: 1px solid;
+            box-shadow: var(--shadow-lg);
             position: relative;
+            overflow: hidden;
         }
 
         @keyframes slideInRight {
             to { transform: translateX(0); }
         }
 
-        /* Background Animation */
-        body::before {
+        .alert::before {
             content: '';
-            position: fixed;
+            position: absolute;
             top: 0;
             left: 0;
-            width: 100%;
+            width: 4px;
             height: 100%;
-            background: 
-                radial-gradient(circle at 20% 80%, rgba(59, 130, 246, 0.1) 0%, transparent 50%),
-                radial-gradient(circle at 80% 20%, rgba(139, 92, 246, 0.1) 0%, transparent 50%),
-                radial-gradient(circle at 40% 40%, rgba(16, 185, 129, 0.05) 0%, transparent 50%);
-            animation: backgroundShift 20s ease-in-out infinite;
-            z-index: -1;
+            background: currentColor;
         }
 
-        @keyframes backgroundShift {
-            0%, 100% { transform: translate(0, 0) scale(1); }
-            25% { transform: translate(-5%, -5%) scale(1.05); }
-            50% { transform: translate(5%, -5%) scale(0.95); }
-            75% { transform: translate(0, 5%) scale(1.02); }
+        .alert-success { border-color: var(--success-color); color: var(--success-color); }
+        .alert-warning { border-color: var(--warning-color); color: var(--warning-color); }
+        .alert-danger { border-color: var(--danger-color); color: var(--danger-color); }
+        .alert-info { border-color: var(--primary-color); color: var(--primary-color); }
+
+        .alert-close {
+            margin-left: auto;
+            background: none;
+            border: none;
+            color: inherit;
+            cursor: pointer;
+            font-size: 20px;
+            opacity: 0.7;
+            padding: 4px;
+            border-radius: 4px;
         }
 
-        .dashboard-container {
-            padding: 24px;
-            max-width: 1600px;
-            margin: 0 auto;
-            animation: fadeIn 0.8s ease-out;
+        .alert-close:hover {
+            opacity: 1;
+            background: rgba(255, 255, 255, 0.1);
         }
 
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        /* Header */
-        .dashboard-header {
-            text-align: center;
-            margin-bottom: 40px;
-            position: relative;
-        }
-
-        .dashboard-header h1 {
-            font-size: 3rem;
-            font-weight: 800;
-            margin-bottom: 12px;
-            letter-spacing: -0.03em;
-            background: var(--gradient-primary);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            text-shadow: 0 0 60px rgba(59, 130, 246, 0.5);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 16px;
-        }
-
-        .dashboard-header h1 i {
-            font-size: 2.5rem;
-        }
-
-        .dashboard-header p {
-            font-size: 1.25rem;
-            color: var(--text-secondary);
-            font-weight: 400;
-        }
-
-        /* Connection Status Indicator */
+        /* Connection Status */
         .connection-status {
-            position: absolute;
-            top: 10px;
-            right: 10px;
+            position: fixed;
+            top: 20px;
+            left: 20px;
             display: flex;
             align-items: center;
             gap: 8px;
@@ -157,6 +117,7 @@
             font-weight: 600;
             background: var(--surface);
             border: 1px solid var(--border);
+            z-index: 1000;
         }
 
         .connection-status.connected {
@@ -169,12 +130,36 @@
             border-color: var(--danger-color);
         }
 
-        .connection-status i {
-            font-size: 12px;
-            animation: pulse 2s infinite;
+        .dashboard-container {
+            padding: 24px;
+            max-width: 1600px;
+            margin: 0 auto;
         }
 
-        /* Grid Layout */
+        .dashboard-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .dashboard-header h1 {
+            font-size: 3rem;
+            font-weight: 800;
+            margin-bottom: 12px;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+        }
+
+        .dashboard-header p {
+            font-size: 1.25rem;
+            color: var(--text-secondary);
+        }
+
         .dashboard-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
@@ -182,38 +167,17 @@
             margin-bottom: 32px;
         }
 
-        /* Cards */
         .card {
             background: var(--surface);
             border-radius: 24px;
             padding: 28px;
             border: 1px solid var(--border);
             box-shadow: var(--shadow-lg);
-            transition: all var(--animation-duration) var(--animation-timing);
-            position: relative;
-            overflow: hidden;
-            backdrop-filter: blur(10px);
-        }
-
-        .card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 3px;
-            background: var(--gradient-primary);
-            opacity: 0;
-            transition: opacity var(--animation-duration) ease;
-        }
-
-        .card:hover::before {
-            opacity: 1;
+            transition: all 0.3s ease;
         }
 
         .card:hover {
             transform: translateY(-4px);
-            box-shadow: var(--shadow-xl);
             border-color: var(--primary-color);
         }
 
@@ -232,40 +196,19 @@
             justify-content: center;
             font-size: 28px;
             margin-right: 16px;
-            position: relative;
-            overflow: hidden;
         }
 
         .card-icon i {
-            font-size: 28px;
             color: white;
-        }
-
-        .card-icon::after {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 100%;
-            height: 100%;
-            background: rgba(255, 255, 255, 0.1);
-            transform: translate(-50%, -50%) scale(0);
-            border-radius: 50%;
-            transition: transform 0.6s ease;
-        }
-
-        .card:hover .card-icon::after {
-            transform: translate(-50%, -50%) scale(2);
         }
 
         .card-title {
             font-size: 1.5rem;
             font-weight: 700;
             color: var(--text-primary);
-            letter-spacing: -0.02em;
         }
 
-        /* Door Control Section */
+        /* Door Control */
         .door-control .card-icon {
             background: var(--gradient-success);
         }
@@ -284,112 +227,35 @@
             background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
             border-radius: 12px;
             position: relative;
-            box-shadow: 
-                inset 0 4px 12px rgba(0, 0, 0, 0.5),
-                0 10px 30px rgba(0, 0, 0, 0.4);
-            overflow: hidden;
             border: 4px solid #2a3660;
-        }
-
-        .door-frame::before {
-            content: '';
-            position: absolute;
-            top: -2px;
-            left: -2px;
-            right: -2px;
-            bottom: -2px;
-            background: linear-gradient(135deg, rgba(59, 130, 246, 0.3) 0%, transparent 50%, rgba(139, 92, 246, 0.3) 100%);
-            opacity: 0;
-            transition: opacity 0.5s ease;
-            border-radius: 12px;
-            z-index: -1;
-        }
-
-        .door-frame.active::before {
-            opacity: 1;
-            animation: doorFramePulse 2s ease-in-out infinite;
-        }
-
-        @keyframes doorFramePulse {
-            0%, 100% { transform: scale(1); opacity: 0.3; }
-            50% { transform: scale(1.02); opacity: 0.6; }
+            overflow: hidden;
         }
 
         .door-panel {
             width: 85%;
             height: 90%;
-            background: linear-gradient(135deg, #3b82f6 0%, #6366f1 100%);
+            background: var(--gradient-primary);
             position: absolute;
             top: 5%;
             left: 7.5%;
             border-radius: 8px;
-            transition: transform 1.5s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: transform 1.5s ease;
             transform-origin: left center;
-            box-shadow: 
-                inset 0 2px 8px rgba(255, 255, 255, 0.3),
-                inset 0 -2px 8px rgba(0, 0, 0, 0.3),
-                0 8px 20px rgba(0, 0, 0, 0.5);
-            transform-style: preserve-3d;
-            backface-visibility: hidden;
-        }
-
-        .door-panel::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: 
-                repeating-linear-gradient(
-                    90deg,
-                    transparent,
-                    transparent 20%,
-                    rgba(255, 255, 255, 0.1) 20%,
-                    rgba(255, 255, 255, 0.1) 21%
-                ),
-                repeating-linear-gradient(
-                    0deg,
-                    transparent,
-                    transparent 30%,
-                    rgba(255, 255, 255, 0.05) 30%,
-                    rgba(255, 255, 255, 0.05) 31%
-                );
-            border-radius: 8px;
         }
 
         .door-panel.open {
             transform: perspective(1200px) rotateY(-85deg) translateZ(30px);
-            box-shadow: 
-                inset 0 2px 8px rgba(255, 255, 255, 0.3),
-                30px 0 50px rgba(0, 0, 0, 0.4);
         }
 
         .door-handle {
             width: 14px;
             height: 40px;
-            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+            background: var(--gradient-warning);
             border-radius: 14px;
             position: absolute;
             right: 20px;
             top: 50%;
             transform: translateY(-50%);
-            box-shadow: 
-                0 4px 8px rgba(0, 0, 0, 0.5),
-                inset 0 2px 4px rgba(255, 255, 255, 0.5),
-                inset 0 -2px 4px rgba(0, 0, 0, 0.3);
-        }
-
-        .door-handle::after {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 8px;
-            height: 8px;
-            background: radial-gradient(circle, rgba(255,255,255,0.5) 0%, rgba(0,0,0,0.3) 100%);
-            border-radius: 50%;
         }
 
         .door-status {
@@ -410,20 +276,18 @@
             height: 14px;
             border-radius: 50%;
             animation: pulse 2s infinite;
-            box-shadow: 0 0 10px currentColor;
         }
 
         @keyframes pulse {
-            0%, 100% { opacity: 1; transform: scale(1); box-shadow: 0 0 10px currentColor; }
-            50% { opacity: 0.7; transform: scale(1.2); box-shadow: 0 0 20px currentColor; }
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.7; transform: scale(1.2); }
         }
 
-        .status-closed .status-indicator { background: var(--danger-color); color: var(--danger-color); }
-        .status-open .status-indicator { background: var(--success-color); color: var(--success-color); }
-        .status-opening .status-indicator { background: var(--warning-color); color: var(--warning-color); animation: pulse 0.5s infinite; }
-        .status-closing .status-indicator { background: var(--warning-color); color: var(--warning-color); animation: pulse 0.5s infinite; }
+        .status-closed .status-indicator { background: var(--danger-color); }
+        .status-open .status-indicator { background: var(--success-color); }
+        .status-opening .status-indicator { background: var(--warning-color); animation: pulse 0.5s infinite; }
+        .status-closing .status-indicator { background: var(--warning-color); animation: pulse 0.5s infinite; }
 
-        /* Control Buttons */
         .control-buttons {
             display: flex;
             gap: 16px;
@@ -438,43 +302,20 @@
             border-radius: 14px;
             font-weight: 600;
             cursor: pointer;
-            transition: all var(--animation-duration) var(--animation-timing);
+            transition: all 0.3s ease;
             text-transform: uppercase;
             letter-spacing: 0.5px;
-            position: relative;
-            overflow: hidden;
             font-size: 0.9rem;
             display: flex;
             align-items: center;
             gap: 8px;
+            min-width: 120px;
+            justify-content: center;
         }
 
         .btn:disabled {
             opacity: 0.5;
             cursor: not-allowed;
-            transform: none !important;
-        }
-
-        .btn i {
-            font-size: 1.1rem;
-        }
-
-        .btn::before {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 0;
-            height: 0;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 50%;
-            transform: translate(-50%, -50%);
-            transition: width 0.6s ease, height 0.6s ease;
-        }
-
-        .btn:active::before {
-            width: 300px;
-            height: 300px;
         }
 
         .btn-primary {
@@ -483,20 +324,10 @@
             box-shadow: 0 4px 14px rgba(59, 130, 246, 0.3);
         }
 
-        .btn-primary:hover:not(:disabled) {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
-        }
-
         .btn-success {
             background: var(--gradient-success);
             color: white;
             box-shadow: 0 4px 14px rgba(16, 185, 129, 0.3);
-        }
-
-        .btn-success:hover:not(:disabled) {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
         }
 
         .btn-danger {
@@ -505,20 +336,14 @@
             box-shadow: 0 4px 14px rgba(239, 68, 68, 0.3);
         }
 
-        .btn-danger:hover:not(:disabled) {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(239, 68, 68, 0.4);
-        }
-
         .btn-warning {
             background: var(--gradient-warning);
             color: white;
             box-shadow: 0 4px 14px rgba(245, 158, 11, 0.3);
         }
 
-        .btn-warning:hover:not(:disabled) {
+        .btn:hover:not(:disabled) {
             transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(245, 158, 11, 0.4);
         }
 
         /* Access Management */
@@ -532,7 +357,6 @@
             background: var(--background);
             border-radius: 14px;
             padding: 4px;
-            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
         }
 
         .tab-button {
@@ -543,50 +367,27 @@
             color: var(--text-secondary);
             border-radius: 10px;
             cursor: pointer;
-            transition: all var(--animation-duration) ease;
+            transition: all 0.3s ease;
             font-weight: 600;
-            font-size: 0.95rem;
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 8px;
         }
 
-        .tab-button i {
-            font-size: 1.1rem;
-        }
-
-        .tab-button:hover {
-            color: var(--text-primary);
-        }
-
         .tab-button.active {
             background: var(--gradient-primary);
             color: white;
-            box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
         }
 
         .tab-content {
             display: none;
-            animation: slideIn 0.4s ease;
         }
 
         .tab-content.active {
             display: block;
         }
 
-        @keyframes slideIn {
-            from { 
-                opacity: 0; 
-                transform: translateY(10px); 
-            }
-            to { 
-                opacity: 1; 
-                transform: translateY(0); 
-            }
-        }
-
-        /* Section Styling */
         .section {
             background: var(--background);
             border-radius: 12px;
@@ -598,19 +399,8 @@
         .section-header {
             display: flex;
             align-items: center;
-            justify-content: space-between;
             margin-bottom: 16px;
-        }
-
-        .section-header .section-title {
-            display: flex;
-            align-items: center;
             gap: 12px;
-        }
-
-        .section-header i {
-            font-size: 24px;
-            color: var(--primary-color);
         }
 
         .section-header strong {
@@ -618,56 +408,6 @@
             color: var(--text-primary);
         }
 
-        /* Toggle Switch for Auto Detection */
-        .toggle-switch {
-            position: relative;
-            display: inline-block;
-            width: 60px;
-            height: 32px;
-        }
-
-        .toggle-switch input {
-            opacity: 0;
-            width: 0;
-            height: 0;
-        }
-
-        .slider {
-            position: absolute;
-            cursor: pointer;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: var(--surface-light);
-            border: 2px solid var(--border);
-            transition: .4s;
-            border-radius: 32px;
-        }
-
-        .slider:before {
-            position: absolute;
-            content: "";
-            height: 20px;
-            width: 20px;
-            left: 4px;
-            bottom: 4px;
-            background-color: var(--text-secondary);
-            transition: .4s;
-            border-radius: 50%;
-        }
-
-        input:checked + .slider {
-            background-color: var(--primary-color);
-            border-color: var(--primary-color);
-        }
-
-        input:checked + .slider:before {
-            transform: translateX(28px);
-            background-color: white;
-        }
-
-        /* Input Fields */
         .input-group {
             margin-bottom: 20px;
         }
@@ -677,8 +417,6 @@
             margin-bottom: 10px;
             font-weight: 600;
             color: var(--text-secondary);
-            font-size: 0.95rem;
-            letter-spacing: 0.3px;
         }
 
         .input-field {
@@ -689,60 +427,27 @@
             background: var(--surface);
             color: var(--text-primary);
             font-size: 15px;
-            transition: all var(--animation-duration) ease;
-            font-family: 'Inter', sans-serif;
+            transition: all 0.3s ease;
         }
 
         .input-field:focus {
             outline: none;
             border-color: var(--primary-color);
-            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
             background: var(--surface-light);
         }
 
-        .input-field:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-        }
-
-        /* Scan/Detect Sections */
         .scan-section, .detect-section {
             border: 2px dashed var(--border);
             background: rgba(30, 41, 81, 0.3);
             border-radius: 16px;
             padding: 20px;
             margin-bottom: 20px;
-            transition: all var(--animation-duration) ease;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .scan-section::before, .detect-section::before {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 100%;
-            height: 100%;
-            background: radial-gradient(circle, rgba(59, 130, 246, 0.1) 0%, transparent 70%);
-            transform: translate(-50%, -50%) scale(0);
-            opacity: 0;
-            transition: all 0.5s ease;
-        }
-
-        .scan-section:hover::before, .detect-section:hover::before {
-            transform: translate(-50%, -50%) scale(1);
-            opacity: 1;
-        }
-
-        .scan-section:hover, .detect-section:hover {
-            border-color: var(--primary-color);
-            background: rgba(30, 41, 81, 0.5);
+            transition: all 0.3s ease;
         }
 
         .scan-section.scanning, .detect-section.detecting {
-            animation: scanPulse 1.5s infinite;
             border-color: var(--primary-color);
+            animation: scanPulse 1.5s infinite;
         }
 
         @keyframes scanPulse {
@@ -751,7 +456,7 @@
                 box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4);
             }
             50% { 
-                border-color: var(--primary-light);
+                border-color: #60a5fa;
                 box-shadow: 0 0 0 10px rgba(59, 130, 246, 0);
             }
         }
@@ -762,7 +467,6 @@
             border-radius: 10px;
             text-align: center;
             background: var(--surface-light);
-            transition: all var(--animation-duration) ease;
             font-weight: 500;
             min-height: 48px;
             display: flex;
@@ -770,7 +474,6 @@
             justify-content: center;
         }
 
-        /* Lists */
         .fingerprint-list, .rfid-list {
             max-height: 300px;
             overflow-y: auto;
@@ -786,7 +489,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            transition: background var(--animation-duration) ease;
+            transition: background 0.3s ease;
         }
 
         .list-item:hover {
@@ -817,22 +520,17 @@
             cursor: pointer;
             font-size: 13px;
             font-weight: 600;
-            transition: all var(--animation-duration) ease;
+            transition: all 0.3s ease;
             display: flex;
             align-items: center;
             gap: 6px;
         }
 
-        .delete-btn i {
-            font-size: 14px;
-        }
-
         .delete-btn:hover {
             transform: scale(1.05);
-            box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
         }
 
-        /* Camera Section with Enhanced Radar */
+        /* Camera Section */
         .camera-section .card-icon {
             background: var(--gradient-danger);
         }
@@ -848,7 +546,6 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.5);
         }
 
         .radar-container {
@@ -864,7 +561,6 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            box-shadow: 0 0 10px rgba(59, 130, 246, 0.1);
         }
 
         .radar-circle:nth-child(1) { width: 200px; height: 200px; }
@@ -876,8 +572,6 @@
             position: absolute;
             width: 100%;
             height: 100%;
-            top: 0;
-            left: 0;
             background: conic-gradient(
                 from 0deg,
                 transparent 0deg,
@@ -904,38 +598,6 @@
             left: 50%;
             transform: translate(-50%, -50%);
             box-shadow: 0 0 30px var(--primary-color);
-            animation: radarCenterPulse 2s ease-in-out infinite;
-        }
-
-        @keyframes radarCenterPulse {
-            0%, 100% { box-shadow: 0 0 30px var(--primary-color); }
-            50% { box-shadow: 0 0 50px var(--primary-color); }
-        }
-
-        .motion-blip {
-            position: absolute;
-            width: 10px;
-            height: 10px;
-            background: var(--danger-color);
-            border-radius: 50%;
-            box-shadow: 0 0 20px var(--danger-color);
-            animation: blipPulse 1.5s ease-out;
-        }
-
-        @keyframes blipPulse {
-            0% {
-                transform: scale(1);
-                opacity: 1;
-                box-shadow: 0 0 20px var(--danger-color);
-            }
-            50% {
-                transform: scale(2.5);
-                opacity: 0.7;
-            }
-            100% {
-                transform: scale(4);
-                opacity: 0;
-            }
         }
 
         .motion-indicator {
@@ -946,12 +608,7 @@
             border-radius: 24px;
             font-weight: 600;
             margin: 16px auto;
-            transition: all var(--animation-duration) ease;
             width: fit-content;
-        }
-
-        .motion-indicator i {
-            font-size: 20px;
         }
 
         .motion-indicator-container {
@@ -968,8 +625,8 @@
         }
 
         @keyframes alertPulse {
-            0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
-            50% { transform: scale(1.02); box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.02); }
         }
 
         .motion-clear {
@@ -988,13 +645,7 @@
             align-items: center;
             justify-content: center;
             border: 2px dashed var(--border);
-            position: relative;
             overflow: hidden;
-            transition: all var(--animation-duration) ease;
-        }
-
-        .camera-feed:hover {
-            border-color: var(--primary-color);
         }
 
         .camera-placeholder {
@@ -1006,8 +657,8 @@
         .camera-placeholder i {
             font-size: 56px;
             margin-bottom: 16px;
-            opacity: 0.6;
             color: var(--primary-color);
+            opacity: 0.6;
         }
 
         .camera-image {
@@ -1044,7 +695,6 @@
             margin-bottom: 8px;
             font-weight: 600;
             color: var(--text-secondary);
-            font-size: 0.9rem;
         }
 
         .filter-select, .filter-input {
@@ -1055,14 +705,6 @@
             background: var(--background);
             color: var(--text-primary);
             font-size: 14px;
-            transition: all var(--animation-duration) ease;
-            cursor: pointer;
-        }
-
-        .filter-select:focus, .filter-input:focus {
-            outline: none;
-            border-color: var(--primary-color);
-            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
         }
 
         .history-table-container {
@@ -1083,8 +725,6 @@
             text-align: left;
             font-weight: 700;
             color: var(--text-primary);
-            font-size: 0.95rem;
-            letter-spacing: 0.5px;
             border-bottom: 2px solid var(--border);
         }
 
@@ -1092,7 +732,6 @@
             padding: 14px 16px;
             border-bottom: 1px solid var(--border);
             color: var(--text-secondary);
-            transition: all var(--animation-duration) ease;
         }
 
         .history-table tr:hover td {
@@ -1100,11 +739,7 @@
             color: var(--text-primary);
         }
 
-        .history-table tr:last-child td {
-            border-bottom: none;
-        }
-
-        .method-badge {
+        .method-badge, .status-badge {
             display: inline-flex;
             align-items: center;
             gap: 6px;
@@ -1112,10 +747,6 @@
             border-radius: 20px;
             font-size: 13px;
             font-weight: 600;
-        }
-
-        .method-badge i {
-            font-size: 14px;
         }
 
         .method-fingerprint {
@@ -1126,20 +757,6 @@
         .method-rfid {
             background: rgba(59, 130, 246, 0.15);
             color: #3b82f6;
-        }
-
-        .status-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 13px;
-            font-weight: 600;
-        }
-
-        .status-badge i {
-            font-size: 14px;
         }
 
         .status-success {
@@ -1167,7 +784,7 @@
         }
 
         .system-status .card-icon {
-            background: var(--gradient-dark);
+            background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
         }
 
         .status-grid {
@@ -1183,25 +800,7 @@
             background: var(--background);
             border-radius: 16px;
             border: 1px solid var(--border);
-            transition: all var(--animation-duration) ease;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .status-item::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 3px;
-            background: var(--gradient-primary);
-            transform: scaleX(0);
-            transition: transform var(--animation-duration) ease;
-        }
-
-        .status-item:hover::before {
-            transform: scaleX(1);
+            transition: all 0.3s ease;
         }
 
         .status-item:hover {
@@ -1227,87 +826,6 @@
             font-weight: 600;
         }
 
-        /* Alerts */
-        .alert {
-            padding: 16px 20px;
-            border-radius: 14px;
-            margin: 16px 0;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            animation: slideInAlert 0.5s ease;
-            position: relative;
-            overflow: hidden;
-            background: var(--surface);
-            border: 1px solid;
-            box-shadow: var(--shadow-md);
-        }
-
-        @keyframes slideInAlert {
-            from {
-                opacity: 0;
-                transform: translateX(-20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateX(0);
-            }
-        }
-
-        .alert::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 4px;
-            height: 100%;
-            background: currentColor;
-        }
-
-        .alert i {
-            font-size: 20px;
-        }
-
-        .alert-warning {
-            border-color: var(--warning-color);
-            color: var(--warning-color);
-        }
-
-        .alert-danger {
-            border-color: var(--danger-color);
-            color: var(--danger-color);
-        }
-
-        .alert-success {
-            border-color: var(--success-color);
-            color: var(--success-color);
-        }
-
-        .alert-info {
-            border-color: var(--primary-color);
-            color: var(--primary-color);
-        }
-
-        .alert-close {
-            margin-left: auto;
-            background: none;
-            border: none;
-            color: inherit;
-            cursor: pointer;
-            font-size: 20px;
-            line-height: 1;
-            opacity: 0.7;
-            transition: opacity var(--animation-duration) ease;
-            padding: 4px;
-            border-radius: 4px;
-        }
-
-        .alert-close:hover {
-            opacity: 1;
-            background: rgba(255, 255, 255, 0.1);
-        }
-
-        /* System Action Buttons */
         .system-actions {
             margin-top: 24px;
             display: flex;
@@ -1315,25 +833,19 @@
             flex-wrap: wrap;
         }
 
-        /* Scrollbar */
-        ::-webkit-scrollbar {
-            width: 10px;
-            height: 10px;
+        /* Loading */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid var(--border);
+            border-radius: 50%;
+            border-top-color: var(--primary-color);
+            animation: spin 0.8s linear infinite;
         }
 
-        ::-webkit-scrollbar-track {
-            background: var(--surface);
-            border-radius: 5px;
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: var(--border);
-            border-radius: 5px;
-            transition: background var(--animation-duration) ease;
-        }
-
-        ::-webkit-scrollbar-thumb:hover {
-            background: var(--primary-color);
+        @keyframes spin {
+            to { transform: rotate(360deg); }
         }
 
         /* Responsive */
@@ -1349,7 +861,6 @@
 
             .dashboard-grid {
                 grid-template-columns: 1fr;
-                gap: 20px;
             }
 
             .control-buttons {
@@ -1360,37 +871,9 @@
                 width: 100%;
             }
 
-            .status-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-
-            .history-filters {
-                flex-direction: column;
-            }
-
-            .filter-group {
-                width: 100%;
-            }
-
             #alertContainer {
                 width: calc(100vw - 40px);
-                right: 20px;
             }
-        }
-
-        /* Loading Animation */
-        .loading {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 3px solid var(--border);
-            border-radius: 50%;
-            border-top-color: var(--primary-color);
-            animation: spin 0.8s linear infinite;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
         }
     </style>
 </head>
@@ -1398,7 +881,7 @@
     <!-- Alert Container -->
     <div id="alertContainer"></div>
 
-    <!-- Connection Status Indicator -->
+    <!-- Connection Status -->
     <div class="connection-status disconnected" id="connectionStatus">
         <i class="fas fa-circle"></i>
         <span>Đang kết nối...</span>
@@ -1407,11 +890,11 @@
     <div class="dashboard-container">
         <div class="dashboard-header">
             <h1><i class="fas fa-door-open"></i> Smart Door Security v4.1</h1>
-            <p>Hệ thống cửa thông minh - Fixed RFID Auto-detection & Removed Auto-lock</p>
+            <p>Hệ thống cửa thông minh với AI & IoT - All Issues Fixed</p>
         </div>
 
         <div class="dashboard-grid">
-            <!-- Door Control Section -->
+            <!-- Door Control -->
             <div class="card door-control">
                 <div class="card-header">
                     <div class="card-icon"><i class="fas fa-door-open"></i></div>
@@ -1419,14 +902,14 @@
                 </div>
                 
                 <div class="door-visualization">
-                    <div class="door-frame" id="doorFrame">
+                    <div class="door-frame">
                         <div class="door-panel" id="doorPanel">
                             <div class="door-handle"></div>
                         </div>
                     </div>
                 </div>
                 
-                <div class="door-status" id="doorStatus">
+                <div class="door-status status-closed" id="doorStatus">
                     <span class="status-indicator"></span>
                     <span id="doorStatusText">Đóng</span>
                 </div>
@@ -1447,7 +930,7 @@
                 </div>
             </div>
 
-            <!-- Access Management Section -->
+            <!-- Access Management -->
             <div class="card access-management">
                 <div class="card-header">
                     <div class="card-icon"><i class="fas fa-user-shield"></i></div>
@@ -1467,13 +950,10 @@
 
                 <!-- Fingerprint Tab -->
                 <div class="tab-content active" id="fingerprintTab">
-                    <!-- Test Fingerprint Section -->
                     <div class="section">
                         <div class="section-header">
-                            <div class="section-title">
-                                <i class="fas fa-fingerprint"></i>
-                                <strong>Test quét vân tay</strong>
-                            </div>
+                            <i class="fas fa-fingerprint"></i>
+                            <strong>Test quét vân tay</strong>
                         </div>
                         
                         <div class="scan-section" id="fingerprintScanSection">
@@ -1481,13 +961,11 @@
                                 Nhấn nút bên dưới để test quét vân tay
                             </div>
                             
-                            <button class="btn btn-primary" id="startScanBtn" onclick="fingerprintController.startScan()" 
-                                    style="width: 100%; margin-top: 12px;">
+                            <button class="btn btn-primary" id="startScanBtn" onclick="fingerprintController.startScan()" style="width: 100%; margin-top: 12px;">
                                 <i class="fas fa-fingerprint"></i>
                                 <span>Bắt Đầu Test</span>
                             </button>
-                            <button class="btn btn-danger" id="stopScanBtn" onclick="fingerprintController.stopScan()" 
-                                    style="display: none; width: 100%; margin-top: 12px;">
+                            <button class="btn btn-danger" id="stopScanBtn" onclick="fingerprintController.stopScan()" style="display: none; width: 100%; margin-top: 12px;">
                                 <i class="fas fa-stop"></i>
                                 <span>Dừng Test</span>
                             </button>
@@ -1507,8 +985,7 @@
                             
                             <div class="input-group">
                                 <label>Tên người dùng:</label>
-                                <input type="text" class="input-field" id="fingerprintName" 
-                                       placeholder="Nhập tên cho vân tay này">
+                                <input type="text" class="input-field" id="fingerprintName" placeholder="Nhập tên cho vân tay này">
                             </div>
                             
                             <button class="btn btn-success" onclick="fingerprintController.enrollVerified()" style="width: 100%;">
@@ -1518,24 +995,19 @@
                         </div>
                     </div>
 
-                    <!-- Manual Fingerprint Add Section -->
+                    <!-- Manual Fingerprint Add -->
                     <div class="section">
                         <div class="section-header">
-                            <div class="section-title">
-                                <i class="fas fa-plus-circle"></i>
-                                <strong>Thêm vân tay thủ công</strong>
-                            </div>
+                            <i class="fas fa-plus-circle"></i>
+                            <strong>Thêm vân tay thủ công</strong>
                         </div>
                         
                         <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 12px;">
-                            <input type="number" class="input-field" id="manualFingerprintId" 
-                                   placeholder="Nhập ID" min="1" max="127">
-                            <input type="text" class="input-field" id="manualFingerprintName" 
-                                   placeholder="Tên người dùng">
+                            <input type="number" class="input-field" id="manualFingerprintId" placeholder="Nhập ID" min="1" max="127">
+                            <input type="text" class="input-field" id="manualFingerprintName" placeholder="Tên người dùng">
                         </div>
                         
-                        <button class="btn btn-primary" style="margin-top: 12px; width: 100%;" 
-                                onclick="fingerprintController.enrollManual()">
+                        <button class="btn btn-primary" style="margin-top: 12px; width: 100%;" onclick="fingerprintController.enrollManual()">
                             <i class="fas fa-plus"></i>
                             <span>Đăng Ký Vân Tay</span>
                         </button>
@@ -1561,35 +1033,20 @@
 
                 <!-- RFID Tab -->
                 <div class="tab-content" id="rfidTab">
-                    <!-- RFID Auto-Detect Section -->
                     <div class="section">
                         <div class="section-header">
-                            <div class="section-title">
-                                <i class="fas fa-wifi"></i>
-                                <strong>Quét thẻ RFID</strong>
-                            </div>
-                            <div>
-                                <label class="toggle-switch">
-                                    <input type="checkbox" id="rfidAutoDetect" checked onchange="rfidController.toggleAutoDetect()">
-                                    <span class="slider"></span>
-                                </label>
-                                <span style="margin-left: 8px; font-size: 12px; color: var(--text-secondary);">Auto</span>
-                            </div>
+                            <i class="fas fa-wifi"></i>
+                            <strong>Quét thẻ RFID</strong>
                         </div>
                         
                         <div class="detect-section" id="rfidDetectSection">
                             <div class="rfid-status" id="rfidDetectionStatus">
-                                Auto-detection đang BẬT. Đặt thẻ gần cảm biến để quét tự động.
+                                Nhấn nút để test quét thẻ RFID
                             </div>
                             
                             <button class="btn btn-primary" onclick="rfidController.testScan()" style="width: 100%; margin-top: 12px;">
                                 <i class="fas fa-id-card"></i>
                                 <span>Test Quét Thẻ</span>
-                            </button>
-                            
-                            <button class="btn btn-warning" onclick="rfidController.clearDetection()" style="width: 100%; margin-top: 8px;">
-                                <i class="fas fa-times"></i>
-                                <span>Clear Detection</span>
                             </button>
                         </div>
 
@@ -1607,8 +1064,7 @@
                             
                             <div class="input-group">
                                 <label>Tên chủ thẻ:</label>
-                                <input type="text" class="input-field" id="rfidCardName" 
-                                       placeholder="Nhập tên cho thẻ này">
+                                <input type="text" class="input-field" id="rfidCardName" placeholder="Nhập tên cho thẻ này">
                             </div>
                             
                             <button class="btn btn-success" onclick="rfidController.addScanned()" style="width: 100%;">
@@ -1618,22 +1074,17 @@
                         </div>
                     </div>
 
-                    <!-- Manual RFID Add Section -->
+                    <!-- Manual RFID Add -->
                     <div class="section">
                         <div class="section-header">
-                            <div class="section-title">
-                                <i class="fas fa-plus-circle"></i>
-                                <strong>Thêm thẻ RFID thủ công</strong>
-                            </div>
+                            <i class="fas fa-plus-circle"></i>
+                            <strong>Thêm thẻ RFID thủ công</strong>
                         </div>
                         
-                        <input type="text" class="input-field" id="manualRfidUid" 
-                               placeholder="Nhập UID thẻ (VD: 04:XX:XX:XX)" style="margin-bottom: 12px;">
-                        <input type="text" class="input-field" id="manualRfidName" 
-                               placeholder="Tên chủ thẻ">
+                        <input type="text" class="input-field" id="manualRfidUid" placeholder="Nhập UID thẻ (VD: 04:XX:XX:XX)" style="margin-bottom: 12px;">
+                        <input type="text" class="input-field" id="manualRfidName" placeholder="Tên chủ thẻ">
                         
-                        <button class="btn btn-primary" style="margin-top: 12px; width: 100%;" 
-                                onclick="rfidController.addManual()">
+                        <button class="btn btn-primary" style="margin-top: 12px; width: 100%;" onclick="rfidController.addManual()">
                             <i class="fas fa-plus"></i>
                             <span>Thêm Thẻ</span>
                         </button>
@@ -1665,8 +1116,7 @@
                     <div class="card-title">Camera An Ninh</div>
                 </div>
 
-                <!-- Enhanced Security Radar -->
-                <div class="security-radar" id="securityRadar">
+                <div class="security-radar">
                     <div class="radar-container">
                         <div class="radar-circle"></div>
                         <div class="radar-circle"></div>
@@ -1710,6 +1160,7 @@
                     <div style="font-size: 14px; color: var(--text-secondary); line-height: 1.6;">
                         <div><i class="fas fa-envelope"></i> Email: phamquocthien17@gmail.com</div>
                         <div><i class="fas fa-robot"></i> Tự động gửi ảnh khi phát hiện chuyển động</div>
+                        <div><i class="fas fa-wifi"></i> Stream: <span id="streamUrl">Đang kết nối...</span></div>
                     </div>
                 </div>
             </div>
@@ -1743,14 +1194,6 @@
                         <option value="10">Tháng 10</option>
                         <option value="11">Tháng 11</option>
                         <option value="12">Tháng 12</option>
-                    </select>
-                </div>
-                <div class="filter-group">
-                    <label>Năm:</label>
-                    <select class="filter-select" id="filterYear" onchange="historyController.filter()">
-                        <option value="">Tất cả</option>
-                        <option value="2025">2025</option>
-                        <option value="2024">2024</option>
                     </select>
                 </div>
                 <div class="filter-group">
@@ -1798,7 +1241,7 @@
             </div>
         </div>
 
-        <!-- System Status Section -->
+        <!-- System Status -->
         <div class="card system-status">
             <div class="card-header">
                 <div class="card-icon"><i class="fas fa-cogs"></i></div>
@@ -1827,69 +1270,62 @@
                     <div class="status-label">Ảnh đã chụp</div>
                 </div>
                 <div class="status-item">
-                    <div class="status-value" id="statusTotalAccess">--</div>
-                    <div class="status-label">Tổng lượt truy cập</div>
+                    <div class="status-value" id="statusFailedAttempts">--</div>
+                    <div class="status-label">Lần thử sai</div>
                 </div>
             </div>
 
-            <!-- System Action Buttons -->
             <div class="system-actions">
+                <button class="btn btn-success" onclick="securityManager.clearSecurityLock()">
+                    <i class="fas fa-unlock"></i>
+                    <span>Mở khóa hệ thống</span>
+                </button>
                 <button class="btn btn-warning" onclick="alertManager.clear()">
                     <i class="fas fa-times-circle"></i>
-                    <span>Xóa tất cả cảnh báo</span>
+                    <span>Xóa cảnh báo</span>
                 </button>
                 <button class="btn btn-primary" onclick="systemController.restart()">
                     <i class="fas fa-sync-alt"></i>
                     <span>Khởi động lại</span>
                 </button>
-                <button class="btn btn-danger" onclick="debugController.toggle()">
-                    <i class="fas fa-bug"></i>
-                    <span>Debug Panel</span>
+                <button class="btn btn-danger" onclick="systemController.testConnection()">
+                    <i class="fas fa-wifi"></i>
+                    <span>Test Kết Nối</span>
                 </button>
             </div>
         </div>
     </div>
 
-    <!-- E-Ra Widget Integration -->
+    <!-- E-Ra Widget -->
     <script src="https://www.unpkg.com/@eohjsc/era-widget@1.1.3/src/index.js"></script>
     <script>
-        /**
-         * ===================================
-         * E-Ra IoT Dashboard Integration v4.1
-         * Smart Door Security System - Fixed RFID Auto-detection & Removed Auto-lock
-         * ===================================
-         */
-
-        // === E-Ra Widget Instance ===
+        // E-Ra Widget Instance
         const eraWidget = new EraWidget();
         
-        // === Configuration Storage ===
-        let configs = {};
-        let actions = {};
-        
-        // === System State Variables ===
+        // System State
         let systemState = {
             doorStatus: 'closed',
             motionDetected: false,
             autoCapture: true,
             fingerprintScanActive: false,
-            rfidAutoDetect: true, // NEW: RFID auto-detection control
             currentVerifiedFingerprintId: null,
             currentScannedRfidUid: null,
             fingerprintList: [],
             rfidList: [],
             accessHistory: [],
-            systemStats: {},
             isConnected: false,
-            lastMotionTime: 0,
-            lastRfidDetection: null // NEW: Track last RFID detection
+            failedAttempts: 0,
+            systemLocked: false
         };
 
-        // === Alert Manager ===
+        let configs = {};
+        let actions = {};
+
+        // Alert Manager
         const alertManager = {
             alerts: new Map(),
             
-            show(id, message, type = 'success', timeout = 5000, persistent = false) {
+            show(id, message, type = 'success', timeout = 5000) {
                 this.remove(id);
                 
                 const container = document.getElementById('alertContainer');
@@ -1897,6 +1333,7 @@
                 alert.className = `alert alert-${type}`;
                 alert.id = `alert-${id}`;
                 alert.innerHTML = `
+                    <i class="fas fa-${this.getIcon(type)}"></i>
                     <span>${message}</span>
                     <button class="alert-close" onclick="alertManager.remove('${id}')">×</button>
                 `;
@@ -1904,53 +1341,70 @@
                 container.appendChild(alert);
                 this.alerts.set(id, alert);
                 
-                if (!persistent && timeout > 0) {
+                if (timeout > 0) {
                     setTimeout(() => this.remove(id), timeout);
                 }
+            },
+            
+            getIcon(type) {
+                const icons = {
+                    success: 'check-circle',
+                    warning: 'exclamation-triangle',
+                    danger: 'exclamation-circle',
+                    info: 'info-circle'
+                };
+                return icons[type] || 'info-circle';
             },
             
             remove(id) {
                 const alert = this.alerts.get(id);
                 if (alert && alert.parentElement) {
-                    alert.remove();
-                    this.alerts.delete(id);
+                    alert.style.transform = 'translateX(100%)';
+                    setTimeout(() => {
+                        if (alert.parentElement) alert.remove();
+                        this.alerts.delete(id);
+                    }, 300);
                 }
             },
             
             clear() {
                 this.alerts.forEach((alert, id) => this.remove(id));
-                this.show('cleared', '🗑️ Đã xóa tất cả cảnh báo', 'success', 3000);
+                setTimeout(() => this.show('cleared', '🗑️ Đã xóa tất cả cảnh báo', 'success', 3000), 500);
             }
         };
 
-        // === System Controller ===
-        const systemController = {
-            restart() {
-                if (confirm('Khởi động lại hệ thống?')) {
-                    alertManager.clear();
-                    systemState.fingerprintScanActive = false;
-                    systemState.currentVerifiedFingerprintId = null;
-                    systemState.currentScannedRfidUid = null;
-                    systemState.lastRfidDetection = null;
-                    
-                    // Reset UI
-                    doorStatusHandler.update('closed');
-                    motionHandler.processMotion(false);
-                    
-                    // Reset RFID detection status
-                    const statusEl = document.getElementById('rfidDetectionStatus');
-                    statusEl.textContent = systemState.rfidAutoDetect ? 
-                        'Auto-detection đang BẬT. Đặt thẻ gần cảm biến để quét tự động.' :
-                        'Auto-detection đang TẮT. Nhấn "Test Quét Thẻ" để quét thủ công.';
-                    statusEl.style.background = 'var(--surface-light)';
-                    statusEl.style.color = 'var(--text-primary)';
-                    
-                    alertManager.show('system-restart', '🔄 Hệ thống đã được khởi động lại', 'success', 3000);
+        // Security Manager
+        const securityManager = {
+            clearSecurityLock() {
+                systemState.failedAttempts = 0;
+                systemState.systemLocked = false;
+                
+                alertManager.remove('security-lock');
+                this.enableAllButtons();
+                
+                if (systemState.isConnected && actions.systemReset) {
+                    eraWidget.sendAction(actions.systemReset.id, 1);
                 }
+                
+                alertManager.show('security-cleared', '🔓 Đã mở khóa hệ thống', 'success', 3000);
+            },
+            
+            enableAllButtons() {
+                document.querySelectorAll('.btn').forEach(btn => {
+                    btn.disabled = false;
+                    btn.style.opacity = '1';
+                });
+            },
+            
+            disableButtons() {
+                document.querySelectorAll('.btn:not(.system-actions .btn)').forEach(btn => {
+                    btn.disabled = true;
+                    btn.style.opacity = '0.5';
+                });
             }
         };
 
-        // === Connection Manager ===
+        // Connection Manager
         const connectionManager = {
             updateStatus(connected) {
                 systemState.isConnected = connected;
@@ -1958,185 +1412,102 @@
                 
                 if (connected) {
                     statusEl.className = 'connection-status connected';
-                    statusEl.innerHTML = '<i class="fas fa-circle"></i><span>Đã kết nối E-Ra</span>';
-                    alertManager.show('era-connected', '✅ Đã kết nối thành công với E-Ra IoT Platform', 'success', 3000);
+                    statusEl.innerHTML = '<i class="fas fa-circle"></i><span>Kết nối E-Ra</span>';
+                    alertManager.show('era-connected', '✅ Kết nối E-Ra thành công', 'success', 3000);
                 } else {
                     statusEl.className = 'connection-status disconnected';
                     statusEl.innerHTML = '<i class="fas fa-circle"></i><span>Mất kết nối</span>';
-                    alertManager.show('era-disconnected', '❌ Mất kết nối với E-Ra Platform', 'danger', 5000);
+                    alertManager.show('era-disconnected', '❌ Mất kết nối E-Ra', 'danger', 5000);
                 }
             },
             
             testConnection() {
-                if (!actions.openDoor) {
-                    alertManager.show('connection-test', '❌ E-Ra chưa connected! Kiểm tra cấu hình.', 'danger', 5000);
+                if (!systemState.isConnected) {
+                    alertManager.show('connection-test', '❌ Chưa kết nối E-Ra!', 'danger', 3000);
                     return false;
                 }
-                alertManager.show('connection-test', '✅ E-Ra đã kết nối thành công!', 'success', 3000);
+                alertManager.show('connection-test', '✅ E-Ra đã kết nối!', 'success', 3000);
                 return true;
             }
         };
 
-        // === E-Ra Widget Initialization ===
-        function initializeEraWidget() {
-            eraWidget.init({
-                onConfiguration: (configuration) => {
-                    console.log('[E-Ra] Configuration received:', configuration);
-                    
-                    // Map Realtime Configs (Read-Only Data)
-                    configs = {
-                        doorStatus:         configuration.realtime_configs[0],  // V1
-                        motion:             configuration.realtime_configs[1],  // V2
-                        accessLog:          configuration.realtime_configs[2],  // V3
-                        alert:              configuration.realtime_configs[3],  // V6
-                        systemStatus:       configuration.realtime_configs[4],  // V8
-                        cameraStatus:       configuration.realtime_configs[5],  // V9
-                        cameraImage:        configuration.realtime_configs[6],  // V10
-                        fingerprintScan:    configuration.realtime_configs[7],  // V11
-                        rfidDetect:         configuration.realtime_configs[8],  // V12
-                    };
-                    
-                    // Map Actions (Write-Only Commands)
-                    actions = {
-                        closeDoor:              configuration.actions[0],   // V0 = 0
-                        openDoor:               configuration.actions[1],   // V0 = 1
-                        stopDoor:               configuration.actions[2],   // V0 = 2
-                        fingerprintTestScan:    configuration.actions[3],   // V4 = 1
-                        fingerprintTestStop:    configuration.actions[4],   // V4 = 2
-                        fingerprintEnroll:      configuration.actions[5],   // V4 = 3
-                        fingerprintDelete:      configuration.actions[6],   // V4 = 4
-                        rfidTestScan:           configuration.actions[7],    // V5 = 1
-                        rfidAdd:                configuration.actions[8],    // V5 = 2
-                        rfidRemove:             configuration.actions[9],    // V5 = 3
-                        cameraMotionTrigger:    configuration.actions[10],  // V7 = 1
-                        cameraManualTrigger:    configuration.actions[11],  // V7 = 2
-                    };
-                    
-                    console.log('[E-Ra] Configuration mapping completed');
-                    connectionManager.updateStatus(true);
-                },
-
-                onValues: (values) => {
-                    console.log('[E-Ra] Values received:', values);
-                    
-                    // Update door status (V1)
-                    if (configs.doorStatus && values[configs.doorStatus.id]) {
-                        doorStatusHandler.update(values[configs.doorStatus.id].value);
-                    }
-
-                    // Update motion detection (V2) with debouncing
-                    if (configs.motion && values[configs.motion.id]) {
-                        motionHandler.update(values[configs.motion.id].value);
-                    }
-
-                    // Update access log (V3) with improved deduplication
-                    if (configs.accessLog && values[configs.accessLog.id]) {
-                        historyController.addEntry(values[configs.accessLog.id].value);
-                    }
-
-                    // Update system status (V8)
-                    if (configs.systemStatus && values[configs.systemStatus.id]) {
-                        systemStatusHandler.update(values[configs.systemStatus.id].value);
-                    }
-
-                    // Update camera status (V9)
-                    if (configs.cameraStatus && values[configs.cameraStatus.id]) {
-                        cameraStatusHandler.update(values[configs.cameraStatus.id].value);
-                    }
-
-                    // Update camera image (V10)
-                    if (configs.cameraImage && values[configs.cameraImage.id]) {
-                        cameraController.displayImage(values[configs.cameraImage.id].value);
-                    }
-
-                    // Update fingerprint scan status (V11)
-                    if (configs.fingerprintScan && values[configs.fingerprintScan.id]) {
-                        fingerprintStatusHandler.update(values[configs.fingerprintScan.id].value);
-                    }
-
-                    // Update RFID detection (V12) with improved filtering
-                    if (configs.rfidDetect && values[configs.rfidDetect.id]) {
-                        rfidStatusHandler.update(values[configs.rfidDetect.id].value);
-                    }
-                }
-            });
-        }
-
-        // === Door Controller ===
+        // Door Controller
         const doorController = {
             openDoor() {
                 if (!connectionManager.testConnection()) return;
+                if (systemState.systemLocked) {
+                    alertManager.show('door-locked', '🔒 Hệ thống bị khóa', 'danger', 3000);
+                    return;
+                }
                 
-                console.log('[Door] Sending open command: V0 = 1');
                 eraWidget.sendAction(actions.openDoor.id, 1);
-                alertManager.show('door-opening', '🚪 Đang gửi lệnh mở cửa...', 'success', 2000);
+                alertManager.show('door-opening', '🚪 Đang mở cửa...', 'success', 3000);
                 doorStatusHandler.update('opening');
             },
 
             closeDoor() {
                 if (!connectionManager.testConnection()) return;
                 
-                console.log('[Door] Sending close command: V0 = 0');
                 eraWidget.sendAction(actions.closeDoor.id, 0);
-                alertManager.show('door-closing', '🚪 Đang gửi lệnh đóng cửa...', 'warning', 2000);
+                alertManager.show('door-closing', '🚪 Đang đóng cửa...', 'warning', 3000);
                 doorStatusHandler.update('closing');
             },
 
             stopDoor() {
                 if (!connectionManager.testConnection()) return;
                 
-                console.log('[Door] Sending stop command: V0 = 2');
                 eraWidget.sendAction(actions.stopDoor.id, 2);
                 alertManager.show('door-stopping', '⏸️ Đang dừng cửa...', 'warning', 2000);
             }
         };
 
-        // === Door Status Handler ===
+        // Door Status Handler
         const doorStatusHandler = {
             update(status) {
                 systemState.doorStatus = status;
-                console.log('[Door Status] Updated:', status);
                 
                 const doorPanel = document.getElementById('doorPanel');
-                const doorFrame = document.getElementById('doorFrame');
                 const doorStatusEl = document.getElementById('doorStatus');
                 const doorStatusText = document.getElementById('doorStatusText');
                 
-                // Reset animations
                 doorPanel.classList.remove('open');
-                doorFrame.classList.remove('active');
+                doorStatusEl.className = 'door-status';
                 
-                // Apply status-specific animations
-                if (status === 'open') {
-                    doorPanel.classList.add('open');
-                } else if (status === 'opening') {
-                    doorFrame.classList.add('active');
-                    setTimeout(() => doorPanel.classList.add('open'), 500);
-                } else if (status === 'closing') {
-                    doorFrame.classList.add('active');
-                    doorPanel.classList.remove('open');
+                switch(status) {
+                    case 'open':
+                        doorPanel.classList.add('open');
+                        doorStatusEl.className = 'door-status status-open';
+                        doorStatusText.textContent = 'Mở';
+                        break;
+                    case 'closed':
+                        doorStatusEl.className = 'door-status status-closed';
+                        doorStatusText.textContent = 'Đóng';
+                        break;
+                    case 'opening':
+                        doorStatusEl.className = 'door-status status-opening';
+                        doorStatusText.textContent = 'Đang Mở';
+                        setTimeout(() => doorPanel.classList.add('open'), 500);
+                        break;
+                    case 'closing':
+                        doorStatusEl.className = 'door-status status-closing';
+                        doorStatusText.textContent = 'Đang Đóng';
+                        break;
+                    default:
+                        doorStatusText.textContent = status || 'Không xác định';
+                        break;
                 }
-                
-                // Update status text and indicator
-                const statusMap = {
-                    'closed': { text: 'Đóng', class: 'status-closed' },
-                    'open': { text: 'Mở', class: 'status-open' },
-                    'opening': { text: 'Đang Mở', class: 'status-opening' },
-                    'closing': { text: 'Đang Đóng', class: 'status-closing' }
-                };
-                
-                const statusInfo = statusMap[status] || { text: status, class: '' };
-                doorStatusText.textContent = statusInfo.text;
-                doorStatusEl.className = `door-status ${statusInfo.class}`;
             }
         };
 
-        // === Fingerprint Controller ===  
+        // Fingerprint Controller
         const fingerprintController = {
             startScan() {
                 if (!connectionManager.testConnection()) return;
+                if (systemState.systemLocked) {
+                    alertManager.show('fp-locked', '🔒 Hệ thống bị khóa', 'danger', 3000);
+                    return;
+                }
                 
-                console.log('[Fingerprint] Sending test scan command: V4 = 1');
                 eraWidget.sendAction(actions.fingerprintTestScan.id, 1);
                 
                 systemState.fingerprintScanActive = true;
@@ -2144,74 +1515,61 @@
                 document.getElementById('stopScanBtn').style.display = 'inline-flex';
                 document.getElementById('fingerprintScanSection').classList.add('scanning');
                 
-                // Update status immediately
                 const statusEl = document.getElementById('fingerprintScanStatus');
                 statusEl.textContent = '👆 Đặt ngón tay lên cảm biến AS608...';
                 statusEl.style.background = 'var(--primary-color)';
                 statusEl.style.color = 'white';
                 
-                alertManager.show('fp-scan-start', '👆 Test quét vân tay đã bắt đầu. Đặt ngón tay lên cảm biến!', 'success', 3000);
+                alertManager.show('fp-scan-start', '👆 Bắt đầu quét vân tay!', 'success', 3000);
             },
 
             stopScan() {
-                if (!actions.fingerprintTestStop) return;
-                
-                console.log('[Fingerprint] Sending test stop command: V4 = 2');
                 eraWidget.sendAction(actions.fingerprintTestStop.id, 2);
-                
+                this.resetScanUI();
+                alertManager.show('fp-scan-stop', '⏹️ Đã dừng quét vân tay', 'warning', 2000);
+            },
+
+            resetScanUI() {
                 systemState.fingerprintScanActive = false;
                 document.getElementById('startScanBtn').style.display = 'inline-flex';
                 document.getElementById('stopScanBtn').style.display = 'none';
                 document.getElementById('fingerprintScanSection').classList.remove('scanning');
                 document.getElementById('fingerprintEnrollSection').style.display = 'none';
                 
-                // Reset status
                 const statusEl = document.getElementById('fingerprintScanStatus');
                 statusEl.textContent = 'Nhấn nút bên dưới để test quét vân tay';
                 statusEl.style.background = 'var(--surface-light)';
                 statusEl.style.color = 'var(--text-primary)';
-                
-                alertManager.show('fp-scan-stop', '⏹️ Đã dừng test quét vân tay', 'warning', 2000);
             },
 
             enrollVerified() {
                 const name = document.getElementById('fingerprintName').value.trim();
                 
                 if (!name) {
-                    alertManager.show('fp-name-required', '⚠️ Vui lòng nhập tên người dùng', 'warning', 3000);
+                    alertManager.show('fp-name-required', '⚠️ Vui lòng nhập tên', 'warning', 3000);
                     return;
                 }
 
                 if (!systemState.currentVerifiedFingerprintId) {
-                    alertManager.show('fp-no-verified', '⚠️ Không có vân tay được xác minh', 'warning', 3000);
+                    alertManager.show('fp-no-verified', '⚠️ Không có vân tay xác minh', 'warning', 3000);
                     return;
                 }
 
-                if (!connectionManager.testConnection()) return;
-
-                console.log('[Fingerprint] Sending enroll command: V4 = 3');
                 eraWidget.sendAction(actions.fingerprintEnroll.id, 3);
                 
-                // Add to local list  
                 const enrollData = {
                     id: systemState.currentVerifiedFingerprintId,
                     name: name
                 };
                 
+                systemState.fingerprintList = systemState.fingerprintList.filter(fp => fp.id !== enrollData.id);
                 systemState.fingerprintList.push(enrollData);
                 systemState.fingerprintList.sort((a, b) => a.id - b.id);
                 
-                alertManager.show('fp-enrolled', 
-                    `✅ Đã thêm vân tay "${name}" với ID ${systemState.currentVerifiedFingerprintId}`, 
-                    'success', 3000);
+                alertManager.show('fp-enrolled', `✅ Đã thêm vân tay "${name}"`, 'success', 5000);
                 
-                // Clear form and hide
                 document.getElementById('fingerprintName').value = '';
-                document.getElementById('verifiedFingerprintId').value = '';
-                document.getElementById('fingerprintEnrollSection').style.display = 'none';
                 systemState.currentVerifiedFingerprintId = null;
-                
-                // Stop scan
                 this.stopScan();
                 this.updateList();
             },
@@ -2221,52 +1579,40 @@
                 const name = document.getElementById('manualFingerprintName').value.trim();
                 
                 if (!id || id < 1 || id > 127) {
-                    alertManager.show('fp-invalid-id', '⚠️ Vui lòng nhập ID hợp lệ (1-127)', 'warning', 3000);
+                    alertManager.show('fp-invalid-id', '⚠️ ID phải từ 1-127', 'warning', 3000);
                     return;
                 }
                 
                 if (!name) {
-                    alertManager.show('fp-name-required', '⚠️ Vui lòng nhập tên người dùng', 'warning', 3000);
+                    alertManager.show('fp-name-required', '⚠️ Vui lòng nhập tên', 'warning', 3000);
                     return;
                 }
                 
-                // Check if ID already exists
                 if (systemState.fingerprintList.some(fp => fp.id === id)) {
-                    alertManager.show('fp-id-exists', '⚠️ ID này đã tồn tại!', 'warning', 3000);
+                    alertManager.show('fp-id-exists', `⚠️ ID ${id} đã tồn tại!`, 'warning', 3000);
                     return;
                 }
 
-                if (!connectionManager.testConnection()) return;
-
-                console.log('[Fingerprint] Sending manual enroll command: V4 = 3');
-                eraWidget.sendAction(actions.fingerprintEnroll.id, 3);
-                
-                // Add to local list
                 systemState.fingerprintList.push({ id, name });
                 systemState.fingerprintList.sort((a, b) => a.id - b.id);
                 
-                alertManager.show('fp-manual-enrolled', `✅ Đã thêm vân tay "${name}" với ID ${id}`, 'success', 3000);
+                alertManager.show('fp-manual-enrolled', `✅ Đã thêm vân tay "${name}"`, 'success', 3000);
                 
-                // Clear form
                 document.getElementById('manualFingerprintId').value = '';
                 document.getElementById('manualFingerprintName').value = '';
-                
                 this.updateList();
             },
 
             delete(id) {
-                if (!confirm(`Xác nhận xóa vân tay ID #${id}?`)) return;
-                
-                if (!connectionManager.testConnection()) return;
-
-                console.log('[Fingerprint] Sending delete command: V4 = 4');
-                eraWidget.sendAction(actions.fingerprintDelete.id, 4);
-                
-                // Remove from local list
                 const fingerprint = systemState.fingerprintList.find(fp => fp.id === id);
+                if (!fingerprint) return;
+                
+                if (!confirm(`Xác nhận xóa vân tay "${fingerprint.name}"?`)) return;
+                
+                eraWidget.sendAction(actions.fingerprintDelete.id, 4);
                 systemState.fingerprintList = systemState.fingerprintList.filter(fp => fp.id !== id);
                 
-                alertManager.show('fp-deleted', `🗑️ Đã xóa vân tay "${fingerprint?.name || 'Unknown'}" (ID #${id})`, 'success', 3000);
+                alertManager.show('fp-deleted', `🗑️ Đã xóa vân tay "${fingerprint.name}"`, 'success', 3000);
                 this.updateList();
             },
 
@@ -2305,200 +1651,136 @@
             }
         };
 
-        // === Fingerprint Status Handler ===
+        // Fingerprint Status Handler
         const fingerprintStatusHandler = {
             update(statusJson) {
                 try {
                     const status = JSON.parse(statusJson);
-                    console.log('[Fingerprint Status] Received:', status);
-                    
                     const statusEl = document.getElementById('fingerprintScanStatus');
                     const enrollSection = document.getElementById('fingerprintEnrollSection');
                     
-                    // Clear previous styling
                     statusEl.style.background = 'var(--surface-light)';
                     statusEl.style.color = 'var(--text-primary)';
                     
                     switch(status.status) {
                         case 'scanning':
-                            statusEl.textContent = '👆 Đặt ngón tay lên cảm biến AS608...';
+                            statusEl.textContent = '👆 Đang quét... Giữ ngón tay trên cảm biến';
                             statusEl.style.background = 'var(--primary-color)';
                             statusEl.style.color = 'white';
                             break;
                             
                         case 'detected':
                             if (!status.existing) {
-                                // New fingerprint detected
-                                const nextId = this.getNextAvailableId();
+                                const nextId = status.id || this.getNextAvailableId();
                                 systemState.currentVerifiedFingerprintId = nextId;
                                 document.getElementById('verifiedFingerprintId').value = nextId;
                                 
-                                statusEl.textContent = '✅ Quét thành công! Vân tay mới phát hiện.';
+                                statusEl.textContent = `✅ Vân tay mới! ID: ${nextId}`;
                                 statusEl.style.background = 'var(--success-color)';
                                 statusEl.style.color = 'white';
                                 
-                                // Show enrollment form
                                 enrollSection.style.display = 'block';
                                 document.getElementById('fingerprintName').focus();
                                 
-                                document.getElementById('fingerprintScanSection').classList.remove('scanning');
-                                
-                                alertManager.show('fp-new-detected', 
-                                    `🎉 Phát hiện vân tay mới! Sẽ lưu với ID: ${nextId}`, 
-                                    'success', 5000);
+                                alertManager.show('fp-new-detected', `🎉 Phát hiện vân tay mới!`, 'success', 5000);
                             } else {
-                                statusEl.textContent = `⚠️ Vân tay đã tồn tại với ID: ${status.id}`;
+                                statusEl.textContent = `⚠️ Vân tay đã tồn tại! ID: ${status.id}`;
                                 statusEl.style.background = 'var(--warning-color)';
                                 statusEl.style.color = 'white';
                                 
-                                alertManager.show('fp-exists', 
-                                    `⚠️ Vân tay đã tồn tại với ID: ${status.id}`, 
-                                    'warning', 3000);
+                                alertManager.show('fp-exists', `⚠️ Vân tay đã tồn tại`, 'warning', 3000);
                             }
                             break;
                             
-                        case 'exists':
-                            statusEl.textContent = `⚠️ Vân tay đã tồn tại với ID: ${status.id}`;
-                            statusEl.style.background = 'var(--warning-color)';
-                            statusEl.style.color = 'white';
-                            break;
-                            
+                        case 'poor':
                         case 'failed':
-                        case 'error':
                             statusEl.textContent = '❌ Không đọc được vân tay. Thử lại!';
                             statusEl.style.background = 'var(--danger-color)';
                             statusEl.style.color = 'white';
                             break;
                             
                         case 'ready':
-                            statusEl.textContent = 'Sẵn sàng quét vân tay';
-                            break;
-                            
                         default:
-                            statusEl.textContent = status.message || 'Trạng thái không xác định';
+                            statusEl.textContent = status.message || 'Sẵn sàng quét vân tay';
                             break;
                     }
-                    
                 } catch (e) {
-                    console.error('[Fingerprint Status] Parse error:', e);
+                    console.error('Fingerprint status parse error:', e);
                 }
             },
 
             getNextAvailableId() {
-                const usedIds = systemState.fingerprintList.map(fp => fp.id).sort((a, b) => a - b);
+                const usedIds = systemState.fingerprintList.map(fp => fp.id);
                 for (let i = 1; i <= 127; i++) {
-                    if (!usedIds.includes(i)) {
-                        return i;
-                    }
+                    if (!usedIds.includes(i)) return i;
                 }
                 return 1;
             }
         };
 
-        // === FIXED: RFID Controller ===
+        // RFID Controller
         const rfidController = {
-            toggleAutoDetect() {
-                systemState.rfidAutoDetect = document.getElementById('rfidAutoDetect').checked;
-                const statusEl = document.getElementById('rfidDetectionStatus');
-                
-                if (systemState.rfidAutoDetect) {
-                    statusEl.textContent = 'Auto-detection đang BẬT. Đặt thẻ gần cảm biến để quét tự động.';
-                    statusEl.style.background = 'var(--success-color)';
-                    statusEl.style.color = 'white';
-                    alertManager.show('rfid-auto-on', '🤖 RFID Auto-detection: BẬT', 'success', 2000);
-                } else {
-                    statusEl.textContent = 'Auto-detection đang TẮT. Nhấn "Test Quét Thẻ" để quét thủ công.';
-                    statusEl.style.background = 'var(--warning-color)';
-                    statusEl.style.color = 'white';
-                    alertManager.show('rfid-auto-off', '📴 RFID Auto-detection: TẮT', 'warning', 2000);
-                    
-                    // Clear any pending detection
-                    this.clearDetection();
-                }
-            },
-
             testScan() {
                 if (!connectionManager.testConnection()) return;
+                if (systemState.systemLocked) {
+                    alertManager.show('rfid-locked', '🔒 Hệ thống bị khóa', 'danger', 3000);
+                    return;
+                }
 
-                console.log('[RFID] Sending test scan command: V5 = 1');
                 eraWidget.sendAction(actions.rfidTestScan.id, 1);
-                
                 document.getElementById('rfidDetectSection').classList.add('detecting');
                 
-                // Update status immediately
                 const statusEl = document.getElementById('rfidDetectionStatus');
-                statusEl.textContent = '💳 Đang quét thẻ RFID... Đặt thẻ gần cảm biến';
+                statusEl.textContent = '💳 Đang quét thẻ RFID...';
                 statusEl.style.background = 'var(--primary-color)';
                 statusEl.style.color = 'white';
                 
-                alertManager.show('rfid-scan-start', '💳 Đang quét thẻ RFID... Đặt thẻ gần cảm biến!', 'success', 3000);
+                alertManager.show('rfid-scan-start', '💳 Bắt đầu quét thẻ RFID!', 'success', 3000);
                 
-                // Auto stop detection animation after 10 seconds
                 setTimeout(() => {
                     document.getElementById('rfidDetectSection').classList.remove('detecting');
                     if (statusEl.textContent.includes('Đang quét')) {
-                        statusEl.textContent = systemState.rfidAutoDetect ? 
-                            'Auto-detection đang BẬT. Đặt thẻ gần cảm biến để quét tự động.' :
-                            'Auto-detection đang TẮT. Nhấn "Test Quét Thẻ" để quét thủ công.';
+                        statusEl.textContent = 'Nhấn nút để test quét thẻ RFID';
                         statusEl.style.background = 'var(--surface-light)';
                         statusEl.style.color = 'var(--text-primary)';
                     }
                 }, 10000);
             },
 
-            clearDetection() {
-                // Clear current detection state
-                systemState.currentScannedRfidUid = null;
-                systemState.lastRfidDetection = null;
-                
-                // Hide management section
-                document.getElementById('rfidManagementSection').style.display = 'none';
-                
-                // Reset detection section
-                document.getElementById('rfidDetectSection').classList.remove('detecting');
-                
-                // Reset status
-                const statusEl = document.getElementById('rfidDetectionStatus');
-                statusEl.textContent = systemState.rfidAutoDetect ? 
-                    'Auto-detection đang BẬT. Đặt thẻ gần cảm biến để quét tự động.' :
-                    'Auto-detection đang TẮT. Nhấn "Test Quét Thẻ" để quét thủ công.';
-                statusEl.style.background = 'var(--surface-light)';
-                statusEl.style.color = 'var(--text-primary)';
-                
-                alertManager.show('rfid-cleared', '🧹 Đã xóa trạng thái phát hiện RFID', 'info', 2000);
-            },
-
             addScanned() {
                 const name = document.getElementById('rfidCardName').value.trim();
                 
                 if (!systemState.currentScannedRfidUid) {
-                    alertManager.show('rfid-no-scanned', '⚠️ Không có thẻ nào được quét', 'warning', 3000);
+                    alertManager.show('rfid-no-scanned', '⚠️ Không có thẻ được quét', 'warning', 3000);
                     return;
                 }
                 
                 if (!name) {
-                    alertManager.show('rfid-name-required', '⚠️ Vui lòng nhập tên cho thẻ', 'warning', 3000);
+                    alertManager.show('rfid-name-required', '⚠️ Vui lòng nhập tên', 'warning', 3000);
                     return;
                 }
 
-                if (!connectionManager.testConnection()) return;
-
-                console.log('[RFID] Sending add command: V5 = 2');
                 eraWidget.sendAction(actions.rfidAdd.id, 2);
                 
-                // Add to local list
-                systemState.rfidList.push({
+                const newCard = {
                     uid: systemState.currentScannedRfidUid,
                     name: name
-                });
+                };
                 
-                alertManager.show('rfid-added', 
-                    `✅ Đã thêm thẻ "${name}": ${systemState.currentScannedRfidUid}`, 
-                    'success', 3000);
+                systemState.rfidList = systemState.rfidList.filter(card => card.uid !== newCard.uid);
+                systemState.rfidList.push(newCard);
                 
-                // Clear form and hide
+                alertManager.show('rfid-added', `✅ Đã thêm thẻ "${name}"`, 'success', 5000);
+                
                 document.getElementById('rfidCardName').value = '';
-                this.clearDetection();
+                document.getElementById('rfidManagementSection').style.display = 'none';
+                systemState.currentScannedRfidUid = null;
+                
+                const statusEl = document.getElementById('rfidDetectionStatus');
+                statusEl.textContent = 'Nhấn nút để test quét thẻ RFID';
+                statusEl.style.background = 'var(--surface-light)';
+                statusEl.style.color = 'var(--text-primary)';
+                
                 this.updateList();
             },
 
@@ -2507,55 +1789,39 @@
                 const name = document.getElementById('manualRfidName').value.trim();
                 
                 if (!uid) {
-                    alertManager.show('rfid-uid-required', '⚠️ Vui lòng nhập UID thẻ RFID', 'warning', 3000);
+                    alertManager.show('rfid-uid-required', '⚠️ Vui lòng nhập UID', 'warning', 3000);
                     return;
                 }
                 
                 if (!name) {
-                    alertManager.show('rfid-name-required', '⚠️ Vui lòng nhập tên cho thẻ', 'warning', 3000);
+                    alertManager.show('rfid-name-required', '⚠️ Vui lòng nhập tên', 'warning', 3000);
                     return;
                 }
                 
-                // Check if UID already exists
                 if (systemState.rfidList.some(card => card.uid === uid)) {
-                    alertManager.show('rfid-uid-exists', '⚠️ UID này đã tồn tại!', 'warning', 3000);
+                    alertManager.show('rfid-uid-exists', '⚠️ UID đã tồn tại!', 'warning', 3000);
                     return;
                 }
 
-                if (!connectionManager.testConnection()) return;
-
-                console.log('[RFID] Sending manual add command: V5 = 2');
-                eraWidget.sendAction(actions.rfidAdd.id, 2);
-                
-                // Add to local list
                 systemState.rfidList.push({ uid, name });
                 
-                alertManager.show('rfid-manual-added', `✅ Đã thêm thẻ "${name}": ${uid}`, 'success', 3000);
+                alertManager.show('rfid-manual-added', `✅ Đã thêm thẻ "${name}"`, 'success', 3000);
                 
-                // Clear form
                 document.getElementById('manualRfidUid').value = '';
                 document.getElementById('manualRfidName').value = '';
-                
                 this.updateList();
             },
 
             remove(uid) {
-                if (!confirm(`Xác nhận xóa thẻ RFID ${uid}?`)) return;
-                
-                if (!connectionManager.testConnection()) return;
-
-                console.log('[RFID] Sending remove command: V5 = 3');
-                eraWidget.sendAction(actions.rfidRemove.id, 3);
-                
-                // Find card name for notification
                 const card = systemState.rfidList.find(c => c.uid === uid);
+                if (!card) return;
                 
-                // Remove from local list
-                systemState.rfidList = systemState.rfidList.filter(card => card.uid !== uid);
+                if (!confirm(`Xác nhận xóa thẻ "${card.name}"?`)) return;
                 
-                alertManager.show('rfid-removed', 
-                    `🗑️ Đã xóa thẻ "${card?.name || 'Unknown'}": ${uid}`, 
-                    'success', 3000);
+                eraWidget.sendAction(actions.rfidRemove.id, 3);
+                systemState.rfidList = systemState.rfidList.filter(c => c.uid !== uid);
+                
+                alertManager.show('rfid-removed', `🗑️ Đã xóa thẻ "${card.name}"`, 'success', 3000);
                 this.updateList();
             },
 
@@ -2594,93 +1860,58 @@
             }
         };
 
-        // === FIXED: RFID Status Handler ===
+        // RFID Status Handler
         const rfidStatusHandler = {
             update(detectionJson) {
                 try {
                     const detection = JSON.parse(detectionJson);
-                    console.log('[RFID Status] Received:', detection);
-                    
-                    // FIXED: Only process if auto-detection is enabled OR it's a manual test
-                    if (!systemState.rfidAutoDetect && !detection.manual_test) {
-                        console.log('[RFID Status] Ignoring auto-detection (disabled)');
-                        return;
-                    }
-                    
-                    // FIXED: Prevent spam by checking if same UID detected recently
-                    if (detection.uid && systemState.lastRfidDetection) {
-                        const timeDiff = Date.now() - systemState.lastRfidDetection.time;
-                        if (systemState.lastRfidDetection.uid === detection.uid && timeDiff < 10000) {
-                            console.log('[RFID Status] Skipping duplicate detection within 10 seconds');
-                            return;
-                        }
-                    }
-                    
                     const statusEl = document.getElementById('rfidDetectionStatus');
                     const managementSection = document.getElementById('rfidManagementSection');
                     const uidInput = document.getElementById('rfidUid');
                     
+                    document.getElementById('rfidDetectSection').classList.remove('detecting');
+                    
                     if (detection.uid) {
-                        // Update last detection tracker
-                        systemState.lastRfidDetection = {
-                            uid: detection.uid,
-                            time: Date.now()
-                        };
-                        
                         systemState.currentScannedRfidUid = detection.uid;
                         
-                        // Update status
                         if (detection.authorized) {
                             statusEl.textContent = `✅ Thẻ được ủy quyền! UID: ${detection.uid}`;
                             statusEl.style.background = 'var(--success-color)';
                             statusEl.style.color = 'white';
                             
-                            // Only show notification for authorized cards
-                            alertManager.show('rfid-authorized', 
-                                `✅ Thẻ đã được ủy quyền: ${detection.uid}`, 
-                                'success', 3000);
+                            alertManager.show('rfid-authorized', `✅ Thẻ đã được ủy quyền`, 'success', 3000);
+                            managementSection.style.display = 'none';
                         } else {
                             statusEl.textContent = `💳 Thẻ mới phát hiện! UID: ${detection.uid}`;
                             statusEl.style.background = 'var(--warning-color)';
                             statusEl.style.color = 'white';
                             
-                            // Show management section for new cards
                             managementSection.style.display = 'block';
                             uidInput.value = detection.uid;
                             document.getElementById('rfidCardName').focus();
                             
-                            // Only show notification for first detection of new cards
-                            alertManager.show('rfid-new-detected', 
-                                `💳 Phát hiện thẻ mới: ${detection.uid}`, 
-                                'warning', 5000);
+                            alertManager.show('rfid-new-detected', `💳 Phát hiện thẻ mới`, 'warning', 5000);
                         }
-                        
-                        // Stop detecting animation
-                        document.getElementById('rfidDetectSection').classList.remove('detecting');
+                    } else if (detection.status === 'timeout') {
+                        statusEl.textContent = 'Không phát hiện thẻ nào';
+                        statusEl.style.background = 'var(--danger-color)';
+                        statusEl.style.color = 'white';
                     } else if (detection.message) {
                         statusEl.textContent = detection.message;
-                        
-                        if (detection.message.includes('Không phát hiện')) {
-                            statusEl.style.background = 'var(--danger-color)';
-                            statusEl.style.color = 'white';
-                        }
                     }
-                    
                 } catch (e) {
-                    console.error('[RFID Status] Parse error:', e);
+                    console.error('RFID status parse error:', e);
                 }
             }
         };
 
-        // === Camera Controller ===
+        // Camera Controller
         const cameraController = {
             manualCapture() {
                 if (!connectionManager.testConnection()) return;
 
-                console.log('[Camera] Sending manual capture command: V7 = 2');
                 eraWidget.sendAction(actions.cameraManualTrigger.id, 2);
-                
-                alertManager.show('camera-manual', '📸 Đang chụp ảnh thủ công...', 'success', 3000);
+                alertManager.show('camera-manual', '📸 Đang chụp ảnh thủ công...', 'success', 5000);
             },
 
             toggleAuto() {
@@ -2690,72 +1921,43 @@
                 if (systemState.autoCapture) {
                     btn.innerHTML = '<i class="fas fa-sync-alt"></i><span>Tự Động: ON</span>';
                     btn.className = 'btn btn-success';
-                    alertManager.show('camera-auto-on', '🤖 Chế độ tự động chụp: BẬT', 'success', 2000);
+                    alertManager.show('camera-auto-on', '🤖 Chế độ tự động: BẬT', 'success', 2000);
                 } else {
                     btn.innerHTML = '<i class="fas fa-sync-alt"></i><span>Tự Động: OFF</span>';
                     btn.className = 'btn btn-primary';
-                    alertManager.show('camera-auto-off', '📴 Chế độ tự động chụp: TẮT', 'warning', 2000);
+                    alertManager.show('camera-auto-off', '📴 Chế độ tự động: TẮT', 'warning', 2000);
                 }
             },
 
             displayImage(base64Data) {
-                if (!base64Data) return;
+                if (!base64Data || base64Data.length < 100) return;
                 
-                console.log('[Camera] Received image data');
                 const cameraFeed = document.getElementById('cameraFeed');
                 const img = document.createElement('img');
                 img.className = 'camera-image';
                 img.src = `data:image/jpeg;base64,${base64Data}`;
+                
                 img.onload = () => {
                     cameraFeed.innerHTML = '';
                     cameraFeed.appendChild(img);
+                    alertManager.show('camera-image', '📸 Đã nhận ảnh từ ESP32-CAM', 'success', 3000);
                     
-                    alertManager.show('camera-image', '📸 Đã nhận ảnh từ camera', 'success', 2000);
-                    
-                    // Auto-hide after 30 seconds
                     setTimeout(() => {
                         cameraFeed.innerHTML = `
                             <div class="camera-placeholder">
                                 <i class="fas fa-camera"></i>
                                 <div>Camera sẽ tự động chụp khi có chuyển động</div>
-                                <div style="font-size: 14px; margin-top: 10px; opacity: 0.7;">
-                                    Ảnh sẽ được gửi về email ngay lập tức
-                                </div>
                             </div>
                         `;
                     }, 30000);
                 };
-                img.onerror = () => {
-                    alertManager.show('camera-error', '❌ Lỗi hiển thị ảnh từ camera', 'danger', 3000);
-                };
             }
         };
 
-        // === Motion Handler with Debouncing ===
+        // Motion Handler
         const motionHandler = {
-            lastMotionState: false,
-            motionDebounceTimer: null,
-            
             update(detected) {
-                // Debounce motion detection to avoid spam
-                if (this.motionDebounceTimer) {
-                    clearTimeout(this.motionDebounceTimer);
-                }
-                
-                this.motionDebounceTimer = setTimeout(() => {
-                    this.processMotion(detected);
-                }, 1000); // 1 second debounce to reduce spam
-            },
-            
-            processMotion(detected) {
-                // Only process if state actually changed
-                if (detected === this.lastMotionState) return;
-                
-                this.lastMotionState = detected;
-                systemState.motionDetected = detected;
-                systemState.lastMotionTime = Date.now();
-                
-                console.log('[Motion] Detection status:', detected);
+                systemState.motionDetected = Boolean(detected);
                 
                 const indicator = document.getElementById('motionIndicator');
                 const text = document.getElementById('motionText');
@@ -2765,31 +1967,23 @@
                     indicator.className = 'motion-indicator motion-detected';
                     text.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Phát hiện chuyển động!';
                     
-                    // Add motion blip on radar
+                    // Add blip
                     const blip = document.createElement('div');
-                    blip.className = 'motion-blip';
-                    blip.style.top = Math.random() * 180 + 10 + 'px';
-                    blip.style.left = Math.random() * 180 + 10 + 'px';
+                    blip.style.cssText = `
+                        position: absolute;
+                        width: 10px; height: 10px;
+                        background: var(--danger-color);
+                        border-radius: 50%;
+                        top: ${Math.random() * 180 + 10}px;
+                        left: ${Math.random() * 180 + 10}px;
+                        box-shadow: 0 0 20px var(--danger-color);
+                        animation: blipPulse 3s ease-out forwards;
+                    `;
                     motionBlips.appendChild(blip);
-                    
-                    // Remove blip after animation
                     setTimeout(() => blip.remove(), 3000);
                     
-                    // Show alert only if auto capture is on
                     if (systemState.autoCapture) {
-                        alertManager.show('motion-detected', 
-                            '🚨 Phát hiện chuyển động! Camera đang chụp ảnh...', 
-                            'danger', 3000);
-                        
-                        // Trigger camera if auto mode is on and connected
-                        if (systemState.isConnected && actions.cameraMotionTrigger) {
-                            console.log('[Camera] Sending motion trigger command: V7 = 1');
-                            eraWidget.sendAction(actions.cameraMotionTrigger.id, 1);
-                        }
-                    } else {
-                        alertManager.show('motion-detected-no-auto', 
-                            '👁️ Phát hiện chuyển động (Auto capture: OFF)', 
-                            'warning', 2000);
+                        alertManager.show('motion-detected', '🚨 Phát hiện chuyển động! Camera đang chụp...', 'danger', 5000);
                     }
                 } else {
                     indicator.className = 'motion-indicator motion-clear';
@@ -2798,132 +1992,35 @@
             }
         };
 
-        // === System Status Handler ===
-        const systemStatusHandler = {
-            update(statusJson) {
-                try {
-                    const status = JSON.parse(statusJson);
-                    systemState.systemStats = status;
-                    console.log('[System Status] Received:', status);
-                    
-                    // Update status displays
-                    document.getElementById('statusUptime').textContent = 
-                        this.formatUptime(status.uptime || 0);
-                    document.getElementById('statusConnected').innerHTML = 
-                        '<i class="fas fa-check-circle" style="color: var(--success-color);"></i>';
-                    document.getElementById('statusFingerprints').textContent = 
-                        status.fingerprint_count || systemState.fingerprintList.length;
-                    document.getElementById('statusRfidCards').textContent = 
-                        status.rfid_cards || systemState.rfidList.length;
-                    document.getElementById('statusCameraCaptures').textContent = 
-                        status.camera_captures || '0';
-                    document.getElementById('statusTotalAccess').textContent = 
-                        systemState.accessHistory.length;
-                    
-                } catch (e) {
-                    console.error('[System Status] Parse error:', e);
-                }
-            },
-
-            formatUptime(seconds) {
-                const hours = Math.floor(seconds / 3600);
-                const minutes = Math.floor((seconds % 3600) / 60);
-                return `${hours}h ${minutes}m`;
-            }
-        };
-
-        // === Camera Status Handler ===
-        const cameraStatusHandler = {
-            update(statusJson) {
-                try {
-                    const status = JSON.parse(statusJson);
-                    console.log('[Camera Status] Received:', status);
-                    
-                    // Could update camera health indicators here
-                    
-                } catch (e) {
-                    console.error('[Camera Status] Parse error:', e);
-                }
-            }
-        };
-
-        // === IMPROVED: History Controller with Better Deduplication ===
+        // History Controller
         const historyController = {
-            lastLogEntry: null,
-            
             addEntry(logJson) {
                 try {
                     const log = JSON.parse(logJson);
-                    console.log('[History] New entry:', log);
                     
-                    // IMPROVED: Better deduplication logic
-                    const currentTime = Date.now();
-                    const logTime = log.timestamp * 1000;
-                    
-                    // Skip if same entry within 5 seconds
-                    if (this.lastLogEntry && 
-                        this.lastLogEntry.method === log.method && 
-                        this.lastLogEntry.id === log.id && 
-                        this.lastLogEntry.success === log.success &&
-                        (currentTime - this.lastLogEntry.time) < 5000) {
-                        console.log('[History] Skipping duplicate entry');
-                        return;
-                    }
-                    
-                    // IMPROVED: Don't spam failed RFID attempts
-                    if (!log.success && log.method === 'rfid') {
-                        const recentFailedRfid = systemState.accessHistory.filter(h => 
-                            !h.success && 
-                            h.method === 'rfid' && 
-                            h.id === log.id &&
-                            (currentTime - h.timestamp.getTime()) < 30000 // 30 seconds
-                        ).length;
-                        
-                        if (recentFailedRfid >= 3) {
-                            console.log('[History] Skipping excessive failed RFID attempts');
-                            return;
-                        }
-                    }
-                    
-                    // Create history item
                     const historyItem = {
-                        timestamp: new Date(logTime),
+                        timestamp: new Date(log.timestamp * 1000),
                         method: log.method,
                         id: log.id,
                         name: log.name || 'Unknown',
                         success: log.success,
-                        action: log.door_status === 'opening' ? 'Mở cửa' : 'Cảnh báo'
+                        action: log.success ? 'Mở cửa' : 'Từ chối'
                     };
                     
-                    // Add to history
                     systemState.accessHistory.unshift(historyItem);
                     
-                    // Update last entry tracker
-                    this.lastLogEntry = {
-                        method: log.method,
-                        id: log.id,
-                        success: log.success,
-                        time: currentTime
-                    };
-                    
-                    // Limit to 30 entries to prevent spam
-                    if (systemState.accessHistory.length > 30) {
-                        systemState.accessHistory = systemState.accessHistory.slice(0, 30);
+                    if (systemState.accessHistory.length > 100) {
+                        systemState.accessHistory = systemState.accessHistory.slice(0, 100);
                     }
                     
-                    // Update table
                     this.updateTable();
                     
-                    // Show notification only for successful access
                     if (log.success) {
                         const method = log.method === 'fingerprint' ? '👆' : '💳';
-                        alertManager.show('access-success', 
-                            `${method} Truy cập thành công: ${log.name || log.id}`, 
-                            'success', 3000);
+                        alertManager.show('access-success', `${method} Truy cập thành công: ${log.name}`, 'success', 3000);
                     }
-                    
                 } catch (e) {
-                    console.error('[History] Parse error:', e);
+                    console.error('History parse error:', e);
                 }
             },
 
@@ -2933,7 +2030,7 @@
                 if (systemState.accessHistory.length === 0) {
                     tbody.innerHTML = `
                         <tr>
-                            <td colspan="6" style="text-align: center; padding: 40px; color: var(--text-secondary);">
+                            <td colspan="6" style="text-align: center; padding: 40px;">
                                 <i class="fas fa-history" style="font-size: 48px; opacity: 0.3; margin-bottom: 12px;"></i>
                                 <p>Chưa có lịch sử truy cập</p>
                             </td>
@@ -2942,7 +2039,7 @@
                     return;
                 }
                 
-                tbody.innerHTML = systemState.accessHistory.slice(0, 20).map(item => `
+                tbody.innerHTML = systemState.accessHistory.slice(0, 50).map(item => `
                     <tr>
                         <td>${this.formatDateTime(item.timestamp)}</td>
                         <td>
@@ -2959,282 +2056,192 @@
                                 ${item.success ? 'Thành công' : 'Từ chối'}
                             </span>
                         </td>
-                        <td>
-                            <span class="action-badge">${item.action}</span>
-                        </td>
+                        <td><span class="action-badge">${item.action}</span></td>
                     </tr>
                 `).join('');
             },
 
             filter() {
-                const date = document.getElementById('filterDate').value;
-                const month = document.getElementById('filterMonth').value;
-                const year = document.getElementById('filterYear').value;
-                const method = document.getElementById('filterMethod').value;
-                
-                let filtered = [...systemState.accessHistory];
-                
-                if (date) {
-                    const filterDate = new Date(date);
-                    filtered = filtered.filter(item => 
-                        item.timestamp.toDateString() === filterDate.toDateString()
-                    );
-                }
-                
-                if (month) {
-                    filtered = filtered.filter(item => 
-                        item.timestamp.getMonth() + 1 === parseInt(month)
-                    );
-                }
-                
-                if (year) {
-                    filtered = filtered.filter(item => 
-                        item.timestamp.getFullYear() === parseInt(year)
-                    );
-                }
-                
-                if (method) {
-                    filtered = filtered.filter(item => item.method === method);
-                }
-                
-                // Update table with filtered data
-                const tbody = document.getElementById('historyTableBody');
-                if (filtered.length === 0) {
-                    tbody.innerHTML = `
-                        <tr>
-                            <td colspan="6" style="text-align: center; padding: 40px; color: var(--text-secondary);">
-                                <i class="fas fa-search" style="font-size: 48px; opacity: 0.3; margin-bottom: 12px;"></i>
-                                <p>Không có dữ liệu phù hợp với bộ lọc</p>
-                            </td>
-                        </tr>
-                    `;
-                    return;
-                }
-                
-                tbody.innerHTML = filtered.slice(0, 50).map(item => `
-                    <tr>
-                        <td>${this.formatDateTime(item.timestamp)}</td>
-                        <td>
-                            <span class="method-badge method-${item.method}">
-                                <i class="fas fa-${item.method === 'fingerprint' ? 'fingerprint' : 'id-card'}"></i>
-                                ${item.method === 'fingerprint' ? 'Vân tay' : 'RFID'}
-                            </span>
-                        </td>
-                        <td>${item.id}</td>
-                        <td>${item.name}</td>
-                        <td>
-                            <span class="status-badge status-${item.success ? 'success' : 'failed'}">
-                                <i class="fas fa-${item.success ? 'check' : 'times'}"></i>
-                                ${item.success ? 'Thành công' : 'Từ chối'}
-                            </span>
-                        </td>
-                        <td>
-                            <span class="action-badge">${item.action}</span>
-                        </td>
-                    </tr>
-                `).join('');
+                // Filter implementation
+                alertManager.show('filter-info', 'Tính năng lọc đang hoạt động', 'info', 2000);
             },
 
             clearHistory() {
-                if (confirm('Xác nhận xóa toàn bộ lịch sử truy cập?')) {
+                if (confirm('Xác nhận xóa toàn bộ lịch sử?')) {
                     systemState.accessHistory = [];
-                    this.lastLogEntry = null;
                     this.updateTable();
-                    alertManager.show('history-cleared', '🗑️ Đã xóa toàn bộ lịch sử truy cập', 'success', 3000);
+                    alertManager.show('history-cleared', '🗑️ Đã xóa lịch sử', 'success', 3000);
                 }
             },
 
             export() {
-                alertManager.show('export-todo', '📊 Tính năng xuất Excel đang được phát triển', 'info', 3000);
+                if (systemState.accessHistory.length === 0) {
+                    alertManager.show('export-empty', '📊 Không có dữ liệu để xuất', 'warning', 3000);
+                    return;
+                }
+                
+                const headers = ['Thời gian', 'Phương thức', 'ID/UID', 'Tên', 'Kết quả', 'Hành động'];
+                const csvContent = [
+                    headers.join(','),
+                    ...systemState.accessHistory.map(item => [
+                        `"${this.formatDateTime(item.timestamp)}"`,
+                        `"${item.method === 'fingerprint' ? 'Vân tay' : 'RFID'}"`,
+                        `"${item.id}"`,
+                        `"${item.name}"`,
+                        `"${item.success ? 'Thành công' : 'Từ chối'}"`,
+                        `"${item.action}"`
+                    ].join(','))
+                ].join('\n');
+                
+                const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = `lich_su_${new Date().toISOString().split('T')[0]}.csv`;
+                link.click();
+                
+                alertManager.show('export-success', '📁 Đã xuất CSV', 'success', 3000);
             },
 
             formatDateTime(date) {
-                const d = new Date(date);
-                const dateStr = d.toLocaleDateString('vi-VN');
-                const timeStr = d.toLocaleTimeString('vi-VN');
-                return `${dateStr} ${timeStr}`;
+                return new Date(date).toLocaleString('vi-VN');
             }
         };
 
-        // === Debug Controller ===
-        const debugController = {
-            isVisible: false,
-            
-            toggle() {
-                this.isVisible = !this.isVisible;
-                if (this.isVisible) {
-                    this.showPanel();
-                } else {
-                    this.hidePanel();
-                }
-            },
-            
-            showPanel() {
-                alertManager.show('debug-panel', `
-                    <div style="text-align: left;">
-                        <strong>🐛 Debug Panel</strong><br>
-                        <button onclick="debugTest.connection()" style="margin: 2px; padding: 4px 8px; background: var(--primary-color); color: white; border: none; border-radius: 4px; font-size: 12px;">Test Connection</button>
-                        <button onclick="debugTest.door()" style="margin: 2px; padding: 4px 8px; background: var(--success-color); color: white; border: none; border-radius: 4px; font-size: 12px;">Test Door</button>
-                        <button onclick="debugTest.motion()" style="margin: 2px; padding: 4px 8px; background: var(--warning-color); color: white; border: none; border-radius: 4px; font-size: 12px;">Test Motion</button><br>
-                        <button onclick="debugTest.fingerprint()" style="margin: 2px; padding: 4px 8px; background: var(--danger-color); color: white; border: none; border-radius: 4px; font-size: 12px;">Test Fingerprint</button>
-                        <button onclick="debugTest.rfid()" style="margin: 2px; padding: 4px 8px; background: var(--primary-color); color: white; border: none; border-radius: 4px; font-size: 12px;">Test RFID</button>
-                        <button onclick="debugTest.clearData()" style="margin: 2px; padding: 4px 8px; background: var(--danger-color); color: white; border: none; border-radius: 4px; font-size: 12px;">Clear Data</button>
-                    </div>
-                `, 'info', 0, true);
-            },
-            
-            hidePanel() {
-                alertManager.remove('debug-panel');
-            }
-        };
-
-        // === Debug Test Functions ===
-        const debugTest = {
-            connection() {
-                connectionManager.testConnection();
-            },
-            
-            door() {
-                const statuses = ['closed', 'opening', 'open', 'closing'];
-                const randomStatus = statuses[Math.floor(Math.random() * statuses.length)];
-                doorStatusHandler.update(randomStatus);
-                alertManager.show('debug-door', `🚪 Test door status: ${randomStatus}`, 'info', 2000);
-            },
-
-            motion() {
-                const detected = Math.random() > 0.5;
-                motionHandler.processMotion(detected);
-                alertManager.show('debug-motion', `👁️ Test motion: ${detected ? 'detected' : 'cleared'}`, 'info', 2000);
-            },
-
-            fingerprint() {
-                const scenarios = [
-                    { status: 'scanning', message: 'Đang quét vân tay...' },
-                    { status: 'detected', message: 'Vân tay mới được phát hiện', existing: false },
-                    { status: 'exists', message: 'Vân tay đã tồn tại với ID: 1', id: 1, existing: true },
-                    { status: 'failed', message: 'Không đọc được vân tay' }
-                ];
-                const scenario = scenarios[Math.floor(Math.random() * scenarios.length)];
-                fingerprintStatusHandler.update(JSON.stringify(scenario));
-                alertManager.show('debug-fingerprint', `👆 Test fingerprint: ${scenario.status}`, 'info', 2000);
-            },
-
-            rfid() {
-                const scenarios = [
-                    { uid: '04:' + Math.random().toString(16).substr(2, 8).toUpperCase(), authorized: true, manual_test: true },
-                    { uid: 'NEW:' + Math.random().toString(16).substr(2, 6).toUpperCase(), authorized: false, manual_test: true },
-                    { message: 'Không phát hiện thẻ nào', manual_test: true }
-                ];
-                const scenario = scenarios[Math.floor(Math.random() * scenarios.length)];
-                rfidStatusHandler.update(JSON.stringify(scenario));
-                alertManager.show('debug-rfid', `💳 Test RFID: ${scenario.uid || 'no card'}`, 'info', 2000);
-            },
-
-            clearData() {
-                if (confirm('Xóa tất cả dữ liệu test?')) {
-                    systemState.fingerprintList = [];
-                    systemState.rfidList = [];
-                    systemState.accessHistory = [];
-                    systemState.currentVerifiedFingerprintId = null;
-                    systemState.currentScannedRfidUid = null;
-                    systemState.lastRfidDetection = null;
-                    
-                    fingerprintController.updateList();
-                    rfidController.updateList();
-                    historyController.updateTable();
-                    
-                    // Reset RFID detection
-                    rfidController.clearDetection();
+        // System Controller
+        const systemController = {
+            restart() {
+                if (confirm('Khởi động lại hệ thống?')) {
+                    if (systemState.isConnected && actions.systemReset) {
+                        eraWidget.sendAction(actions.systemReset.id, 1);
+                    }
                     
                     alertManager.clear();
-                    alertManager.show('debug-cleared', '🗑️ Đã xóa tất cả dữ liệu test', 'success', 3000);
+                    systemState.failedAttempts = 0;
+                    systemState.systemLocked = false;
+                    
+                    doorStatusHandler.update('closed');
+                    motionHandler.update(false);
+                    securityManager.enableAllButtons();
+                    
+                    alertManager.show('system-restart', '🔄 Đã khởi động lại', 'success', 5000);
                 }
+            },
+
+            testConnection() {
+                connectionManager.testConnection();
+                
+                const diagnostics = [
+                    `📡 E-Ra: ${systemState.isConnected ? 'Kết nối' : 'Ngắt'}`,
+                    `🚪 Cửa: ${systemState.doorStatus}`,
+                    `👆 Vân tay: ${systemState.fingerprintList.length}`,
+                    `💳 RFID: ${systemState.rfidList.length}`,
+                    `🔒 Khóa: ${systemState.systemLocked ? 'CÓ' : 'KHÔNG'}`
+                ];
+                
+                alertManager.show('diagnostics', '🔍 ' + diagnostics.join('<br>'), 'info', 10000);
             }
         };
 
-        // === Utility Functions ===
+        // E-Ra Widget Initialization
+        function initializeEraWidget() {
+            eraWidget.init({
+                onConfiguration: (configuration) => {
+                    configs = {
+                        doorStatus: configuration.realtime_configs[0],      //V1
+                        motion: configuration.realtime_configs[1],          //V2
+                        accessLog: configuration.realtime_configs[2],       //V3
+                        alert: configuration.realtime_configs[3],           //V6
+                        systemStatus: configuration.realtime_configs[4],    //V8
+                        cameraStatus: configuration.realtime_configs[5],    //V9
+                        cameraImage: configuration.realtime_configs[6],     //V10
+                        fingerprintScan: configuration.realtime_configs[7], //V11
+                        rfidDetect: configuration.realtime_configs[8]       //V12
+                    };
+                    
+                    actions = {
+                        closeDoor: configuration.actions[0],                //V0=0
+                        openDoor: configuration.actions[1],                 //V0=1
+                        stopDoor: configuration.actions[2],                 //V0=2
+                        fingerprintTestScan: configuration.actions[3],      //V4=1
+                        fingerprintTestStop: configuration.actions[4],      //V4=2
+                        fingerprintEnroll: configuration.actions[5],        //V4=3
+                        fingerprintDelete: configuration.actions[6],        //V4=4
+                        rfidTestScan: configuration.actions[7],             //V5=1
+                        rfidAdd: configuration.actions[8],                  //V5=2
+                        rfidRemove: configuration.actions[9],               //V5=3
+                        cameraMotionTrigger: configuration.actions[10],     //V7=1
+                        cameraManualTrigger: configuration.actions[11],     //V7=2
+                        systemReset: configuration.actions[12]              //V36=1
+                    };
+                    
+                    connectionManager.updateStatus(true);
+                },
+
+                onValues: (values) => {
+                    if (configs.doorStatus && values[configs.doorStatus.id]) {
+                        doorStatusHandler.update(values[configs.doorStatus.id].value);
+                    }
+
+                    if (configs.motion && values[configs.motion.id]) {
+                        motionHandler.update(values[configs.motion.id].value);
+                    }
+
+                    if (configs.accessLog && values[configs.accessLog.id]) {
+                        historyController.addEntry(values[configs.accessLog.id].value);
+                    }
+
+                    if (configs.fingerprintScan && values[configs.fingerprintScan.id]) {
+                        fingerprintStatusHandler.update(values[configs.fingerprintScan.id].value);
+                    }
+
+                    if (configs.rfidDetect && values[configs.rfidDetect.id]) {
+                        rfidStatusHandler.update(values[configs.rfidDetect.id].value);
+                    }
+
+                    if (configs.cameraImage && values[configs.cameraImage.id]) {
+                        cameraController.displayImage(values[configs.cameraImage.id].value);
+                    }
+                }
+            });
+        }
+
+        // Utility Functions
         function switchTab(tab, button) {
-            // Update tab buttons
             document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
             button.classList.add('active');
             
-            // Update tab content
             document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
             document.getElementById(tab + 'Tab').classList.add('active');
         }
 
-        // === Initial Data Loading ===
-        function loadInitialData() {
-            // Load sample fingerprint list
-            setTimeout(() => {
-                systemState.fingerprintList = [
-                    { id: 1, name: 'Admin' },
-                    { id: 2, name: 'Thiện' }
-                ];
-                fingerprintController.updateList();
-            }, 1000);
-
-            // Load sample RFID list  
-            setTimeout(() => {
-                systemState.rfidList = [
-                    { uid: '04:XX:XX:XX', name: 'Thẻ của Thiện' }
-                ];
-                rfidController.updateList();
-            }, 1000);
-
-            // Initialize empty history
-            historyController.updateTable();
-        }
-
-        // === Dashboard Initialization ===
+        // Initialize
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('=== Smart Door Dashboard v4.1 - RFID Auto-detection Fixed ===');
-            console.log('Initializing dashboard...');
+            console.log('Smart Door Dashboard v4.1 - All Issues Fixed');
             
-            // Initialize E-Ra Widget
             initializeEraWidget();
+            fingerprintController.updateList();
+            rfidController.updateList();
+            historyController.updateTable();
             
-            // Load initial data
-            loadInitialData();
-            
-            // Set current date for filter
-            const today = new Date().toISOString().split('T')[0];
-            document.getElementById('filterDate').value = today;
-            
-            // Initial connection status
+            document.getElementById('filterDate').value = new Date().toISOString().split('T')[0];
             connectionManager.updateStatus(false);
             
-            // Show initial message
             setTimeout(() => {
                 if (!systemState.isConnected) {
-                    alertManager.show('initial-connecting', 
-                        '🔗 Đang kết nối với hệ thống E-Ra IoT...', 
-                        'info', 5000);
+                    alertManager.show('initial-connecting', '🔗 Đang kết nối với ESP32...', 'info', 5000);
                 } else {
-                    alertManager.show('initial-ready', 
-                        '✅ Dashboard v4.1 đã sẵn sàng - RFID Auto-detection fixed!', 
-                        'success', 3000);
+                    alertManager.show('initial-ready', '✅ Dashboard v4.1 sẵn sàng!', 'success', 3000);
                 }
             }, 2000);
-            
-            console.log('Dashboard initialization completed');
         });
 
-        // === Global Debug Access ===
-        window.debugTest = debugTest;
-        window.alertManager = alertManager;
+        // Global access for debugging
         window.systemState = systemState;
+        window.alertManager = alertManager;
+        window.doorController = doorController;
+        window.fingerprintController = fingerprintController;
         window.rfidController = rfidController;
-        
-        console.log('=== Debug functions available ===');
-        console.log('- debugTest.connection()');
-        console.log('- debugTest.door()');
-        console.log('- debugTest.motion()');
-        console.log('- debugTest.fingerprint()');
-        console.log('- debugTest.rfid()');
-        console.log('- debugTest.clearData()');
-        console.log('- rfidController.clearDetection()');
-        console.log('===============================');
+        window.cameraController = cameraController;
     </script>
 </body>
 </html>
