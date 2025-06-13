@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Smart Door Security Dashboard v4.0 - Fixed</title>
+    <title>Smart Door Security Dashboard v4.1 - No Auto Lock</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
@@ -52,7 +52,7 @@
             position: relative;
         }
 
-        /* FIXED: Alert Container Positioning */
+        /* Alert Container - Fixed positioning */
         #alertContainer {
             position: fixed;
             top: 20px;
@@ -598,7 +598,13 @@
         .section-header {
             display: flex;
             align-items: center;
+            justify-content: space-between;
             margin-bottom: 16px;
+        }
+
+        .section-header .section-title {
+            display: flex;
+            align-items: center;
             gap: 12px;
         }
 
@@ -610,6 +616,55 @@
         .section-header strong {
             font-size: 1.1rem;
             color: var(--text-primary);
+        }
+
+        /* Toggle Switch for Auto Detection */
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 32px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: var(--surface-light);
+            border: 2px solid var(--border);
+            transition: .4s;
+            border-radius: 32px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 20px;
+            width: 20px;
+            left: 4px;
+            bottom: 4px;
+            background-color: var(--text-secondary);
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(28px);
+            background-color: white;
         }
 
         /* Input Fields */
@@ -1252,7 +1307,7 @@
             background: rgba(255, 255, 255, 0.1);
         }
 
-        /* Action Buttons in System Status */
+        /* System Action Buttons */
         .system-actions {
             margin-top: 24px;
             display: flex;
@@ -1337,72 +1392,10 @@
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
-
-        /* Tooltips */
-        .tooltip {
-            position: relative;
-            cursor: help;
-        }
-
-        .tooltip::after {
-            content: attr(data-tooltip);
-            position: absolute;
-            bottom: 100%;
-            left: 50%;
-            transform: translateX(-50%);
-            background: var(--surface-light);
-            color: var(--text-primary);
-            padding: 8px 12px;
-            border-radius: 8px;
-            font-size: 13px;
-            white-space: nowrap;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity var(--animation-duration) ease;
-            box-shadow: var(--shadow-md);
-            z-index: 1000;
-        }
-
-        .tooltip:hover::after {
-            opacity: 1;
-        }
-
-        /* Debug Panel */
-        .debug-panel {
-            position: fixed;
-            bottom: 20px;
-            left: 20px;
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 16px;
-            z-index: 1000;
-            display: none;
-        }
-
-        .debug-panel.show {
-            display: block;
-        }
-
-        .debug-panel h4 {
-            margin-bottom: 12px;
-            color: var(--primary-color);
-        }
-
-        .debug-button {
-            background: var(--gradient-primary);
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 8px;
-            cursor: pointer;
-            margin: 4px;
-            font-size: 12px;
-        }
     </style>
 </head>
 <body>
-    <!-- Alert Container - Fixed positioning -->
+    <!-- Alert Container -->
     <div id="alertContainer"></div>
 
     <!-- Connection Status Indicator -->
@@ -1413,8 +1406,8 @@
 
     <div class="dashboard-container">
         <div class="dashboard-header">
-            <h1><i class="fas fa-door-open"></i> Smart Door Security v4.0</h1>
-            <p>Hệ thống cửa thông minh với AI & IoT - E-Ra Platform Integration - All Issues Fixed</p>
+            <h1><i class="fas fa-door-open"></i> Smart Door Security v4.1</h1>
+            <p>Hệ thống cửa thông minh - Fixed RFID Auto-detection & Removed Auto-lock</p>
         </div>
 
         <div class="dashboard-grid">
@@ -1439,15 +1432,15 @@
                 </div>
                 
                 <div class="control-buttons">
-                    <button class="btn btn-success" id="openDoorBtn" onclick="doorController.openDoor()">
+                    <button class="btn btn-success" onclick="doorController.openDoor()">
                         <i class="fas fa-unlock"></i>
                         <span>Mở Cửa</span>
                     </button>
-                    <button class="btn btn-danger" id="closeDoorBtn" onclick="doorController.closeDoor()">
+                    <button class="btn btn-danger" onclick="doorController.closeDoor()">
                         <i class="fas fa-lock"></i>
                         <span>Đóng Cửa</span>
                     </button>
-                    <button class="btn btn-warning" id="stopDoorBtn" onclick="doorController.stopDoor()">
+                    <button class="btn btn-warning" onclick="doorController.stopDoor()">
                         <i class="fas fa-pause"></i>
                         <span>Dừng</span>
                     </button>
@@ -1477,8 +1470,10 @@
                     <!-- Test Fingerprint Section -->
                     <div class="section">
                         <div class="section-header">
-                            <i class="fas fa-fingerprint"></i>
-                            <strong>Test quét vân tay</strong>
+                            <div class="section-title">
+                                <i class="fas fa-fingerprint"></i>
+                                <strong>Test quét vân tay</strong>
+                            </div>
                         </div>
                         
                         <div class="scan-section" id="fingerprintScanSection">
@@ -1526,8 +1521,10 @@
                     <!-- Manual Fingerprint Add Section -->
                     <div class="section">
                         <div class="section-header">
-                            <i class="fas fa-plus-circle"></i>
-                            <strong>Thêm vân tay thủ công</strong>
+                            <div class="section-title">
+                                <i class="fas fa-plus-circle"></i>
+                                <strong>Thêm vân tay thủ công</strong>
+                            </div>
                         </div>
                         
                         <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 12px;">
@@ -1567,18 +1564,32 @@
                     <!-- RFID Auto-Detect Section -->
                     <div class="section">
                         <div class="section-header">
-                            <i class="fas fa-wifi"></i>
-                            <strong>Quét thẻ RFID</strong>
+                            <div class="section-title">
+                                <i class="fas fa-wifi"></i>
+                                <strong>Quét thẻ RFID</strong>
+                            </div>
+                            <div>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="rfidAutoDetect" checked onchange="rfidController.toggleAutoDetect()">
+                                    <span class="slider"></span>
+                                </label>
+                                <span style="margin-left: 8px; font-size: 12px; color: var(--text-secondary);">Auto</span>
+                            </div>
                         </div>
                         
                         <div class="detect-section" id="rfidDetectSection">
                             <div class="rfid-status" id="rfidDetectionStatus">
-                                Nhấn nút để test quét thẻ RFID
+                                Auto-detection đang BẬT. Đặt thẻ gần cảm biến để quét tự động.
                             </div>
                             
                             <button class="btn btn-primary" onclick="rfidController.testScan()" style="width: 100%; margin-top: 12px;">
                                 <i class="fas fa-id-card"></i>
                                 <span>Test Quét Thẻ</span>
+                            </button>
+                            
+                            <button class="btn btn-warning" onclick="rfidController.clearDetection()" style="width: 100%; margin-top: 8px;">
+                                <i class="fas fa-times"></i>
+                                <span>Clear Detection</span>
                             </button>
                         </div>
 
@@ -1610,8 +1621,10 @@
                     <!-- Manual RFID Add Section -->
                     <div class="section">
                         <div class="section-header">
-                            <i class="fas fa-plus-circle"></i>
-                            <strong>Thêm thẻ RFID thủ công</strong>
+                            <div class="section-title">
+                                <i class="fas fa-plus-circle"></i>
+                                <strong>Thêm thẻ RFID thủ công</strong>
+                            </div>
                         </div>
                         
                         <input type="text" class="input-field" id="manualRfidUid" 
@@ -1645,7 +1658,7 @@
                 </div>
             </div>
 
-            <!-- Camera Section with Security Radar -->
+            <!-- Camera Section -->
             <div class="card camera-section">
                 <div class="card-header">
                     <div class="card-icon"><i class="fas fa-video"></i></div>
@@ -1683,7 +1696,7 @@
                 </div>
 
                 <div class="control-buttons">
-                    <button class="btn btn-primary" id="manualCaptureBtn" onclick="cameraController.manualCapture()">
+                    <button class="btn btn-primary" onclick="cameraController.manualCapture()">
                         <i class="fas fa-camera"></i>
                         <span>Chụp Thủ Công</span>
                     </button>
@@ -1814,17 +1827,13 @@
                     <div class="status-label">Ảnh đã chụp</div>
                 </div>
                 <div class="status-item">
-                    <div class="status-value" id="statusFailedAttempts">--</div>
-                    <div class="status-label">Lần thử sai</div>
+                    <div class="status-value" id="statusTotalAccess">--</div>
+                    <div class="status-label">Tổng lượt truy cập</div>
                 </div>
             </div>
 
             <!-- System Action Buttons -->
             <div class="system-actions">
-                <button class="btn btn-success" onclick="securityManager.clearSecurityLock()">
-                    <i class="fas fa-unlock"></i>
-                    <span>Mở khóa hệ thống</span>
-                </button>
                 <button class="btn btn-warning" onclick="alertManager.clear()">
                     <i class="fas fa-times-circle"></i>
                     <span>Xóa tất cả cảnh báo</span>
@@ -1833,24 +1842,12 @@
                     <i class="fas fa-sync-alt"></i>
                     <span>Khởi động lại</span>
                 </button>
-                <button class="btn btn-danger" onclick="debugPanel.toggle()" data-tooltip="Toggle debug panel">
+                <button class="btn btn-danger" onclick="debugController.toggle()">
                     <i class="fas fa-bug"></i>
-                    <span>Debug</span>
+                    <span>Debug Panel</span>
                 </button>
             </div>
         </div>
-    </div>
-
-    <!-- Debug Panel -->
-    <div class="debug-panel" id="debugPanel">
-        <h4><i class="fas fa-bug"></i> Debug & Test Panel</h4>
-        <button class="debug-button" onclick="debugTest.connection()">Test Connection</button>
-        <button class="debug-button" onclick="debugTest.door()">Test Door</button>
-        <button class="debug-button" onclick="debugTest.motion()">Test Motion</button>
-        <button class="debug-button" onclick="debugTest.fingerprint()">Test Fingerprint</button>
-        <button class="debug-button" onclick="debugTest.rfid()">Test RFID</button>
-        <button class="debug-button" onclick="debugTest.camera()">Test Camera</button>
-        <button class="debug-button" onclick="debugTest.clearData()">Clear All Data</button>
     </div>
 
     <!-- E-Ra Widget Integration -->
@@ -1858,8 +1855,8 @@
     <script>
         /**
          * ===================================
-         * E-Ra IoT Dashboard Integration v4.0
-         * Smart Door Security System - ALL ISSUES FIXED
+         * E-Ra IoT Dashboard Integration v4.1
+         * Smart Door Security System - Fixed RFID Auto-detection & Removed Auto-lock
          * ===================================
          */
 
@@ -1876,6 +1873,7 @@
             motionDetected: false,
             autoCapture: true,
             fingerprintScanActive: false,
+            rfidAutoDetect: true, // NEW: RFID auto-detection control
             currentVerifiedFingerprintId: null,
             currentScannedRfidUid: null,
             fingerprintList: [],
@@ -1883,12 +1881,11 @@
             accessHistory: [],
             systemStats: {},
             isConnected: false,
-            failedAttempts: 0,
-            systemLocked: false,
-            lastMotionTime: 0
+            lastMotionTime: 0,
+            lastRfidDetection: null // NEW: Track last RFID detection
         };
 
-        // === FIXED: Alert Manager ===
+        // === Alert Manager ===
         const alertManager = {
             alerts: new Map(),
             
@@ -1926,78 +1923,34 @@
             }
         };
 
-        // === FIXED: Security Manager ===
-        const securityManager = {
-            clearSecurityLock() {
-                systemState.failedAttempts = 0;
-                systemState.systemLocked = false;
-                
-                alertManager.remove('security-lock');
-                alertManager.remove('too-many-attempts');
-                
-                // Enable all buttons
-                this.enableAllButtons();
-                
-                alertManager.show('security-cleared', '🔓 Đã mở khóa hệ thống an ninh', 'success', 3000);
-                
-                // Send reset command to ESP32 if connected
-                if (systemState.isConnected && actions.openDoor) {
-                    // Could send a reset command here if implemented
-                }
-            },
-            
-            enableAllButtons() {
-                const buttons = document.querySelectorAll('.btn');
-                buttons.forEach(btn => {
-                    btn.disabled = false;
-                });
-            },
-            
-            disableButtons() {
-                const buttons = document.querySelectorAll('.btn:not(.system-actions .btn)');
-                buttons.forEach(btn => {
-                    btn.disabled = true;
-                });
-            },
-            
-            incrementFailedAttempts() {
-                systemState.failedAttempts++;
-                
-                if (systemState.failedAttempts >= 5) {
-                    systemState.systemLocked = true;
-                    this.disableButtons();
-                    alertManager.show('security-lock', 
-                        '🚨 CẢNH BÁO: Quá nhiều lần thử sai! Hệ thống đã bị khóa. Nhấn "Mở khóa hệ thống" để reset.',
-                        'danger', 0, true);
-                } else {
-                    alertManager.show('failed-attempt',
-                        `⚠️ Lần thử sai ${systemState.failedAttempts}/5. ${5 - systemState.failedAttempts} lần thử còn lại.`,
-                        'warning', 5000);
-                }
-            }
-        };
-
         // === System Controller ===
         const systemController = {
             restart() {
                 if (confirm('Khởi động lại hệ thống?')) {
                     alertManager.clear();
-                    systemState.failedAttempts = 0;
-                    systemState.systemLocked = false;
                     systemState.fingerprintScanActive = false;
+                    systemState.currentVerifiedFingerprintId = null;
+                    systemState.currentScannedRfidUid = null;
+                    systemState.lastRfidDetection = null;
                     
                     // Reset UI
                     doorStatusHandler.update('closed');
-                    motionHandler.update(false);
+                    motionHandler.processMotion(false);
                     
-                    securityManager.enableAllButtons();
+                    // Reset RFID detection status
+                    const statusEl = document.getElementById('rfidDetectionStatus');
+                    statusEl.textContent = systemState.rfidAutoDetect ? 
+                        'Auto-detection đang BẬT. Đặt thẻ gần cảm biến để quét tự động.' :
+                        'Auto-detection đang TẮT. Nhấn "Test Quét Thẻ" để quét thủ công.';
+                    statusEl.style.background = 'var(--surface-light)';
+                    statusEl.style.color = 'var(--text-primary)';
                     
                     alertManager.show('system-restart', '🔄 Hệ thống đã được khởi động lại', 'success', 3000);
                 }
             }
         };
 
-        // === FIXED: Connection Manager ===
+        // === Connection Manager ===
         const connectionManager = {
             updateStatus(connected) {
                 systemState.isConnected = connected;
@@ -2076,14 +2029,9 @@
                         motionHandler.update(values[configs.motion.id].value);
                     }
 
-                    // Update access log (V3) with deduplication
+                    // Update access log (V3) with improved deduplication
                     if (configs.accessLog && values[configs.accessLog.id]) {
                         historyController.addEntry(values[configs.accessLog.id].value);
-                    }
-
-                    // Update alert status (V6)
-                    if (configs.alert && values[configs.alert.id]) {
-                        alertHandler.update(values[configs.alert.id].value);
                     }
 
                     // Update system status (V8)
@@ -2101,12 +2049,12 @@
                         cameraController.displayImage(values[configs.cameraImage.id].value);
                     }
 
-                    // Update fingerprint scan status (V11) with better feedback
+                    // Update fingerprint scan status (V11)
                     if (configs.fingerprintScan && values[configs.fingerprintScan.id]) {
                         fingerprintStatusHandler.update(values[configs.fingerprintScan.id].value);
                     }
 
-                    // Update RFID auto-detect (V12)
+                    // Update RFID detection (V12) with improved filtering
                     if (configs.rfidDetect && values[configs.rfidDetect.id]) {
                         rfidStatusHandler.update(values[configs.rfidDetect.id].value);
                     }
@@ -2114,14 +2062,9 @@
             });
         }
 
-        // === FIXED: Door Controller ===
+        // === Door Controller ===
         const doorController = {
             openDoor() {
-                if (systemState.systemLocked) {
-                    alertManager.show('door-locked', '🔒 Hệ thống đã bị khóa. Không thể điều khiển cửa.', 'danger', 3000);
-                    return;
-                }
-                
                 if (!connectionManager.testConnection()) return;
                 
                 console.log('[Door] Sending open command: V0 = 1');
@@ -2131,11 +2074,6 @@
             },
 
             closeDoor() {
-                if (systemState.systemLocked) {
-                    alertManager.show('door-locked', '🔒 Hệ thống đã bị khóa. Không thể điều khiển cửa.', 'danger', 3000);
-                    return;
-                }
-                
                 if (!connectionManager.testConnection()) return;
                 
                 console.log('[Door] Sending close command: V0 = 0');
@@ -2193,14 +2131,9 @@
             }
         };
 
-        // === FIXED: Fingerprint Controller ===  
+        // === Fingerprint Controller ===  
         const fingerprintController = {
             startScan() {
-                if (systemState.systemLocked) {
-                    alertManager.show('fp-locked', '🔒 Hệ thống đã bị khóa. Không thể quét vân tay.', 'danger', 3000);
-                    return;
-                }
-                
                 if (!connectionManager.testConnection()) return;
                 
                 console.log('[Fingerprint] Sending test scan command: V4 = 1');
@@ -2372,7 +2305,7 @@
             }
         };
 
-        // === FIXED: Fingerprint Status Handler ===
+        // === Fingerprint Status Handler ===
         const fingerprintStatusHandler = {
             update(statusJson) {
                 try {
@@ -2464,12 +2397,27 @@
 
         // === FIXED: RFID Controller ===
         const rfidController = {
-            testScan() {
-                if (systemState.systemLocked) {
-                    alertManager.show('rfid-locked', '🔒 Hệ thống đã bị khóa. Không thể quét thẻ RFID.', 'danger', 3000);
-                    return;
-                }
+            toggleAutoDetect() {
+                systemState.rfidAutoDetect = document.getElementById('rfidAutoDetect').checked;
+                const statusEl = document.getElementById('rfidDetectionStatus');
                 
+                if (systemState.rfidAutoDetect) {
+                    statusEl.textContent = 'Auto-detection đang BẬT. Đặt thẻ gần cảm biến để quét tự động.';
+                    statusEl.style.background = 'var(--success-color)';
+                    statusEl.style.color = 'white';
+                    alertManager.show('rfid-auto-on', '🤖 RFID Auto-detection: BẬT', 'success', 2000);
+                } else {
+                    statusEl.textContent = 'Auto-detection đang TẮT. Nhấn "Test Quét Thẻ" để quét thủ công.';
+                    statusEl.style.background = 'var(--warning-color)';
+                    statusEl.style.color = 'white';
+                    alertManager.show('rfid-auto-off', '📴 RFID Auto-detection: TẮT', 'warning', 2000);
+                    
+                    // Clear any pending detection
+                    this.clearDetection();
+                }
+            },
+
+            testScan() {
                 if (!connectionManager.testConnection()) return;
 
                 console.log('[RFID] Sending test scan command: V5 = 1');
@@ -2489,11 +2437,35 @@
                 setTimeout(() => {
                     document.getElementById('rfidDetectSection').classList.remove('detecting');
                     if (statusEl.textContent.includes('Đang quét')) {
-                        statusEl.textContent = 'Nhấn nút để test quét thẻ RFID';
+                        statusEl.textContent = systemState.rfidAutoDetect ? 
+                            'Auto-detection đang BẬT. Đặt thẻ gần cảm biến để quét tự động.' :
+                            'Auto-detection đang TẮT. Nhấn "Test Quét Thẻ" để quét thủ công.';
                         statusEl.style.background = 'var(--surface-light)';
                         statusEl.style.color = 'var(--text-primary)';
                     }
                 }, 10000);
+            },
+
+            clearDetection() {
+                // Clear current detection state
+                systemState.currentScannedRfidUid = null;
+                systemState.lastRfidDetection = null;
+                
+                // Hide management section
+                document.getElementById('rfidManagementSection').style.display = 'none';
+                
+                // Reset detection section
+                document.getElementById('rfidDetectSection').classList.remove('detecting');
+                
+                // Reset status
+                const statusEl = document.getElementById('rfidDetectionStatus');
+                statusEl.textContent = systemState.rfidAutoDetect ? 
+                    'Auto-detection đang BẬT. Đặt thẻ gần cảm biến để quét tự động.' :
+                    'Auto-detection đang TẮT. Nhấn "Test Quét Thẻ" để quét thủ công.';
+                statusEl.style.background = 'var(--surface-light)';
+                statusEl.style.color = 'var(--text-primary)';
+                
+                alertManager.show('rfid-cleared', '🧹 Đã xóa trạng thái phát hiện RFID', 'info', 2000);
             },
 
             addScanned() {
@@ -2526,15 +2498,7 @@
                 
                 // Clear form and hide
                 document.getElementById('rfidCardName').value = '';
-                document.getElementById('rfidManagementSection').style.display = 'none';
-                systemState.currentScannedRfidUid = null;
-                
-                // Reset detection status
-                const statusEl = document.getElementById('rfidDetectionStatus');
-                statusEl.textContent = 'Nhấn nút để test quét thẻ RFID';
-                statusEl.style.background = 'var(--surface-light)';
-                statusEl.style.color = 'var(--text-primary)';
-                
+                this.clearDetection();
                 this.updateList();
             },
 
@@ -2637,11 +2601,32 @@
                     const detection = JSON.parse(detectionJson);
                     console.log('[RFID Status] Received:', detection);
                     
+                    // FIXED: Only process if auto-detection is enabled OR it's a manual test
+                    if (!systemState.rfidAutoDetect && !detection.manual_test) {
+                        console.log('[RFID Status] Ignoring auto-detection (disabled)');
+                        return;
+                    }
+                    
+                    // FIXED: Prevent spam by checking if same UID detected recently
+                    if (detection.uid && systemState.lastRfidDetection) {
+                        const timeDiff = Date.now() - systemState.lastRfidDetection.time;
+                        if (systemState.lastRfidDetection.uid === detection.uid && timeDiff < 10000) {
+                            console.log('[RFID Status] Skipping duplicate detection within 10 seconds');
+                            return;
+                        }
+                    }
+                    
                     const statusEl = document.getElementById('rfidDetectionStatus');
                     const managementSection = document.getElementById('rfidManagementSection');
                     const uidInput = document.getElementById('rfidUid');
                     
                     if (detection.uid) {
+                        // Update last detection tracker
+                        systemState.lastRfidDetection = {
+                            uid: detection.uid,
+                            time: Date.now()
+                        };
+                        
                         systemState.currentScannedRfidUid = detection.uid;
                         
                         // Update status
@@ -2650,6 +2635,7 @@
                             statusEl.style.background = 'var(--success-color)';
                             statusEl.style.color = 'white';
                             
+                            // Only show notification for authorized cards
                             alertManager.show('rfid-authorized', 
                                 `✅ Thẻ đã được ủy quyền: ${detection.uid}`, 
                                 'success', 3000);
@@ -2663,6 +2649,7 @@
                             uidInput.value = detection.uid;
                             document.getElementById('rfidCardName').focus();
                             
+                            // Only show notification for first detection of new cards
                             alertManager.show('rfid-new-detected', 
                                 `💳 Phát hiện thẻ mới: ${detection.uid}`, 
                                 'warning', 5000);
@@ -2685,23 +2672,13 @@
             }
         };
 
-        // === FIXED: Camera Controller ===
+        // === Camera Controller ===
         const cameraController = {
             manualCapture() {
                 if (!connectionManager.testConnection()) return;
 
                 console.log('[Camera] Sending manual capture command: V7 = 2');
                 eraWidget.sendAction(actions.cameraManualTrigger.id, 2);
-                
-                // Disable button temporarily
-                const btn = document.getElementById('manualCaptureBtn');
-                btn.disabled = true;
-                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i><span>Đang chụp...</span>';
-                
-                setTimeout(() => {
-                    btn.disabled = false;
-                    btn.innerHTML = '<i class="fas fa-camera"></i><span>Chụp Thủ Công</span>';
-                }, 3000);
                 
                 alertManager.show('camera-manual', '📸 Đang chụp ảnh thủ công...', 'success', 3000);
             },
@@ -2754,7 +2731,7 @@
             }
         };
 
-        // === FIXED: Motion Handler with Debouncing ===
+        // === Motion Handler with Debouncing ===
         const motionHandler = {
             lastMotionState: false,
             motionDebounceTimer: null,
@@ -2767,7 +2744,7 @@
                 
                 this.motionDebounceTimer = setTimeout(() => {
                     this.processMotion(detected);
-                }, 500); // 500ms debounce
+                }, 1000); // 1 second debounce to reduce spam
             },
             
             processMotion(detected) {
@@ -2840,13 +2817,8 @@
                         status.rfid_cards || systemState.rfidList.length;
                     document.getElementById('statusCameraCaptures').textContent = 
                         status.camera_captures || '0';
-                    document.getElementById('statusFailedAttempts').textContent = 
-                        (status.fingerprint_fails || 0) + (status.rfid_fails || 0);
-                    
-                    // Update system state
-                    if (status.alert_mode && !systemState.systemLocked) {
-                        securityManager.incrementFailedAttempts();
-                    }
+                    document.getElementById('statusTotalAccess').textContent = 
+                        systemState.accessHistory.length;
                     
                 } catch (e) {
                     console.error('[System Status] Parse error:', e);
@@ -2875,18 +2847,7 @@
             }
         };
 
-        // === Alert Handler ===
-        const alertHandler = {
-            update(alertLevel) {
-                console.log('[Alert] Level:', alertLevel);
-                
-                if (alertLevel > 0 && !systemState.systemLocked) {
-                    securityManager.incrementFailedAttempts();
-                }
-            }
-        };
-
-        // === FIXED: History Controller with Deduplication ===
+        // === IMPROVED: History Controller with Better Deduplication ===
         const historyController = {
             lastLogEntry: null,
             
@@ -2895,7 +2856,7 @@
                     const log = JSON.parse(logJson);
                     console.log('[History] New entry:', log);
                     
-                    // FIXED: Deduplication logic
+                    // IMPROVED: Better deduplication logic
                     const currentTime = Date.now();
                     const logTime = log.timestamp * 1000;
                     
@@ -2907,6 +2868,21 @@
                         (currentTime - this.lastLogEntry.time) < 5000) {
                         console.log('[History] Skipping duplicate entry');
                         return;
+                    }
+                    
+                    // IMPROVED: Don't spam failed RFID attempts
+                    if (!log.success && log.method === 'rfid') {
+                        const recentFailedRfid = systemState.accessHistory.filter(h => 
+                            !h.success && 
+                            h.method === 'rfid' && 
+                            h.id === log.id &&
+                            (currentTime - h.timestamp.getTime()) < 30000 // 30 seconds
+                        ).length;
+                        
+                        if (recentFailedRfid >= 3) {
+                            console.log('[History] Skipping excessive failed RFID attempts');
+                            return;
+                        }
                     }
                     
                     // Create history item
@@ -2930,36 +2906,20 @@
                         time: currentTime
                     };
                     
-                    // Limit to 50 entries to prevent spam
-                    if (systemState.accessHistory.length > 50) {
-                        systemState.accessHistory = systemState.accessHistory.slice(0, 50);
+                    // Limit to 30 entries to prevent spam
+                    if (systemState.accessHistory.length > 30) {
+                        systemState.accessHistory = systemState.accessHistory.slice(0, 30);
                     }
                     
                     // Update table
                     this.updateTable();
                     
-                    // Show notification only for successful access or first failed attempt
+                    // Show notification only for successful access
                     if (log.success) {
                         const method = log.method === 'fingerprint' ? '👆' : '💳';
                         alertManager.show('access-success', 
                             `${method} Truy cập thành công: ${log.name || log.id}`, 
                             'success', 3000);
-                    } else {
-                        // Only show failed notification if not too frequent
-                        const recentFailed = systemState.accessHistory.filter(h => 
-                            !h.success && 
-                            h.method === log.method && 
-                            (currentTime - h.timestamp.getTime()) < 10000
-                        ).length;
-                        
-                        if (recentFailed <= 2) { // Only show first 2 failures
-                            const method = log.method === 'fingerprint' ? '👆' : '💳';
-                            alertManager.show('access-failed', 
-                                `${method} Truy cập bị từ chối: ${log.id}`, 
-                                'danger', 3000);
-                        }
-                        
-                        securityManager.incrementFailedAttempts();
                     }
                     
                 } catch (e) {
@@ -3096,14 +3056,35 @@
             }
         };
 
-        // === Debug Panel ===
-        const debugPanel = {
+        // === Debug Controller ===
+        const debugController = {
             isVisible: false,
             
             toggle() {
                 this.isVisible = !this.isVisible;
-                const panel = document.getElementById('debugPanel');
-                panel.className = this.isVisible ? 'debug-panel show' : 'debug-panel';
+                if (this.isVisible) {
+                    this.showPanel();
+                } else {
+                    this.hidePanel();
+                }
+            },
+            
+            showPanel() {
+                alertManager.show('debug-panel', `
+                    <div style="text-align: left;">
+                        <strong>🐛 Debug Panel</strong><br>
+                        <button onclick="debugTest.connection()" style="margin: 2px; padding: 4px 8px; background: var(--primary-color); color: white; border: none; border-radius: 4px; font-size: 12px;">Test Connection</button>
+                        <button onclick="debugTest.door()" style="margin: 2px; padding: 4px 8px; background: var(--success-color); color: white; border: none; border-radius: 4px; font-size: 12px;">Test Door</button>
+                        <button onclick="debugTest.motion()" style="margin: 2px; padding: 4px 8px; background: var(--warning-color); color: white; border: none; border-radius: 4px; font-size: 12px;">Test Motion</button><br>
+                        <button onclick="debugTest.fingerprint()" style="margin: 2px; padding: 4px 8px; background: var(--danger-color); color: white; border: none; border-radius: 4px; font-size: 12px;">Test Fingerprint</button>
+                        <button onclick="debugTest.rfid()" style="margin: 2px; padding: 4px 8px; background: var(--primary-color); color: white; border: none; border-radius: 4px; font-size: 12px;">Test RFID</button>
+                        <button onclick="debugTest.clearData()" style="margin: 2px; padding: 4px 8px; background: var(--danger-color); color: white; border: none; border-radius: 4px; font-size: 12px;">Clear Data</button>
+                    </div>
+                `, 'info', 0, true);
+            },
+            
+            hidePanel() {
+                alertManager.remove('debug-panel');
             }
         };
 
@@ -3140,20 +3121,13 @@
 
             rfid() {
                 const scenarios = [
-                    { uid: '04:' + Math.random().toString(16).substr(2, 8).toUpperCase(), authorized: true },
-                    { uid: 'BA:9D:E7:5C', authorized: false },
-                    { message: 'Không phát hiện thẻ nào' }
+                    { uid: '04:' + Math.random().toString(16).substr(2, 8).toUpperCase(), authorized: true, manual_test: true },
+                    { uid: 'NEW:' + Math.random().toString(16).substr(2, 6).toUpperCase(), authorized: false, manual_test: true },
+                    { message: 'Không phát hiện thẻ nào', manual_test: true }
                 ];
                 const scenario = scenarios[Math.floor(Math.random() * scenarios.length)];
                 rfidStatusHandler.update(JSON.stringify(scenario));
                 alertManager.show('debug-rfid', `💳 Test RFID: ${scenario.uid || 'no card'}`, 'info', 2000);
-            },
-
-            camera() {
-                // Simulate small test image
-                const testImageBase64 = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==';
-                cameraController.displayImage(testImageBase64);
-                alertManager.show('debug-camera', '📸 Test camera image', 'info', 2000);
             },
 
             clearData() {
@@ -3161,16 +3135,18 @@
                     systemState.fingerprintList = [];
                     systemState.rfidList = [];
                     systemState.accessHistory = [];
-                    systemState.failedAttempts = 0;
-                    systemState.systemLocked = false;
+                    systemState.currentVerifiedFingerprintId = null;
+                    systemState.currentScannedRfidUid = null;
+                    systemState.lastRfidDetection = null;
                     
                     fingerprintController.updateList();
                     rfidController.updateList();
                     historyController.updateTable();
                     
-                    securityManager.enableAllButtons();
-                    alertManager.clear();
+                    // Reset RFID detection
+                    rfidController.clearDetection();
                     
+                    alertManager.clear();
                     alertManager.show('debug-cleared', '🗑️ Đã xóa tất cả dữ liệu test', 'success', 3000);
                 }
             }
@@ -3212,7 +3188,7 @@
 
         // === Dashboard Initialization ===
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('=== Smart Door Dashboard v4.0 - All Issues Fixed ===');
+            console.log('=== Smart Door Dashboard v4.1 - RFID Auto-detection Fixed ===');
             console.log('Initializing dashboard...');
             
             // Initialize E-Ra Widget
@@ -3236,7 +3212,7 @@
                         'info', 5000);
                 } else {
                     alertManager.show('initial-ready', 
-                        '✅ Dashboard v4.0 đã sẵn sàng - All issues fixed!', 
+                        '✅ Dashboard v4.1 đã sẵn sàng - RFID Auto-detection fixed!', 
                         'success', 3000);
                 }
             }, 2000);
@@ -3248,7 +3224,7 @@
         window.debugTest = debugTest;
         window.alertManager = alertManager;
         window.systemState = systemState;
-        window.securityManager = securityManager;
+        window.rfidController = rfidController;
         
         console.log('=== Debug functions available ===');
         console.log('- debugTest.connection()');
@@ -3256,8 +3232,8 @@
         console.log('- debugTest.motion()');
         console.log('- debugTest.fingerprint()');
         console.log('- debugTest.rfid()');
-        console.log('- debugTest.camera()');
         console.log('- debugTest.clearData()');
+        console.log('- rfidController.clearDetection()');
         console.log('===============================');
     </script>
 </body>
