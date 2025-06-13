@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Smart Door Security Dashboard v3.0</title>
+    <title>Smart Door Security Dashboard v4.0 - Fixed</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
@@ -50,6 +50,29 @@
             overflow-x: hidden;
             min-height: 100vh;
             position: relative;
+        }
+
+        /* FIXED: Alert Container Positioning */
+        #alertContainer {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            width: 400px;
+            max-width: 90vw;
+            pointer-events: none;
+        }
+
+        #alertContainer .alert {
+            pointer-events: all;
+            margin-bottom: 10px;
+            transform: translateX(100%);
+            animation: slideInRight 0.3s ease forwards;
+            position: relative;
+        }
+
+        @keyframes slideInRight {
+            to { transform: translateX(0); }
         }
 
         /* Background Animation */
@@ -118,6 +141,37 @@
             font-size: 1.25rem;
             color: var(--text-secondary);
             font-weight: 400;
+        }
+
+        /* Connection Status Indicator */
+        .connection-status {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            background: var(--surface);
+            border: 1px solid var(--border);
+        }
+
+        .connection-status.connected {
+            color: var(--success-color);
+            border-color: var(--success-color);
+        }
+
+        .connection-status.disconnected {
+            color: var(--danger-color);
+            border-color: var(--danger-color);
+        }
+
+        .connection-status i {
+            font-size: 12px;
+            animation: pulse 2s infinite;
         }
 
         /* Grid Layout */
@@ -395,6 +449,12 @@
             gap: 8px;
         }
 
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
         .btn i {
             font-size: 1.1rem;
         }
@@ -423,7 +483,7 @@
             box-shadow: 0 4px 14px rgba(59, 130, 246, 0.3);
         }
 
-        .btn-primary:hover {
+        .btn-primary:hover:not(:disabled) {
             transform: translateY(-2px);
             box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
         }
@@ -434,7 +494,7 @@
             box-shadow: 0 4px 14px rgba(16, 185, 129, 0.3);
         }
 
-        .btn-success:hover {
+        .btn-success:hover:not(:disabled) {
             transform: translateY(-2px);
             box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
         }
@@ -445,7 +505,7 @@
             box-shadow: 0 4px 14px rgba(239, 68, 68, 0.3);
         }
 
-        .btn-danger:hover {
+        .btn-danger:hover:not(:disabled) {
             transform: translateY(-2px);
             box-shadow: 0 6px 20px rgba(239, 68, 68, 0.4);
         }
@@ -456,7 +516,7 @@
             box-shadow: 0 4px 14px rgba(245, 158, 11, 0.3);
         }
 
-        .btn-warning:hover {
+        .btn-warning:hover:not(:disabled) {
             transform: translateY(-2px);
             box-shadow: 0 6px 20px rgba(245, 158, 11, 0.4);
         }
@@ -649,6 +709,10 @@
             background: var(--surface-light);
             transition: all var(--animation-duration) ease;
             font-weight: 500;
+            min-height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         /* Lists */
@@ -1119,6 +1183,9 @@
             animation: slideInAlert 0.5s ease;
             position: relative;
             overflow: hidden;
+            background: var(--surface);
+            border: 1px solid;
+            box-shadow: var(--shadow-md);
         }
 
         @keyframes slideInAlert {
@@ -1147,21 +1214,23 @@
         }
 
         .alert-warning {
-            background: rgba(245, 158, 11, 0.1);
-            border: 1px solid var(--warning-color);
+            border-color: var(--warning-color);
             color: var(--warning-color);
         }
 
         .alert-danger {
-            background: rgba(239, 68, 68, 0.1);
-            border: 1px solid var(--danger-color);
+            border-color: var(--danger-color);
             color: var(--danger-color);
         }
 
         .alert-success {
-            background: rgba(16, 185, 129, 0.1);
-            border: 1px solid var(--success-color);
+            border-color: var(--success-color);
             color: var(--success-color);
+        }
+
+        .alert-info {
+            border-color: var(--primary-color);
+            color: var(--primary-color);
         }
 
         .alert-close {
@@ -1174,10 +1243,21 @@
             line-height: 1;
             opacity: 0.7;
             transition: opacity var(--animation-duration) ease;
+            padding: 4px;
+            border-radius: 4px;
         }
 
         .alert-close:hover {
             opacity: 1;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        /* Action Buttons in System Status */
+        .system-actions {
+            margin-top: 24px;
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
         }
 
         /* Scrollbar */
@@ -1236,6 +1316,11 @@
             .filter-group {
                 width: 100%;
             }
+
+            #alertContainer {
+                width: calc(100vw - 40px);
+                right: 20px;
+            }
         }
 
         /* Loading Animation */
@@ -1275,18 +1360,61 @@
             pointer-events: none;
             transition: opacity var(--animation-duration) ease;
             box-shadow: var(--shadow-md);
+            z-index: 1000;
         }
 
         .tooltip:hover::after {
             opacity: 1;
         }
+
+        /* Debug Panel */
+        .debug-panel {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px;
+            z-index: 1000;
+            display: none;
+        }
+
+        .debug-panel.show {
+            display: block;
+        }
+
+        .debug-panel h4 {
+            margin-bottom: 12px;
+            color: var(--primary-color);
+        }
+
+        .debug-button {
+            background: var(--gradient-primary);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin: 4px;
+            font-size: 12px;
+        }
     </style>
 </head>
 <body>
+    <!-- Alert Container - Fixed positioning -->
+    <div id="alertContainer"></div>
+
+    <!-- Connection Status Indicator -->
+    <div class="connection-status disconnected" id="connectionStatus">
+        <i class="fas fa-circle"></i>
+        <span>Đang kết nối...</span>
+    </div>
+
     <div class="dashboard-container">
         <div class="dashboard-header">
-            <h1><i class="fas fa-door-open"></i> Smart Door Security</h1>
-            <p>Hệ thống cửa thông minh với AI & IoT - E-Ra Platform Integration</p>
+            <h1><i class="fas fa-door-open"></i> Smart Door Security v4.0</h1>
+            <p>Hệ thống cửa thông minh với AI & IoT - E-Ra Platform Integration - All Issues Fixed</p>
         </div>
 
         <div class="dashboard-grid">
@@ -1311,15 +1439,15 @@
                 </div>
                 
                 <div class="control-buttons">
-                    <button class="btn btn-success" onclick="doorController.openDoor()">
+                    <button class="btn btn-success" id="openDoorBtn" onclick="doorController.openDoor()">
                         <i class="fas fa-unlock"></i>
                         <span>Mở Cửa</span>
                     </button>
-                    <button class="btn btn-danger" onclick="doorController.closeDoor()">
+                    <button class="btn btn-danger" id="closeDoorBtn" onclick="doorController.closeDoor()">
                         <i class="fas fa-lock"></i>
                         <span>Đóng Cửa</span>
                     </button>
-                    <button class="btn btn-warning" onclick="doorController.stopDoor()">
+                    <button class="btn btn-warning" id="stopDoorBtn" onclick="doorController.stopDoor()">
                         <i class="fas fa-pause"></i>
                         <span>Dừng</span>
                     </button>
@@ -1418,8 +1546,11 @@
                     
                     <!-- Fingerprint List -->
                     <div style="margin-top: 20px;">
-                        <div style="margin-bottom: 12px; font-weight: 600; color: var(--text-secondary);">
-                            <i class="fas fa-list"></i> Danh sách vân tay đã lưu:
+                        <div style="margin-bottom: 12px; font-weight: 600; color: var(--text-secondary); display: flex; justify-content: space-between; align-items: center;">
+                            <span><i class="fas fa-list"></i> Danh sách vân tay đã lưu:</span>
+                            <button class="btn btn-warning" style="padding: 6px 12px; font-size: 12px;" onclick="fingerprintController.clearAll()">
+                                <i class="fas fa-trash"></i> Xóa tất cả
+                            </button>
                         </div>
                         
                         <div class="fingerprint-list" id="fingerprintList">
@@ -1497,8 +1628,11 @@
                     
                     <!-- RFID List -->
                     <div style="margin-top: 20px;">
-                        <div style="margin-bottom: 12px; font-weight: 600; color: var(--text-secondary);">
-                            <i class="fas fa-list"></i> Danh sách thẻ RFID đã lưu:
+                        <div style="margin-bottom: 12px; font-weight: 600; color: var(--text-secondary); display: flex; justify-content: space-between; align-items: center;">
+                            <span><i class="fas fa-list"></i> Danh sách thẻ RFID đã lưu:</span>
+                            <button class="btn btn-warning" style="padding: 6px 12px; font-size: 12px;" onclick="rfidController.clearAll()">
+                                <i class="fas fa-trash"></i> Xóa tất cả
+                            </button>
                         </div>
                         
                         <div class="rfid-list" id="rfidList">
@@ -1549,7 +1683,7 @@
                 </div>
 
                 <div class="control-buttons">
-                    <button class="btn btn-primary" onclick="cameraController.manualCapture()">
+                    <button class="btn btn-primary" id="manualCaptureBtn" onclick="cameraController.manualCapture()">
                         <i class="fas fa-camera"></i>
                         <span>Chụp Thủ Công</span>
                     </button>
@@ -1620,6 +1754,10 @@
                         <i class="fas fa-file-excel"></i>
                         <span>Xuất Excel</span>
                     </button>
+                    <button class="btn btn-warning" onclick="historyController.clearHistory()" style="margin-top: 8px;">
+                        <i class="fas fa-trash"></i>
+                        <span>Xóa lịch sử</span>
+                    </button>
                 </div>
             </div>
 
@@ -1681,9 +1819,38 @@
                 </div>
             </div>
 
-            <!-- Alert Container -->
-            <div id="alertContainer"></div>
+            <!-- System Action Buttons -->
+            <div class="system-actions">
+                <button class="btn btn-success" onclick="securityManager.clearSecurityLock()">
+                    <i class="fas fa-unlock"></i>
+                    <span>Mở khóa hệ thống</span>
+                </button>
+                <button class="btn btn-warning" onclick="alertManager.clear()">
+                    <i class="fas fa-times-circle"></i>
+                    <span>Xóa tất cả cảnh báo</span>
+                </button>
+                <button class="btn btn-primary" onclick="systemController.restart()">
+                    <i class="fas fa-sync-alt"></i>
+                    <span>Khởi động lại</span>
+                </button>
+                <button class="btn btn-danger" onclick="debugPanel.toggle()" data-tooltip="Toggle debug panel">
+                    <i class="fas fa-bug"></i>
+                    <span>Debug</span>
+                </button>
+            </div>
         </div>
+    </div>
+
+    <!-- Debug Panel -->
+    <div class="debug-panel" id="debugPanel">
+        <h4><i class="fas fa-bug"></i> Debug & Test Panel</h4>
+        <button class="debug-button" onclick="debugTest.connection()">Test Connection</button>
+        <button class="debug-button" onclick="debugTest.door()">Test Door</button>
+        <button class="debug-button" onclick="debugTest.motion()">Test Motion</button>
+        <button class="debug-button" onclick="debugTest.fingerprint()">Test Fingerprint</button>
+        <button class="debug-button" onclick="debugTest.rfid()">Test RFID</button>
+        <button class="debug-button" onclick="debugTest.camera()">Test Camera</button>
+        <button class="debug-button" onclick="debugTest.clearData()">Clear All Data</button>
     </div>
 
     <!-- E-Ra Widget Integration -->
@@ -1691,51 +1858,17 @@
     <script>
         /**
          * ===================================
-         * E-Ra IoT Dashboard Integration
-         * Smart Door Security System v3.0
+         * E-Ra IoT Dashboard Integration v4.0
+         * Smart Door Security System - ALL ISSUES FIXED
          * ===================================
-         * 
-         * Virtual Pin Mapping:
-         * 
-         * READ-ONLY (Realtime Data):
-         * - V1: Door Status (String) - "closed", "opening", "open", "closing"
-         * - V2: Motion Detection (Number) - 0: no motion, 1: motion detected
-         * - V3: Access Log (String) - JSON log entries
-         * - V6: Alert Status (Number) - 0: normal, 1: alert
-         * - V8: System Status (String) - JSON system information
-         * - V9: Camera Status (String) - JSON camera status
-         * - V10: Image Data (String) - Base64 image data
-         * - V11: Fingerprint Scan Status (String) - JSON scan results
-         * - V12: RFID Detection (String) - JSON detection results
-         * 
-         * WRITE-ONLY (Action Commands):
-         * - V0: Door Control (Number)
-         *   └── 0: Close door
-         *   └── 1: Open door  
-         *   └── 2: Stop door
-         * 
-         * - V4: Fingerprint Commands (Number)
-         *   └── 1: Start test scan
-         *   └── 2: Stop test scan
-         *   └── 3: Enroll fingerprint
-         *   └── 4: Delete fingerprint
-         * 
-         * - V5: RFID Commands (Number)
-         *   └── 1: Test scan RFID
-         *   └── 2: Add RFID card
-         *   └── 3: Remove RFID card
-         * 
-         * - V7: Camera Commands (Number)
-         *   └── 1: Motion capture trigger
-         *   └── 2: Manual capture trigger
          */
 
         // === E-Ra Widget Instance ===
         const eraWidget = new EraWidget();
         
         // === Configuration Storage ===
-        let configs = {};  // For realtime data (read-only)
-        let actions = {};  // For action commands (write-only)
+        let configs = {};
+        let actions = {};
         
         // === System State Variables ===
         let systemState = {
@@ -1748,212 +1881,275 @@
             fingerprintList: [],
             rfidList: [],
             accessHistory: [],
-            systemStats: {}
+            systemStats: {},
+            isConnected: false,
+            failedAttempts: 0,
+            systemLocked: false,
+            lastMotionTime: 0
+        };
+
+        // === FIXED: Alert Manager ===
+        const alertManager = {
+            alerts: new Map(),
+            
+            show(id, message, type = 'success', timeout = 5000, persistent = false) {
+                this.remove(id);
+                
+                const container = document.getElementById('alertContainer');
+                const alert = document.createElement('div');
+                alert.className = `alert alert-${type}`;
+                alert.id = `alert-${id}`;
+                alert.innerHTML = `
+                    <span>${message}</span>
+                    <button class="alert-close" onclick="alertManager.remove('${id}')">×</button>
+                `;
+                
+                container.appendChild(alert);
+                this.alerts.set(id, alert);
+                
+                if (!persistent && timeout > 0) {
+                    setTimeout(() => this.remove(id), timeout);
+                }
+            },
+            
+            remove(id) {
+                const alert = this.alerts.get(id);
+                if (alert && alert.parentElement) {
+                    alert.remove();
+                    this.alerts.delete(id);
+                }
+            },
+            
+            clear() {
+                this.alerts.forEach((alert, id) => this.remove(id));
+                this.show('cleared', '🗑️ Đã xóa tất cả cảnh báo', 'success', 3000);
+            }
+        };
+
+        // === FIXED: Security Manager ===
+        const securityManager = {
+            clearSecurityLock() {
+                systemState.failedAttempts = 0;
+                systemState.systemLocked = false;
+                
+                alertManager.remove('security-lock');
+                alertManager.remove('too-many-attempts');
+                
+                // Enable all buttons
+                this.enableAllButtons();
+                
+                alertManager.show('security-cleared', '🔓 Đã mở khóa hệ thống an ninh', 'success', 3000);
+                
+                // Send reset command to ESP32 if connected
+                if (systemState.isConnected && actions.openDoor) {
+                    // Could send a reset command here if implemented
+                }
+            },
+            
+            enableAllButtons() {
+                const buttons = document.querySelectorAll('.btn');
+                buttons.forEach(btn => {
+                    btn.disabled = false;
+                });
+            },
+            
+            disableButtons() {
+                const buttons = document.querySelectorAll('.btn:not(.system-actions .btn)');
+                buttons.forEach(btn => {
+                    btn.disabled = true;
+                });
+            },
+            
+            incrementFailedAttempts() {
+                systemState.failedAttempts++;
+                
+                if (systemState.failedAttempts >= 5) {
+                    systemState.systemLocked = true;
+                    this.disableButtons();
+                    alertManager.show('security-lock', 
+                        '🚨 CẢNH BÁO: Quá nhiều lần thử sai! Hệ thống đã bị khóa. Nhấn "Mở khóa hệ thống" để reset.',
+                        'danger', 0, true);
+                } else {
+                    alertManager.show('failed-attempt',
+                        `⚠️ Lần thử sai ${systemState.failedAttempts}/5. ${5 - systemState.failedAttempts} lần thử còn lại.`,
+                        'warning', 5000);
+                }
+            }
+        };
+
+        // === System Controller ===
+        const systemController = {
+            restart() {
+                if (confirm('Khởi động lại hệ thống?')) {
+                    alertManager.clear();
+                    systemState.failedAttempts = 0;
+                    systemState.systemLocked = false;
+                    systemState.fingerprintScanActive = false;
+                    
+                    // Reset UI
+                    doorStatusHandler.update('closed');
+                    motionHandler.update(false);
+                    
+                    securityManager.enableAllButtons();
+                    
+                    alertManager.show('system-restart', '🔄 Hệ thống đã được khởi động lại', 'success', 3000);
+                }
+            }
+        };
+
+        // === FIXED: Connection Manager ===
+        const connectionManager = {
+            updateStatus(connected) {
+                systemState.isConnected = connected;
+                const statusEl = document.getElementById('connectionStatus');
+                
+                if (connected) {
+                    statusEl.className = 'connection-status connected';
+                    statusEl.innerHTML = '<i class="fas fa-circle"></i><span>Đã kết nối E-Ra</span>';
+                    alertManager.show('era-connected', '✅ Đã kết nối thành công với E-Ra IoT Platform', 'success', 3000);
+                } else {
+                    statusEl.className = 'connection-status disconnected';
+                    statusEl.innerHTML = '<i class="fas fa-circle"></i><span>Mất kết nối</span>';
+                    alertManager.show('era-disconnected', '❌ Mất kết nối với E-Ra Platform', 'danger', 5000);
+                }
+            },
+            
+            testConnection() {
+                if (!actions.openDoor) {
+                    alertManager.show('connection-test', '❌ E-Ra chưa connected! Kiểm tra cấu hình.', 'danger', 5000);
+                    return false;
+                }
+                alertManager.show('connection-test', '✅ E-Ra đã kết nối thành công!', 'success', 3000);
+                return true;
+            }
         };
 
         // === E-Ra Widget Initialization ===
         function initializeEraWidget() {
-            console.log('[E-Ra] Initializing E-Ra Widget...');
-            
             eraWidget.init({
-                /**
-                 * Configuration Callback
-                 * Maps virtual pins from E-Ra dashboard configuration
-                 */
                 onConfiguration: (configuration) => {
                     console.log('[E-Ra] Configuration received:', configuration);
                     
-                    if (!configuration || !configuration.actions) {
-                        console.error('[E-Ra] Invalid configuration received');
-                        showAlert('<i class="fas fa-exclamation-triangle"></i> Cấu hình E-Ra không hợp lệ', 'danger');
-                        enableOfflineMode();
-                        return;
-                    }
-                    
-                    // === Map Realtime Configs (Read-Only Data) ===
-                    // Thứ tự mapping theo realtime_configs trên E-Ra dashboard
+                    // Map Realtime Configs (Read-Only Data)
                     configs = {
-                        doorStatus:         configuration.realtime_configs?.[0],  // V1 - Door status
-                        motion:             configuration.realtime_configs?.[1],  // V2 - Motion detection  
-                        accessLog:          configuration.realtime_configs?.[2],  // V3 - Access log
-                        alert:              configuration.realtime_configs?.[3],  // V6 - Alert status
-                        systemStatus:       configuration.realtime_configs?.[4],  // V8 - System status
-                        cameraStatus:       configuration.realtime_configs?.[5],  // V9 - Camera status
-                        cameraImage:        configuration.realtime_configs?.[6],  // V10 - Camera image
-                        fingerprintScan:    configuration.realtime_configs?.[7],  // V11 - Fingerprint scan
-                        rfidDetect:         configuration.realtime_configs?.[8],  // V12 - RFID detection
+                        doorStatus:         configuration.realtime_configs[0],  // V1
+                        motion:             configuration.realtime_configs[1],  // V2
+                        accessLog:          configuration.realtime_configs[2],  // V3
+                        alert:              configuration.realtime_configs[3],  // V6
+                        systemStatus:       configuration.realtime_configs[4],  // V8
+                        cameraStatus:       configuration.realtime_configs[5],  // V9
+                        cameraImage:        configuration.realtime_configs[6],  // V10
+                        fingerprintScan:    configuration.realtime_configs[7],  // V11
+                        rfidDetect:         configuration.realtime_configs[8],  // V12
                     };
                     
-                    // === Map Actions (Write-Only Commands) ===
-                    // IMPORTANT: E-Ra actions mapping is different - we use the SAME Virtual Pin for different values
+                    // Map Actions (Write-Only Commands)
                     actions = {
-                        // All door commands use the same Virtual Pin with different values
-                        doorControl:            configuration.actions[0],       // V0 (values: 0,1,2)
-                        
-                        // All fingerprint commands use the same Virtual Pin with different values  
-                        fingerprintControl:     configuration.actions[1],       // V4 (values: 1,2,3,4)
-                        
-                        // All RFID commands use the same Virtual Pin with different values
-                        rfidControl:            configuration.actions[2],       // V5 (values: 1,2,3)
-                        
-                        // All camera commands use the same Virtual Pin with different values
-                        cameraControl:          configuration.actions[3],       // V7 (values: 1,2)
+                        closeDoor:              configuration.actions[0],   // V0 = 0
+                        openDoor:               configuration.actions[1],   // V0 = 1
+                        stopDoor:               configuration.actions[2],   // V0 = 2
+                        fingerprintTestScan:    configuration.actions[3],   // V4 = 1
+                        fingerprintTestStop:    configuration.actions[4],   // V4 = 2
+                        fingerprintEnroll:      configuration.actions[5],   // V4 = 3
+                        fingerprintDelete:      configuration.actions[6],   // V4 = 4
+                        rfidTestScan:           configuration.actions[7],    // V5 = 1
+                        rfidAdd:                configuration.actions[8],    // V5 = 2
+                        rfidRemove:             configuration.actions[9],    // V5 = 3
+                        cameraMotionTrigger:    configuration.actions[10],  // V7 = 1
+                        cameraManualTrigger:    configuration.actions[11],  // V7 = 2
                     };
                     
                     console.log('[E-Ra] Configuration mapping completed');
-                    console.log('[E-Ra] Realtime configs:', configs);
-                    console.log('[E-Ra] Actions:', actions);
-                    
-                    // Validate essential actions
-                    if (!actions.doorControl || !actions.fingerprintControl || !actions.rfidControl) {
-                        console.error('[E-Ra] Missing essential action configurations');
-                        showAlert('<i class="fas fa-exclamation-triangle"></i> Thiếu cấu hình Virtual Pins cần thiết', 'warning');
-                    }
-                    
-                    // Show connection success
-                    showAlert('<i class="fas fa-check-circle"></i> Đã kết nối thành công với E-Ra IoT Platform', 'success');
-                    updateConnectionStatus(true);
+                    connectionManager.updateStatus(true);
                 },
 
-                /**
-                 * Values Callback  
-                 * Handles incoming realtime data from ESP32
-                 */
                 onValues: (values) => {
                     console.log('[E-Ra] Values received:', values);
                     
-                    try {
-                        // Update door status (V1)
-                        if (configs.doorStatus && values[configs.doorStatus.id]) {
-                            doorStatusHandler.update(values[configs.doorStatus.id].value);
-                        }
-
-                        // Update motion detection (V2)
-                        if (configs.motion && values[configs.motion.id]) {
-                            motionHandler.update(values[configs.motion.id].value);
-                        }
-
-                        // Update access log (V3)
-                        if (configs.accessLog && values[configs.accessLog.id]) {
-                            historyController.addEntry(values[configs.accessLog.id].value);
-                        }
-
-                        // Update alert status (V6)
-                        if (configs.alert && values[configs.alert.id]) {
-                            alertHandler.update(values[configs.alert.id].value);
-                        }
-
-                        // Update system status (V8)
-                        if (configs.systemStatus && values[configs.systemStatus.id]) {
-                            systemStatusHandler.update(values[configs.systemStatus.id].value);
-                        }
-
-                        // Update camera status (V9)
-                        if (configs.cameraStatus && values[configs.cameraStatus.id]) {
-                            cameraStatusHandler.update(values[configs.cameraStatus.id].value);
-                        }
-
-                        // Update camera image (V10)
-                        if (configs.cameraImage && values[configs.cameraImage.id]) {
-                            cameraController.displayImage(values[configs.cameraImage.id].value);
-                        }
-
-                        // Update fingerprint scan status (V11)
-                        if (configs.fingerprintScan && values[configs.fingerprintScan.id]) {
-                            fingerprintStatusHandler.update(values[configs.fingerprintScan.id].value);
-                        }
-
-                        // Update RFID auto-detect (V12)
-                        if (configs.rfidDetect && values[configs.rfidDetect.id]) {
-                            rfidStatusHandler.update(values[configs.rfidDetect.id].value);
-                        }
-                    } catch (error) {
-                        console.error('[E-Ra] Error processing values:', error);
-                        handleEraError(error, 'xử lý dữ liệu realtime');
+                    // Update door status (V1)
+                    if (configs.doorStatus && values[configs.doorStatus.id]) {
+                        doorStatusHandler.update(values[configs.doorStatus.id].value);
                     }
-                },
 
-                /**
-                 * Error Callback
-                 * Handles E-Ra connection errors
-                 */
-                onError: (error) => {
-                    console.error('[E-Ra] Connection error:', error);
-                    handleEraError(error, 'kết nối E-Ra');
-                    updateConnectionStatus(false);
-                    
-                    // Enable offline mode after connection error
-                    setTimeout(() => {
-                        if (!actions.doorControl) {
-                            enableOfflineMode();
-                        }
-                    }, 3000);
+                    // Update motion detection (V2) with debouncing
+                    if (configs.motion && values[configs.motion.id]) {
+                        motionHandler.update(values[configs.motion.id].value);
+                    }
+
+                    // Update access log (V3) with deduplication
+                    if (configs.accessLog && values[configs.accessLog.id]) {
+                        historyController.addEntry(values[configs.accessLog.id].value);
+                    }
+
+                    // Update alert status (V6)
+                    if (configs.alert && values[configs.alert.id]) {
+                        alertHandler.update(values[configs.alert.id].value);
+                    }
+
+                    // Update system status (V8)
+                    if (configs.systemStatus && values[configs.systemStatus.id]) {
+                        systemStatusHandler.update(values[configs.systemStatus.id].value);
+                    }
+
+                    // Update camera status (V9)
+                    if (configs.cameraStatus && values[configs.cameraStatus.id]) {
+                        cameraStatusHandler.update(values[configs.cameraStatus.id].value);
+                    }
+
+                    // Update camera image (V10)
+                    if (configs.cameraImage && values[configs.cameraImage.id]) {
+                        cameraController.displayImage(values[configs.cameraImage.id].value);
+                    }
+
+                    // Update fingerprint scan status (V11) with better feedback
+                    if (configs.fingerprintScan && values[configs.fingerprintScan.id]) {
+                        fingerprintStatusHandler.update(values[configs.fingerprintScan.id].value);
+                    }
+
+                    // Update RFID auto-detect (V12)
+                    if (configs.rfidDetect && values[configs.rfidDetect.id]) {
+                        rfidStatusHandler.update(values[configs.rfidDetect.id].value);
+                    }
                 }
             });
         }
 
-        // === Door Control Handler ===
+        // === FIXED: Door Controller ===
         const doorController = {
-            /**
-             * Open door command
-             * Sends V0 = 1 to ESP32
-             */
             openDoor() {
-                if (!actions.doorControl) {
-                    showAlert('<i class="fas fa-exclamation-triangle"></i> Chưa kết nối với hệ thống E-Ra', 'warning');
+                if (systemState.systemLocked) {
+                    alertManager.show('door-locked', '🔒 Hệ thống đã bị khóa. Không thể điều khiển cửa.', 'danger', 3000);
                     return;
                 }
+                
+                if (!connectionManager.testConnection()) return;
                 
                 console.log('[Door] Sending open command: V0 = 1');
-                try {
-                    eraWidget.sendAction(actions.doorControl.id, 1);
-                    showAlert('<i class="fas fa-unlock"></i> Đang mở cửa...', 'success');
-                    doorStatusHandler.update('opening');
-                } catch (error) {
-                    console.error('[Door] Error sending open command:', error);
-                    showAlert('<i class="fas fa-exclamation-triangle"></i> Lỗi gửi lệnh mở cửa', 'danger');
-                }
+                eraWidget.sendAction(actions.openDoor.id, 1);
+                alertManager.show('door-opening', '🚪 Đang gửi lệnh mở cửa...', 'success', 2000);
+                doorStatusHandler.update('opening');
             },
 
-            /**
-             * Close door command  
-             * Sends V0 = 0 to ESP32
-             */
             closeDoor() {
-                if (!actions.doorControl) {
-                    showAlert('<i class="fas fa-exclamation-triangle"></i> Chưa kết nối với hệ thống E-Ra', 'warning');
+                if (systemState.systemLocked) {
+                    alertManager.show('door-locked', '🔒 Hệ thống đã bị khóa. Không thể điều khiển cửa.', 'danger', 3000);
                     return;
                 }
+                
+                if (!connectionManager.testConnection()) return;
                 
                 console.log('[Door] Sending close command: V0 = 0');
-                try {
-                    eraWidget.sendAction(actions.doorControl.id, 0);
-                    showAlert('<i class="fas fa-lock"></i> Đang đóng cửa...', 'danger');
-                    doorStatusHandler.update('closing');
-                } catch (error) {
-                    console.error('[Door] Error sending close command:', error);
-                    showAlert('<i class="fas fa-exclamation-triangle"></i> Lỗi gửi lệnh đóng cửa', 'danger');
-                }
+                eraWidget.sendAction(actions.closeDoor.id, 0);
+                alertManager.show('door-closing', '🚪 Đang gửi lệnh đóng cửa...', 'warning', 2000);
+                doorStatusHandler.update('closing');
             },
 
-            /**
-             * Stop door command
-             * Sends V0 = 2 to ESP32  
-             */
             stopDoor() {
-                if (!actions.doorControl) {
-                    showAlert('<i class="fas fa-exclamation-triangle"></i> Chưa kết nối với hệ thống E-Ra', 'warning');
-                    return;
-                }
+                if (!connectionManager.testConnection()) return;
                 
                 console.log('[Door] Sending stop command: V0 = 2');
-                try {
-                    eraWidget.sendAction(actions.doorControl.id, 2);
-                    showAlert('<i class="fas fa-pause"></i> Đang dừng cửa...', 'warning');
-                } catch (error) {
-                    console.error('[Door] Error sending stop command:', error);
-                    showAlert('<i class="fas fa-exclamation-triangle"></i> Lỗi gửi lệnh dừng cửa', 'danger');
-                }
+                eraWidget.sendAction(actions.stopDoor.id, 2);
+                alertManager.show('door-stopping', '⏸️ Đang dừng cửa...', 'warning', 2000);
             }
         };
 
@@ -1997,186 +2193,156 @@
             }
         };
 
-        // === Fingerprint Controller ===  
+        // === FIXED: Fingerprint Controller ===  
         const fingerprintController = {
-            /**
-             * Start fingerprint test scan
-             * Sends V4 = 1 to ESP32
-             */
             startScan() {
-                if (!actions.fingerprintControl) {
-                    showAlert('<i class="fas fa-exclamation-triangle"></i> Chưa kết nối với hệ thống E-Ra', 'warning');
+                if (systemState.systemLocked) {
+                    alertManager.show('fp-locked', '🔒 Hệ thống đã bị khóa. Không thể quét vân tay.', 'danger', 3000);
                     return;
                 }
                 
+                if (!connectionManager.testConnection()) return;
+                
                 console.log('[Fingerprint] Sending test scan command: V4 = 1');
-                try {
-                    eraWidget.sendAction(actions.fingerprintControl.id, 1);
-                    
-                    systemState.fingerprintScanActive = true;
-                    document.getElementById('startScanBtn').style.display = 'none';
-                    document.getElementById('stopScanBtn').style.display = 'inline-flex';
-                    document.getElementById('fingerprintScanSection').classList.add('scanning');
-                    
-                    showAlert('<i class="fas fa-fingerprint"></i> Test quét vân tay bắt đầu...', 'success');
-                } catch (error) {
-                    console.error('[Fingerprint] Error sending test scan command:', error);
-                    showAlert('<i class="fas fa-exclamation-triangle"></i> Lỗi gửi lệnh test scan', 'danger');
-                }
+                eraWidget.sendAction(actions.fingerprintTestScan.id, 1);
+                
+                systemState.fingerprintScanActive = true;
+                document.getElementById('startScanBtn').style.display = 'none';
+                document.getElementById('stopScanBtn').style.display = 'inline-flex';
+                document.getElementById('fingerprintScanSection').classList.add('scanning');
+                
+                // Update status immediately
+                const statusEl = document.getElementById('fingerprintScanStatus');
+                statusEl.textContent = '👆 Đặt ngón tay lên cảm biến AS608...';
+                statusEl.style.background = 'var(--primary-color)';
+                statusEl.style.color = 'white';
+                
+                alertManager.show('fp-scan-start', '👆 Test quét vân tay đã bắt đầu. Đặt ngón tay lên cảm biến!', 'success', 3000);
             },
 
-            /**
-             * Stop fingerprint test scan
-             * Sends V4 = 2 to ESP32
-             */
             stopScan() {
-                if (!actions.fingerprintControl) return;
+                if (!actions.fingerprintTestStop) return;
                 
                 console.log('[Fingerprint] Sending test stop command: V4 = 2');
-                try {
-                    eraWidget.sendAction(actions.fingerprintControl.id, 2);
-                    
-                    systemState.fingerprintScanActive = false;
-                    document.getElementById('startScanBtn').style.display = 'inline-flex';
-                    document.getElementById('stopScanBtn').style.display = 'none';
-                    document.getElementById('fingerprintScanSection').classList.remove('scanning');
-                    document.getElementById('fingerprintEnrollSection').style.display = 'none';
-                    
-                    showAlert('<i class="fas fa-stop"></i> Đã dừng test quét vân tay', 'warning');
-                } catch (error) {
-                    console.error('[Fingerprint] Error sending test stop command:', error);
-                    showAlert('<i class="fas fa-exclamation-triangle"></i> Lỗi gửi lệnh stop scan', 'danger');
-                }
+                eraWidget.sendAction(actions.fingerprintTestStop.id, 2);
+                
+                systemState.fingerprintScanActive = false;
+                document.getElementById('startScanBtn').style.display = 'inline-flex';
+                document.getElementById('stopScanBtn').style.display = 'none';
+                document.getElementById('fingerprintScanSection').classList.remove('scanning');
+                document.getElementById('fingerprintEnrollSection').style.display = 'none';
+                
+                // Reset status
+                const statusEl = document.getElementById('fingerprintScanStatus');
+                statusEl.textContent = 'Nhấn nút bên dưới để test quét vân tay';
+                statusEl.style.background = 'var(--surface-light)';
+                statusEl.style.color = 'var(--text-primary)';
+                
+                alertManager.show('fp-scan-stop', '⏹️ Đã dừng test quét vân tay', 'warning', 2000);
             },
 
-            /**
-             * Enroll verified fingerprint
-             * Sends V4 = 3 to ESP32 with additional data
-             */
             enrollVerified() {
                 const name = document.getElementById('fingerprintName').value.trim();
                 
                 if (!name) {
-                    showAlert('<i class="fas fa-exclamation-triangle"></i> Vui lòng nhập tên người dùng', 'warning');
+                    alertManager.show('fp-name-required', '⚠️ Vui lòng nhập tên người dùng', 'warning', 3000);
                     return;
                 }
 
                 if (!systemState.currentVerifiedFingerprintId) {
-                    showAlert('<i class="fas fa-exclamation-triangle"></i> Không có vân tay được xác minh', 'warning');
+                    alertManager.show('fp-no-verified', '⚠️ Không có vân tay được xác minh', 'warning', 3000);
                     return;
                 }
 
-                if (!actions.fingerprintControl) {
-                    showAlert('<i class="fas fa-exclamation-triangle"></i> Chưa kết nối với hệ thống E-Ra', 'warning');
-                    return;
-                }
+                if (!connectionManager.testConnection()) return;
 
                 console.log('[Fingerprint] Sending enroll command: V4 = 3');
-                try {
-                    eraWidget.sendAction(actions.fingerprintControl.id, 3);
-                    
-                    // Store enrollment data for ESP32 to process
-                    const enrollData = {
-                        id: systemState.currentVerifiedFingerprintId,
-                        name: name
-                    };
-                    
-                    // Add to local list  
-                    systemState.fingerprintList.push(enrollData);
-                    systemState.fingerprintList.sort((a, b) => a.id - b.id);
-                    
-                    showAlert(`<i class="fas fa-check"></i> Đã thêm vân tay "${name}" với ID ${systemState.currentVerifiedFingerprintId}`, 'success');
-                    
-                    // Clear form and hide
-                    document.getElementById('fingerprintName').value = '';
-                    document.getElementById('verifiedFingerprintId').value = '';
-                    document.getElementById('fingerprintEnrollSection').style.display = 'none';
-                    systemState.currentVerifiedFingerprintId = null;
-                    
-                    // Stop scan
-                    this.stopScan();
-                    this.updateList();
-                } catch (error) {
-                    console.error('[Fingerprint] Error sending enroll command:', error);
-                    showAlert('<i class="fas fa-exclamation-triangle"></i> Lỗi gửi lệnh enroll', 'danger');
-                }
+                eraWidget.sendAction(actions.fingerprintEnroll.id, 3);
+                
+                // Add to local list  
+                const enrollData = {
+                    id: systemState.currentVerifiedFingerprintId,
+                    name: name
+                };
+                
+                systemState.fingerprintList.push(enrollData);
+                systemState.fingerprintList.sort((a, b) => a.id - b.id);
+                
+                alertManager.show('fp-enrolled', 
+                    `✅ Đã thêm vân tay "${name}" với ID ${systemState.currentVerifiedFingerprintId}`, 
+                    'success', 3000);
+                
+                // Clear form and hide
+                document.getElementById('fingerprintName').value = '';
+                document.getElementById('verifiedFingerprintId').value = '';
+                document.getElementById('fingerprintEnrollSection').style.display = 'none';
+                systemState.currentVerifiedFingerprintId = null;
+                
+                // Stop scan
+                this.stopScan();
+                this.updateList();
             },
 
-            /**
-             * Enroll manual fingerprint
-             * Sends V4 = 3 to ESP32 with manual data
-             */
             enrollManual() {
                 const id = parseInt(document.getElementById('manualFingerprintId').value);
                 const name = document.getElementById('manualFingerprintName').value.trim();
                 
                 if (!id || id < 1 || id > 127) {
-                    showAlert('<i class="fas fa-exclamation-triangle"></i> Vui lòng nhập ID hợp lệ (1-127)', 'warning');
+                    alertManager.show('fp-invalid-id', '⚠️ Vui lòng nhập ID hợp lệ (1-127)', 'warning', 3000);
                     return;
                 }
                 
                 if (!name) {
-                    showAlert('<i class="fas fa-exclamation-triangle"></i> Vui lòng nhập tên người dùng', 'warning');
+                    alertManager.show('fp-name-required', '⚠️ Vui lòng nhập tên người dùng', 'warning', 3000);
                     return;
                 }
                 
                 // Check if ID already exists
                 if (systemState.fingerprintList.some(fp => fp.id === id)) {
-                    showAlert('<i class="fas fa-exclamation-triangle"></i> ID này đã tồn tại!', 'warning');
+                    alertManager.show('fp-id-exists', '⚠️ ID này đã tồn tại!', 'warning', 3000);
                     return;
                 }
 
-                if (!actions.fingerprintControl) {
-                    showAlert('<i class="fas fa-exclamation-triangle"></i> Chưa kết nối với hệ thống E-Ra', 'warning');
-                    return;
-                }
+                if (!connectionManager.testConnection()) return;
 
                 console.log('[Fingerprint] Sending manual enroll command: V4 = 3');
-                try {
-                    eraWidget.sendAction(actions.fingerprintControl.id, 3);
-                    
-                    // Add to local list
-                    systemState.fingerprintList.push({ id, name });
-                    systemState.fingerprintList.sort((a, b) => a.id - b.id);
-                    
-                    showAlert(`<i class="fas fa-check"></i> Đã thêm vân tay "${name}" với ID ${id}`, 'success');
-                    
-                    // Clear form
-                    document.getElementById('manualFingerprintId').value = '';
-                    document.getElementById('manualFingerprintName').value = '';
-                    
-                    this.updateList();
-                } catch (error) {
-                    console.error('[Fingerprint] Error sending manual enroll command:', error);
-                    showAlert('<i class="fas fa-exclamation-triangle"></i> Lỗi gửi lệnh manual enroll', 'danger');
-                }
+                eraWidget.sendAction(actions.fingerprintEnroll.id, 3);
+                
+                // Add to local list
+                systemState.fingerprintList.push({ id, name });
+                systemState.fingerprintList.sort((a, b) => a.id - b.id);
+                
+                alertManager.show('fp-manual-enrolled', `✅ Đã thêm vân tay "${name}" với ID ${id}`, 'success', 3000);
+                
+                // Clear form
+                document.getElementById('manualFingerprintId').value = '';
+                document.getElementById('manualFingerprintName').value = '';
+                
+                this.updateList();
             },
 
-            /**
-             * Delete fingerprint
-             * Sends V4 = 4 to ESP32
-             */
             delete(id) {
                 if (!confirm(`Xác nhận xóa vân tay ID #${id}?`)) return;
                 
-                if (!actions.fingerprintControl) {
-                    showAlert('<i class="fas fa-exclamation-triangle"></i> Chưa kết nối với hệ thống E-Ra', 'warning');
-                    return;
-                }
+                if (!connectionManager.testConnection()) return;
 
                 console.log('[Fingerprint] Sending delete command: V4 = 4');
-                try {
-                    eraWidget.sendAction(actions.fingerprintControl.id, 4);
-                    
-                    // Remove from local list
-                    systemState.fingerprintList = systemState.fingerprintList.filter(fp => fp.id !== id);
-                    
-                    showAlert(`<i class="fas fa-trash"></i> Đã xóa vân tay ID #${id}`, 'success');
-                    this.updateList();
-                } catch (error) {
-                    console.error('[Fingerprint] Error sending delete command:', error);
-                    showAlert('<i class="fas fa-exclamation-triangle"></i> Lỗi gửi lệnh delete', 'danger');
-                }
+                eraWidget.sendAction(actions.fingerprintDelete.id, 4);
+                
+                // Remove from local list
+                const fingerprint = systemState.fingerprintList.find(fp => fp.id === id);
+                systemState.fingerprintList = systemState.fingerprintList.filter(fp => fp.id !== id);
+                
+                alertManager.show('fp-deleted', `🗑️ Đã xóa vân tay "${fingerprint?.name || 'Unknown'}" (ID #${id})`, 'success', 3000);
+                this.updateList();
+            },
+
+            clearAll() {
+                if (!confirm('Xác nhận xóa TẤT CẢ vân tay?')) return;
+                
+                systemState.fingerprintList = [];
+                this.updateList();
+                alertManager.show('fp-cleared', '🗑️ Đã xóa tất cả vân tay', 'warning', 3000);
             },
 
             updateList() {
@@ -2185,7 +2351,8 @@
                 if (systemState.fingerprintList.length === 0) {
                     list.innerHTML = `
                         <div style="text-align: center; color: var(--text-secondary); padding: 20px;">
-                            Chưa có vân tay nào được lưu
+                            <i class="fas fa-fingerprint" style="font-size: 48px; opacity: 0.3; margin-bottom: 12px;"></i>
+                            <p>Chưa có vân tay nào được lưu</p>
                         </div>
                     `;
                     return;
@@ -2205,7 +2372,7 @@
             }
         };
 
-        // === Fingerprint Status Handler ===
+        // === FIXED: Fingerprint Status Handler ===
         const fingerprintStatusHandler = {
             update(statusJson) {
                 try {
@@ -2215,41 +2382,68 @@
                     const statusEl = document.getElementById('fingerprintScanStatus');
                     const enrollSection = document.getElementById('fingerprintEnrollSection');
                     
-                    // Update status display
-                    statusEl.textContent = status.message;
+                    // Clear previous styling
+                    statusEl.style.background = 'var(--surface-light)';
+                    statusEl.style.color = 'var(--text-primary)';
                     
-                    // Handle verified fingerprint
-                    if (status.status === 'detected' && !status.existing) {
-                        // Find next available ID
-                        const nextId = this.getNextAvailableId();
-                        systemState.currentVerifiedFingerprintId = nextId;
-                        document.getElementById('verifiedFingerprintId').value = nextId;
-                        
-                        // Show enrollment form
-                        enrollSection.style.display = 'block';
-                        document.getElementById('fingerprintName').focus();
-                        
-                        // Update status styling
-                        statusEl.style.background = 'var(--success-color)';
-                        statusEl.style.color = 'white';
-                        
-                        showAlert(`<i class="fas fa-check-circle"></i> Phát hiện vân tay mới! Sẽ lưu với ID: ${nextId}`, 'success');
-                        
-                        // Stop scanning animation
-                        document.getElementById('fingerprintScanSection').classList.remove('scanning');
-                    } else if (status.status === 'exists') {
-                        statusEl.style.background = 'var(--warning-color)';
-                        statusEl.style.color = 'white';
-                        showAlert(`<i class="fas fa-exclamation-triangle"></i> Vân tay đã tồn tại với ID: ${status.id}`, 'warning');
-                    } else if (status.status === 'scanning') {
-                        statusEl.style.background = 'var(--primary-color)';
-                        statusEl.style.color = 'white';
-                    } else if (status.status === 'error' || status.status === 'failed') {
-                        statusEl.style.background = 'var(--danger-color)';
-                        statusEl.style.color = 'white';
-                    } else {
-                        statusEl.style.background = 'var(--surface-light)';
-                        statusEl.style.color = 'var(--text-primary)';
+                    switch(status.status) {
+                        case 'scanning':
+                            statusEl.textContent = '👆 Đặt ngón tay lên cảm biến AS608...';
+                            statusEl.style.background = 'var(--primary-color)';
+                            statusEl.style.color = 'white';
+                            break;
+                            
+                        case 'detected':
+                            if (!status.existing) {
+                                // New fingerprint detected
+                                const nextId = this.getNextAvailableId();
+                                systemState.currentVerifiedFingerprintId = nextId;
+                                document.getElementById('verifiedFingerprintId').value = nextId;
+                                
+                                statusEl.textContent = '✅ Quét thành công! Vân tay mới phát hiện.';
+                                statusEl.style.background = 'var(--success-color)';
+                                statusEl.style.color = 'white';
+                                
+                                // Show enrollment form
+                                enrollSection.style.display = 'block';
+                                document.getElementById('fingerprintName').focus();
+                                
+                                document.getElementById('fingerprintScanSection').classList.remove('scanning');
+                                
+                                alertManager.show('fp-new-detected', 
+                                    `🎉 Phát hiện vân tay mới! Sẽ lưu với ID: ${nextId}`, 
+                                    'success', 5000);
+                            } else {
+                                statusEl.textContent = `⚠️ Vân tay đã tồn tại với ID: ${status.id}`;
+                                statusEl.style.background = 'var(--warning-color)';
+                                statusEl.style.color = 'white';
+                                
+                                alertManager.show('fp-exists', 
+                                    `⚠️ Vân tay đã tồn tại với ID: ${status.id}`, 
+                                    'warning', 3000);
+                            }
+                            break;
+                            
+                        case 'exists':
+                            statusEl.textContent = `⚠️ Vân tay đã tồn tại với ID: ${status.id}`;
+                            statusEl.style.background = 'var(--warning-color)';
+                            statusEl.style.color = 'white';
+                            break;
+                            
+                        case 'failed':
+                        case 'error':
+                            statusEl.textContent = '❌ Không đọc được vân tay. Thử lại!';
+                            statusEl.style.background = 'var(--danger-color)';
+                            statusEl.style.color = 'white';
+                            break;
+                            
+                        case 'ready':
+                            statusEl.textContent = 'Sẵn sàng quét vân tay';
+                            break;
+                            
+                        default:
+                            statusEl.textContent = status.message || 'Trạng thái không xác định';
+                            break;
                     }
                     
                 } catch (e) {
@@ -2268,155 +2462,145 @@
             }
         };
 
-        // === RFID Controller ===
+        // === FIXED: RFID Controller ===
         const rfidController = {
-            /**
-             * Test scan RFID card
-             * Sends V5 = 1 to ESP32
-             */
             testScan() {
-                if (!actions.rfidControl) {
-                    showAlert('<i class="fas fa-exclamation-triangle"></i> Chưa kết nối với hệ thống E-Ra', 'warning');
+                if (systemState.systemLocked) {
+                    alertManager.show('rfid-locked', '🔒 Hệ thống đã bị khóa. Không thể quét thẻ RFID.', 'danger', 3000);
                     return;
                 }
+                
+                if (!connectionManager.testConnection()) return;
 
                 console.log('[RFID] Sending test scan command: V5 = 1');
-                try {
-                    eraWidget.sendAction(actions.rfidControl.id, 1);
-                    
-                    document.getElementById('rfidDetectSection').classList.add('detecting');
-                    showAlert('<i class="fas fa-id-card"></i> Đang quét thẻ RFID...', 'success');
-                } catch (error) {
-                    console.error('[RFID] Error sending test scan command:', error);
-                    showAlert('<i class="fas fa-exclamation-triangle"></i> Lỗi gửi lệnh test scan', 'danger');
-                }
+                eraWidget.sendAction(actions.rfidTestScan.id, 1);
+                
+                document.getElementById('rfidDetectSection').classList.add('detecting');
+                
+                // Update status immediately
+                const statusEl = document.getElementById('rfidDetectionStatus');
+                statusEl.textContent = '💳 Đang quét thẻ RFID... Đặt thẻ gần cảm biến';
+                statusEl.style.background = 'var(--primary-color)';
+                statusEl.style.color = 'white';
+                
+                alertManager.show('rfid-scan-start', '💳 Đang quét thẻ RFID... Đặt thẻ gần cảm biến!', 'success', 3000);
+                
+                // Auto stop detection animation after 10 seconds
+                setTimeout(() => {
+                    document.getElementById('rfidDetectSection').classList.remove('detecting');
+                    if (statusEl.textContent.includes('Đang quét')) {
+                        statusEl.textContent = 'Nhấn nút để test quét thẻ RFID';
+                        statusEl.style.background = 'var(--surface-light)';
+                        statusEl.style.color = 'var(--text-primary)';
+                    }
+                }, 10000);
             },
 
-            /**
-             * Add scanned RFID card
-             * Sends V5 = 2 to ESP32
-             */
             addScanned() {
                 const name = document.getElementById('rfidCardName').value.trim();
                 
                 if (!systemState.currentScannedRfidUid) {
-                    showAlert('<i class="fas fa-exclamation-triangle"></i> Không có thẻ nào được quét', 'warning');
+                    alertManager.show('rfid-no-scanned', '⚠️ Không có thẻ nào được quét', 'warning', 3000);
                     return;
                 }
                 
                 if (!name) {
-                    showAlert('<i class="fas fa-exclamation-triangle"></i> Vui lòng nhập tên cho thẻ', 'warning');
+                    alertManager.show('rfid-name-required', '⚠️ Vui lòng nhập tên cho thẻ', 'warning', 3000);
                     return;
                 }
 
-                if (!actions.rfidControl) {
-                    showAlert('<i class="fas fa-exclamation-triangle"></i> Chưa kết nối với hệ thống E-Ra', 'warning');
-                    return;
-                }
+                if (!connectionManager.testConnection()) return;
 
                 console.log('[RFID] Sending add command: V5 = 2');
-                try {
-                    eraWidget.sendAction(actions.rfidControl.id, 2);
-                    
-                    // Add to local list
-                    systemState.rfidList.push({
-                        uid: systemState.currentScannedRfidUid,
-                        name: name
-                    });
-                    
-                    showAlert(`<i class="fas fa-check"></i> Đã thêm thẻ "${name}": ${systemState.currentScannedRfidUid}`, 'success');
-                    
-                    // Clear form and hide
-                    document.getElementById('rfidCardName').value = '';
-                    document.getElementById('rfidManagementSection').style.display = 'none';
-                    systemState.currentScannedRfidUid = null;
-                    
-                    // Reset detection status
-                    document.getElementById('rfidDetectionStatus').textContent = 'Nhấn nút để test quét thẻ RFID';
-                    document.getElementById('rfidDetectionStatus').style.background = 'var(--surface-light)';
-                    document.getElementById('rfidDetectionStatus').style.color = 'var(--text-primary)';
-                    
-                    this.updateList();
-                } catch (error) {
-                    console.error('[RFID] Error sending add command:', error);
-                    showAlert('<i class="fas fa-exclamation-triangle"></i> Lỗi gửi lệnh add card', 'danger');
-                }
+                eraWidget.sendAction(actions.rfidAdd.id, 2);
+                
+                // Add to local list
+                systemState.rfidList.push({
+                    uid: systemState.currentScannedRfidUid,
+                    name: name
+                });
+                
+                alertManager.show('rfid-added', 
+                    `✅ Đã thêm thẻ "${name}": ${systemState.currentScannedRfidUid}`, 
+                    'success', 3000);
+                
+                // Clear form and hide
+                document.getElementById('rfidCardName').value = '';
+                document.getElementById('rfidManagementSection').style.display = 'none';
+                systemState.currentScannedRfidUid = null;
+                
+                // Reset detection status
+                const statusEl = document.getElementById('rfidDetectionStatus');
+                statusEl.textContent = 'Nhấn nút để test quét thẻ RFID';
+                statusEl.style.background = 'var(--surface-light)';
+                statusEl.style.color = 'var(--text-primary)';
+                
+                this.updateList();
             },
 
-            /**
-             * Add manual RFID card
-             * Sends V5 = 2 to ESP32
-             */
             addManual() {
                 const uid = document.getElementById('manualRfidUid').value.trim().toUpperCase();
                 const name = document.getElementById('manualRfidName').value.trim();
                 
                 if (!uid) {
-                    showAlert('<i class="fas fa-exclamation-triangle"></i> Vui lòng nhập UID thẻ RFID', 'warning');
+                    alertManager.show('rfid-uid-required', '⚠️ Vui lòng nhập UID thẻ RFID', 'warning', 3000);
                     return;
                 }
                 
                 if (!name) {
-                    showAlert('<i class="fas fa-exclamation-triangle"></i> Vui lòng nhập tên cho thẻ', 'warning');
+                    alertManager.show('rfid-name-required', '⚠️ Vui lòng nhập tên cho thẻ', 'warning', 3000);
                     return;
                 }
                 
                 // Check if UID already exists
                 if (systemState.rfidList.some(card => card.uid === uid)) {
-                    showAlert('<i class="fas fa-exclamation-triangle"></i> UID này đã tồn tại!', 'warning');
+                    alertManager.show('rfid-uid-exists', '⚠️ UID này đã tồn tại!', 'warning', 3000);
                     return;
                 }
 
-                if (!actions.rfidControl) {
-                    showAlert('<i class="fas fa-exclamation-triangle"></i> Chưa kết nối với hệ thống E-Ra', 'warning');
-                    return;
-                }
+                if (!connectionManager.testConnection()) return;
 
                 console.log('[RFID] Sending manual add command: V5 = 2');
-                try {
-                    eraWidget.sendAction(actions.rfidControl.id, 2);
-                    
-                    // Add to local list
-                    systemState.rfidList.push({ uid, name });
-                    
-                    showAlert(`<i class="fas fa-check"></i> Đã thêm thẻ "${name}": ${uid}`, 'success');
-                    
-                    // Clear form
-                    document.getElementById('manualRfidUid').value = '';
-                    document.getElementById('manualRfidName').value = '';
-                    
-                    this.updateList();
-                } catch (error) {
-                    console.error('[RFID] Error sending manual add command:', error);
-                    showAlert('<i class="fas fa-exclamation-triangle"></i> Lỗi gửi lệnh manual add', 'danger');
-                }
+                eraWidget.sendAction(actions.rfidAdd.id, 2);
+                
+                // Add to local list
+                systemState.rfidList.push({ uid, name });
+                
+                alertManager.show('rfid-manual-added', `✅ Đã thêm thẻ "${name}": ${uid}`, 'success', 3000);
+                
+                // Clear form
+                document.getElementById('manualRfidUid').value = '';
+                document.getElementById('manualRfidName').value = '';
+                
+                this.updateList();
             },
 
-            /**
-             * Remove RFID card
-             * Sends V5 = 3 to ESP32
-             */
             remove(uid) {
                 if (!confirm(`Xác nhận xóa thẻ RFID ${uid}?`)) return;
                 
-                if (!actions.rfidControl) {
-                    showAlert('<i class="fas fa-exclamation-triangle"></i> Chưa kết nối với hệ thống E-Ra', 'warning');
-                    return;
-                }
+                if (!connectionManager.testConnection()) return;
 
                 console.log('[RFID] Sending remove command: V5 = 3');
-                try {
-                    eraWidget.sendAction(actions.rfidControl.id, 3);
-                    
-                    // Remove from local list
-                    systemState.rfidList = systemState.rfidList.filter(card => card.uid !== uid);
-                    
-                    showAlert(`<i class="fas fa-trash"></i> Đã xóa thẻ RFID: ${uid}`, 'success');
-                    this.updateList();
-                } catch (error) {
-                    console.error('[RFID] Error sending remove command:', error);
-                    showAlert('<i class="fas fa-exclamation-triangle"></i> Lỗi gửi lệnh remove card', 'danger');
-                }
+                eraWidget.sendAction(actions.rfidRemove.id, 3);
+                
+                // Find card name for notification
+                const card = systemState.rfidList.find(c => c.uid === uid);
+                
+                // Remove from local list
+                systemState.rfidList = systemState.rfidList.filter(card => card.uid !== uid);
+                
+                alertManager.show('rfid-removed', 
+                    `🗑️ Đã xóa thẻ "${card?.name || 'Unknown'}": ${uid}`, 
+                    'success', 3000);
+                this.updateList();
+            },
+
+            clearAll() {
+                if (!confirm('Xác nhận xóa TẤT CẢ thẻ RFID?')) return;
+                
+                systemState.rfidList = [];
+                this.updateList();
+                alertManager.show('rfid-cleared', '🗑️ Đã xóa tất cả thẻ RFID', 'warning', 3000);
             },
 
             updateList() {
@@ -2425,7 +2609,8 @@
                 if (systemState.rfidList.length === 0) {
                     list.innerHTML = `
                         <div style="text-align: center; color: var(--text-secondary); padding: 20px;">
-                            Chưa có thẻ RFID nào được lưu
+                            <i class="fas fa-id-card" style="font-size: 48px; opacity: 0.3; margin-bottom: 12px;"></i>
+                            <p>Chưa có thẻ RFID nào được lưu</p>
                         </div>
                     `;
                     return;
@@ -2445,7 +2630,7 @@
             }
         };
 
-        // === RFID Status Handler ===
+        // === FIXED: RFID Status Handler ===
         const rfidStatusHandler = {
             update(detectionJson) {
                 try {
@@ -2460,24 +2645,37 @@
                         systemState.currentScannedRfidUid = detection.uid;
                         
                         // Update status
-                        statusEl.textContent = `Thẻ đã quét! UID: ${detection.uid}`;
-                        statusEl.style.background = detection.authorized ? 'var(--success-color)' : 'var(--warning-color)';
-                        statusEl.style.color = 'white';
-                        
-                        // Show management section for new cards
-                        if (!detection.authorized) {
+                        if (detection.authorized) {
+                            statusEl.textContent = `✅ Thẻ được ủy quyền! UID: ${detection.uid}`;
+                            statusEl.style.background = 'var(--success-color)';
+                            statusEl.style.color = 'white';
+                            
+                            alertManager.show('rfid-authorized', 
+                                `✅ Thẻ đã được ủy quyền: ${detection.uid}`, 
+                                'success', 3000);
+                        } else {
+                            statusEl.textContent = `💳 Thẻ mới phát hiện! UID: ${detection.uid}`;
+                            statusEl.style.background = 'var(--warning-color)';
+                            statusEl.style.color = 'white';
+                            
+                            // Show management section for new cards
                             managementSection.style.display = 'block';
                             uidInput.value = detection.uid;
                             document.getElementById('rfidCardName').focus();
+                            
+                            alertManager.show('rfid-new-detected', 
+                                `💳 Phát hiện thẻ mới: ${detection.uid}`, 
+                                'warning', 5000);
                         }
                         
                         // Stop detecting animation
                         document.getElementById('rfidDetectSection').classList.remove('detecting');
+                    } else if (detection.message) {
+                        statusEl.textContent = detection.message;
                         
-                        if (detection.authorized) {
-                            showAlert(`<i class="fas fa-check-circle"></i> Thẻ đã được ủy quyền: ${detection.uid}`, 'success');
-                        } else {
-                            showAlert(`<i class="fas fa-id-card"></i> Phát hiện thẻ mới: ${detection.uid}`, 'warning');
+                        if (detection.message.includes('Không phát hiện')) {
+                            statusEl.style.background = 'var(--danger-color)';
+                            statusEl.style.color = 'white';
                         }
                     }
                     
@@ -2487,45 +2685,42 @@
             }
         };
 
-        // === Camera Controller ===
+        // === FIXED: Camera Controller ===
         const cameraController = {
-            /**
-             * Manual camera capture
-             * Sends V7 = 2 to ESP32-CAM
-             */
             manualCapture() {
-                if (!actions.cameraControl) {
-                    showAlert('<i class="fas fa-exclamation-triangle"></i> Chưa kết nối với camera', 'warning');
-                    return;
-                }
+                if (!connectionManager.testConnection()) return;
 
                 console.log('[Camera] Sending manual capture command: V7 = 2');
-                try {
-                    eraWidget.sendAction(actions.cameraControl.id, 2);
-                    showAlert('<i class="fas fa-camera"></i> Đang chụp ảnh thủ công...', 'success');
-                } catch (error) {
-                    console.error('[Camera] Error sending manual capture command:', error);
-                    showAlert('<i class="fas fa-exclamation-triangle"></i> Lỗi gửi lệnh chụp ảnh', 'danger');
-                }
+                eraWidget.sendAction(actions.cameraManualTrigger.id, 2);
+                
+                // Disable button temporarily
+                const btn = document.getElementById('manualCaptureBtn');
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i><span>Đang chụp...</span>';
+                
+                setTimeout(() => {
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fas fa-camera"></i><span>Chụp Thủ Công</span>';
+                }, 3000);
+                
+                alertManager.show('camera-manual', '📸 Đang chụp ảnh thủ công...', 'success', 3000);
             },
 
-            /**
-             * Toggle auto capture mode
-             */
             toggleAuto() {
                 systemState.autoCapture = !systemState.autoCapture;
                 const btn = document.getElementById('autoCaptureBtn');
-                btn.innerHTML = systemState.autoCapture ? 
-                    '<i class="fas fa-sync-alt"></i><span>Tự Động: ON</span>' : 
-                    '<i class="fas fa-sync-alt"></i><span>Tự Động: OFF</span>';
-                btn.className = systemState.autoCapture ? 'btn btn-success' : 'btn btn-primary';
                 
-                showAlert(`Chế độ tự động chụp: ${systemState.autoCapture ? 'BẬT' : 'TẮT'}`, 'success');
+                if (systemState.autoCapture) {
+                    btn.innerHTML = '<i class="fas fa-sync-alt"></i><span>Tự Động: ON</span>';
+                    btn.className = 'btn btn-success';
+                    alertManager.show('camera-auto-on', '🤖 Chế độ tự động chụp: BẬT', 'success', 2000);
+                } else {
+                    btn.innerHTML = '<i class="fas fa-sync-alt"></i><span>Tự Động: OFF</span>';
+                    btn.className = 'btn btn-primary';
+                    alertManager.show('camera-auto-off', '📴 Chế độ tự động chụp: TẮT', 'warning', 2000);
+                }
             },
 
-            /**
-             * Display received camera image
-             */
             displayImage(base64Data) {
                 if (!base64Data) return;
                 
@@ -2537,6 +2732,8 @@
                 img.onload = () => {
                     cameraFeed.innerHTML = '';
                     cameraFeed.appendChild(img);
+                    
+                    alertManager.show('camera-image', '📸 Đã nhận ảnh từ camera', 'success', 2000);
                     
                     // Auto-hide after 30 seconds
                     setTimeout(() => {
@@ -2551,80 +2748,36 @@
                         `;
                     }, 30000);
                 };
+                img.onerror = () => {
+                    alertManager.show('camera-error', '❌ Lỗi hiển thị ảnh từ camera', 'danger', 3000);
+                };
             }
         };
 
-        // === Connection Status & Offline Mode Management ===
-        function updateConnectionStatus(connected) {
-            const statusEl = document.getElementById('statusConnected');
-            if (connected) {
-                statusEl.innerHTML = '<i class="fas fa-check-circle" style="color: var(--success-color);"></i>';
-            } else {
-                statusEl.innerHTML = '<i class="fas fa-times-circle" style="color: var(--danger-color);"></i>';
-            }
-        }
-
-        function enableOfflineMode() {
-            console.log('[Dashboard] Enabling offline mode');
-            
-            // Show offline notification
-            showAlert('<i class="fas fa-wifi"></i> Chế độ ngoại tuyến - Một số chức năng bị hạn chế', 'warning');
-            
-            // Update connection status
-            updateConnectionStatus(false);
-            
-            // Add offline indicators to buttons
-            const buttons = document.querySelectorAll('.btn');
-            buttons.forEach(btn => {
-                if (!btn.classList.contains('btn-primary')) {
-                    btn.style.opacity = '0.6';
-                    btn.title = 'Chức năng không khả dụng khi ngoại tuyến';
-                }
-            });
-        }
-
-        function checkConnectionHealth() {
-            // Periodically check if E-Ra is still connected
-            if (!actions.doorControl) {
-                console.warn('[Dashboard] E-Ra connection lost');
-                updateConnectionStatus(false);
-                showAlert('<i class="fas fa-exclamation-triangle"></i> Mất kết nối với E-Ra Platform', 'warning');
-            }
-        }
-
-        // === Enhanced Error Handling ===
-        function handleEraError(error, operation) {
-            console.error(`[E-Ra Error] ${operation}:`, error);
-            showAlert(`<i class="fas fa-exclamation-triangle"></i> Lỗi ${operation}: ${error.message || 'Không xác định'}`, 'danger');
-        }
-
-        // === Utility Functions Enhancement ===
-        function showAlert(message, type = 'success') {
-            const container = document.getElementById('alertContainer');
-            const alert = document.createElement('div');
-            alert.className = `alert alert-${type}`;
-            alert.innerHTML = `
-                <span>${message}</span>
-                <button class="alert-close" onclick="this.parentElement.remove()">×</button>
-            `;
-            
-            container.appendChild(alert);
-            
-            // Auto-remove after 5 seconds
-            setTimeout(() => {
-                if (alert.parentElement) {
-                    alert.remove();
-                }
-            }, 5000);
-            
-            // Log alert for debugging
-            console.log(`[Alert ${type.toUpperCase()}] ${message.replace(/<[^>]*>/g, '')}`);
-        }
-
-        // === Motion Handler ===
+        // === FIXED: Motion Handler with Debouncing ===
         const motionHandler = {
+            lastMotionState: false,
+            motionDebounceTimer: null,
+            
             update(detected) {
+                // Debounce motion detection to avoid spam
+                if (this.motionDebounceTimer) {
+                    clearTimeout(this.motionDebounceTimer);
+                }
+                
+                this.motionDebounceTimer = setTimeout(() => {
+                    this.processMotion(detected);
+                }, 500); // 500ms debounce
+            },
+            
+            processMotion(detected) {
+                // Only process if state actually changed
+                if (detected === this.lastMotionState) return;
+                
+                this.lastMotionState = detected;
                 systemState.motionDetected = detected;
+                systemState.lastMotionTime = Date.now();
+                
                 console.log('[Motion] Detection status:', detected);
                 
                 const indicator = document.getElementById('motionIndicator');
@@ -2645,13 +2798,21 @@
                     // Remove blip after animation
                     setTimeout(() => blip.remove(), 3000);
                     
-                    // Show alert
-                    showAlert('<i class="fas fa-exclamation-triangle"></i> Phát hiện chuyển động! Camera đang chụp ảnh...', 'danger');
-                    
-                    // Trigger camera if auto mode is on
-                    if (systemState.autoCapture && actions.cameraMotionTrigger) {
-                        console.log('[Camera] Sending motion trigger command: V7 = 1');
-                        eraWidget.sendAction(actions.cameraMotionTrigger.id, 1);
+                    // Show alert only if auto capture is on
+                    if (systemState.autoCapture) {
+                        alertManager.show('motion-detected', 
+                            '🚨 Phát hiện chuyển động! Camera đang chụp ảnh...', 
+                            'danger', 3000);
+                        
+                        // Trigger camera if auto mode is on and connected
+                        if (systemState.isConnected && actions.cameraMotionTrigger) {
+                            console.log('[Camera] Sending motion trigger command: V7 = 1');
+                            eraWidget.sendAction(actions.cameraMotionTrigger.id, 1);
+                        }
+                    } else {
+                        alertManager.show('motion-detected-no-auto', 
+                            '👁️ Phát hiện chuyển động (Auto capture: OFF)', 
+                            'warning', 2000);
                     }
                 } else {
                     indicator.className = 'motion-indicator motion-clear';
@@ -2674,13 +2835,18 @@
                     document.getElementById('statusConnected').innerHTML = 
                         '<i class="fas fa-check-circle" style="color: var(--success-color);"></i>';
                     document.getElementById('statusFingerprints').textContent = 
-                        status.fingerprint_count || '0';
+                        status.fingerprint_count || systemState.fingerprintList.length;
                     document.getElementById('statusRfidCards').textContent = 
-                        status.rfid_cards || '0';
+                        status.rfid_cards || systemState.rfidList.length;
                     document.getElementById('statusCameraCaptures').textContent = 
                         status.camera_captures || '0';
                     document.getElementById('statusFailedAttempts').textContent = 
                         (status.fingerprint_fails || 0) + (status.rfid_fails || 0);
+                    
+                    // Update system state
+                    if (status.alert_mode && !systemState.systemLocked) {
+                        securityManager.incrementFailedAttempts();
+                    }
                     
                 } catch (e) {
                     console.error('[System Status] Parse error:', e);
@@ -2701,8 +2867,7 @@
                     const status = JSON.parse(statusJson);
                     console.log('[Camera Status] Received:', status);
                     
-                    // Handle camera status updates if needed
-                    // This can be extended for camera health monitoring
+                    // Could update camera health indicators here
                     
                 } catch (e) {
                     console.error('[Camera Status] Parse error:', e);
@@ -2715,23 +2880,38 @@
             update(alertLevel) {
                 console.log('[Alert] Level:', alertLevel);
                 
-                if (alertLevel > 0) {
-                    showAlert('<i class="fas fa-exclamation-triangle"></i> CẢNH BÁO: Quá nhiều lần thử sai! Hệ thống bị khóa.', 'danger');
+                if (alertLevel > 0 && !systemState.systemLocked) {
+                    securityManager.incrementFailedAttempts();
                 }
             }
         };
 
-        // === History Controller ===
+        // === FIXED: History Controller with Deduplication ===
         const historyController = {
+            lastLogEntry: null,
+            
             addEntry(logJson) {
                 try {
                     const log = JSON.parse(logJson);
                     console.log('[History] New entry:', log);
                     
-                    // Add to history
-                    const timestamp = new Date(log.timestamp * 1000);
+                    // FIXED: Deduplication logic
+                    const currentTime = Date.now();
+                    const logTime = log.timestamp * 1000;
+                    
+                    // Skip if same entry within 5 seconds
+                    if (this.lastLogEntry && 
+                        this.lastLogEntry.method === log.method && 
+                        this.lastLogEntry.id === log.id && 
+                        this.lastLogEntry.success === log.success &&
+                        (currentTime - this.lastLogEntry.time) < 5000) {
+                        console.log('[History] Skipping duplicate entry');
+                        return;
+                    }
+                    
+                    // Create history item
                     const historyItem = {
-                        timestamp: timestamp,
+                        timestamp: new Date(logTime),
                         method: log.method,
                         id: log.id,
                         name: log.name || 'Unknown',
@@ -2739,20 +2919,48 @@
                         action: log.door_status === 'opening' ? 'Mở cửa' : 'Cảnh báo'
                     };
                     
+                    // Add to history
                     systemState.accessHistory.unshift(historyItem);
-                    if (systemState.accessHistory.length > 100) {
-                        systemState.accessHistory.pop(); // Keep last 100 entries
+                    
+                    // Update last entry tracker
+                    this.lastLogEntry = {
+                        method: log.method,
+                        id: log.id,
+                        success: log.success,
+                        time: currentTime
+                    };
+                    
+                    // Limit to 50 entries to prevent spam
+                    if (systemState.accessHistory.length > 50) {
+                        systemState.accessHistory = systemState.accessHistory.slice(0, 50);
                     }
                     
-                    // Update history table
+                    // Update table
                     this.updateTable();
                     
-                    // Show notification
-                    const success = log.success ? '<i class="fas fa-check-circle"></i>' : '<i class="fas fa-times-circle"></i>';
-                    const method = log.method === 'fingerprint' ? '<i class="fas fa-fingerprint"></i>' : '<i class="fas fa-id-card"></i>';
-                    const message = `${success} ${method} ${log.name || `ID: ${log.id}`}`;
-                    
-                    showAlert(message, log.success ? 'success' : 'danger');
+                    // Show notification only for successful access or first failed attempt
+                    if (log.success) {
+                        const method = log.method === 'fingerprint' ? '👆' : '💳';
+                        alertManager.show('access-success', 
+                            `${method} Truy cập thành công: ${log.name || log.id}`, 
+                            'success', 3000);
+                    } else {
+                        // Only show failed notification if not too frequent
+                        const recentFailed = systemState.accessHistory.filter(h => 
+                            !h.success && 
+                            h.method === log.method && 
+                            (currentTime - h.timestamp.getTime()) < 10000
+                        ).length;
+                        
+                        if (recentFailed <= 2) { // Only show first 2 failures
+                            const method = log.method === 'fingerprint' ? '👆' : '💳';
+                            alertManager.show('access-failed', 
+                                `${method} Truy cập bị từ chối: ${log.id}`, 
+                                'danger', 3000);
+                        }
+                        
+                        securityManager.incrementFailedAttempts();
+                    }
                     
                 } catch (e) {
                     console.error('[History] Parse error:', e);
@@ -2766,14 +2974,15 @@
                     tbody.innerHTML = `
                         <tr>
                             <td colspan="6" style="text-align: center; padding: 40px; color: var(--text-secondary);">
-                                Chưa có lịch sử truy cập
+                                <i class="fas fa-history" style="font-size: 48px; opacity: 0.3; margin-bottom: 12px;"></i>
+                                <p>Chưa có lịch sử truy cập</p>
                             </td>
                         </tr>
                     `;
                     return;
                 }
                 
-                tbody.innerHTML = systemState.accessHistory.map(item => `
+                tbody.innerHTML = systemState.accessHistory.slice(0, 20).map(item => `
                     <tr>
                         <td>${this.formatDateTime(item.timestamp)}</td>
                         <td>
@@ -2803,7 +3012,7 @@
                 const year = document.getElementById('filterYear').value;
                 const method = document.getElementById('filterMethod').value;
                 
-                let filtered = systemState.accessHistory;
+                let filtered = [...systemState.accessHistory];
                 
                 if (date) {
                     const filterDate = new Date(date);
@@ -2834,14 +3043,15 @@
                     tbody.innerHTML = `
                         <tr>
                             <td colspan="6" style="text-align: center; padding: 40px; color: var(--text-secondary);">
-                                Không có dữ liệu phù hợp với bộ lọc
+                                <i class="fas fa-search" style="font-size: 48px; opacity: 0.3; margin-bottom: 12px;"></i>
+                                <p>Không có dữ liệu phù hợp với bộ lọc</p>
                             </td>
                         </tr>
                     `;
                     return;
                 }
                 
-                tbody.innerHTML = filtered.map(item => `
+                tbody.innerHTML = filtered.slice(0, 50).map(item => `
                     <tr>
                         <td>${this.formatDateTime(item.timestamp)}</td>
                         <td>
@@ -2865,8 +3075,17 @@
                 `).join('');
             },
 
+            clearHistory() {
+                if (confirm('Xác nhận xóa toàn bộ lịch sử truy cập?')) {
+                    systemState.accessHistory = [];
+                    this.lastLogEntry = null;
+                    this.updateTable();
+                    alertManager.show('history-cleared', '🗑️ Đã xóa toàn bộ lịch sử truy cập', 'success', 3000);
+                }
+            },
+
             export() {
-                showAlert('<i class="fas fa-file-excel"></i> Tính năng xuất Excel đang được phát triển', 'warning');
+                alertManager.show('export-todo', '📊 Tính năng xuất Excel đang được phát triển', 'info', 3000);
             },
 
             formatDateTime(date) {
@@ -2877,26 +3096,87 @@
             }
         };
 
-        // === Utility Functions ===
-        function showAlert(message, type = 'success') {
-            const container = document.getElementById('alertContainer');
-            const alert = document.createElement('div');
-            alert.className = `alert alert-${type}`;
-            alert.innerHTML = `
-                <span>${message}</span>
-                <button class="alert-close" onclick="this.parentElement.remove()">×</button>
-            `;
+        // === Debug Panel ===
+        const debugPanel = {
+            isVisible: false,
             
-            container.appendChild(alert);
-            
-            // Auto-remove after 5 seconds
-            setTimeout(() => {
-                if (alert.parentElement) {
-                    alert.remove();
-                }
-            }, 5000);
-        }
+            toggle() {
+                this.isVisible = !this.isVisible;
+                const panel = document.getElementById('debugPanel');
+                panel.className = this.isVisible ? 'debug-panel show' : 'debug-panel';
+            }
+        };
 
+        // === Debug Test Functions ===
+        const debugTest = {
+            connection() {
+                connectionManager.testConnection();
+            },
+            
+            door() {
+                const statuses = ['closed', 'opening', 'open', 'closing'];
+                const randomStatus = statuses[Math.floor(Math.random() * statuses.length)];
+                doorStatusHandler.update(randomStatus);
+                alertManager.show('debug-door', `🚪 Test door status: ${randomStatus}`, 'info', 2000);
+            },
+
+            motion() {
+                const detected = Math.random() > 0.5;
+                motionHandler.processMotion(detected);
+                alertManager.show('debug-motion', `👁️ Test motion: ${detected ? 'detected' : 'cleared'}`, 'info', 2000);
+            },
+
+            fingerprint() {
+                const scenarios = [
+                    { status: 'scanning', message: 'Đang quét vân tay...' },
+                    { status: 'detected', message: 'Vân tay mới được phát hiện', existing: false },
+                    { status: 'exists', message: 'Vân tay đã tồn tại với ID: 1', id: 1, existing: true },
+                    { status: 'failed', message: 'Không đọc được vân tay' }
+                ];
+                const scenario = scenarios[Math.floor(Math.random() * scenarios.length)];
+                fingerprintStatusHandler.update(JSON.stringify(scenario));
+                alertManager.show('debug-fingerprint', `👆 Test fingerprint: ${scenario.status}`, 'info', 2000);
+            },
+
+            rfid() {
+                const scenarios = [
+                    { uid: '04:' + Math.random().toString(16).substr(2, 8).toUpperCase(), authorized: true },
+                    { uid: 'BA:9D:E7:5C', authorized: false },
+                    { message: 'Không phát hiện thẻ nào' }
+                ];
+                const scenario = scenarios[Math.floor(Math.random() * scenarios.length)];
+                rfidStatusHandler.update(JSON.stringify(scenario));
+                alertManager.show('debug-rfid', `💳 Test RFID: ${scenario.uid || 'no card'}`, 'info', 2000);
+            },
+
+            camera() {
+                // Simulate small test image
+                const testImageBase64 = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==';
+                cameraController.displayImage(testImageBase64);
+                alertManager.show('debug-camera', '📸 Test camera image', 'info', 2000);
+            },
+
+            clearData() {
+                if (confirm('Xóa tất cả dữ liệu test?')) {
+                    systemState.fingerprintList = [];
+                    systemState.rfidList = [];
+                    systemState.accessHistory = [];
+                    systemState.failedAttempts = 0;
+                    systemState.systemLocked = false;
+                    
+                    fingerprintController.updateList();
+                    rfidController.updateList();
+                    historyController.updateTable();
+                    
+                    securityManager.enableAllButtons();
+                    alertManager.clear();
+                    
+                    alertManager.show('debug-cleared', '🗑️ Đã xóa tất cả dữ liệu test', 'success', 3000);
+                }
+            }
+        };
+
+        // === Utility Functions ===
         function switchTab(tab, button) {
             // Update tab buttons
             document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
@@ -2909,7 +3189,7 @@
 
         // === Initial Data Loading ===
         function loadInitialData() {
-            // Load fingerprint list (simulate)
+            // Load sample fingerprint list
             setTimeout(() => {
                 systemState.fingerprintList = [
                     { id: 1, name: 'Admin' },
@@ -2918,7 +3198,7 @@
                 fingerprintController.updateList();
             }, 1000);
 
-            // Load RFID list (simulate)
+            // Load sample RFID list  
             setTimeout(() => {
                 systemState.rfidList = [
                     { uid: '04:XX:XX:XX', name: 'Thẻ của Thiện' }
@@ -2926,45 +3206,17 @@
                 rfidController.updateList();
             }, 1000);
 
-            // Load sample history
-            const sampleHistory = [
-                {
-                    timestamp: new Date(),
-                    method: 'fingerprint',
-                    id: '1',
-                    name: 'Admin',
-                    success: true,
-                    action: 'Mở cửa'
-                },
-                {
-                    timestamp: new Date(Date.now() - 3600000),
-                    method: 'rfid',
-                    id: '04:XX:XX:XX',
-                    name: 'Không xác định',
-                    success: false,
-                    action: 'Cảnh báo'
-                }
-            ];
-            systemState.accessHistory = sampleHistory;
+            // Initialize empty history
             historyController.updateTable();
         }
 
         // === Dashboard Initialization ===
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('=== Smart Door Dashboard v3.0 - E-Ra Integration ===');
+            console.log('=== Smart Door Dashboard v4.0 - All Issues Fixed ===');
             console.log('Initializing dashboard...');
             
-            // Show loading state
-            showAlert('<i class="fas fa-spinner fa-spin"></i> Đang khởi tạo dashboard...', 'success');
-            
-            // Initialize E-Ra Widget with error handling
-            try {
-                initializeEraWidget();
-            } catch (error) {
-                console.error('[Dashboard] E-Ra initialization failed:', error);
-                showAlert('<i class="fas fa-exclamation-triangle"></i> Không thể kết nối E-Ra - Chế độ offline', 'danger');
-                enableOfflineMode();
-            }
+            // Initialize E-Ra Widget
+            initializeEraWidget();
             
             // Load initial data
             loadInitialData();
@@ -2973,118 +3225,40 @@
             const today = new Date().toISOString().split('T')[0];
             document.getElementById('filterDate').value = today;
             
-            // Setup connection monitoring
-            setInterval(checkConnectionHealth, 30000); // Check every 30 seconds
+            // Initial connection status
+            connectionManager.updateStatus(false);
             
-            // Show initialization complete
+            // Show initial message
             setTimeout(() => {
-                if (actions.doorControl) {
-                    showAlert('<i class="fas fa-check-circle"></i> Dashboard đã sẵn sàng - Kết nối E-Ra thành công', 'success');
+                if (!systemState.isConnected) {
+                    alertManager.show('initial-connecting', 
+                        '🔗 Đang kết nối với hệ thống E-Ra IoT...', 
+                        'info', 5000);
                 } else {
-                    showAlert('<i class="fas fa-plug"></i> Dashboard đã sẵn sàng - Đang chờ kết nối E-Ra...', 'warning');
+                    alertManager.show('initial-ready', 
+                        '✅ Dashboard v4.0 đã sẵn sàng - All issues fixed!', 
+                        'success', 3000);
                 }
-            }, 3000);
+            }, 2000);
             
             console.log('Dashboard initialization completed');
         });
 
-        /**
-         * ===================================
-         * ENHANCED DEBUG & TESTING FUNCTIONS
-         * ===================================
-         * Chỉ dùng để test khi chưa có ESP32
-         */
+        // === Global Debug Access ===
+        window.debugTest = debugTest;
+        window.alertManager = alertManager;
+        window.systemState = systemState;
+        window.securityManager = securityManager;
         
-        // Enhanced test functions for development
-        function testDoorStatus() {
-            const statuses = ['closed', 'opening', 'open', 'closing'];
-            const randomStatus = statuses[Math.floor(Math.random() * statuses.length)];
-            console.log(`[Debug] Testing door status: ${randomStatus}`);
-            doorStatusHandler.update(randomStatus);
-        }
-
-        function testMotion() {
-            const detected = Math.random() > 0.5;
-            console.log(`[Debug] Testing motion: ${detected}`);
-            motionHandler.update(detected);
-        }
-
-        function testFingerprint() {
-            const status = {
-                status: Math.random() > 0.7 ? 'detected' : 'exists',
-                message: Math.random() > 0.7 ? 'Vân tay mới được phát hiện' : 'Vân tay đã tồn tại',
-                existing: Math.random() > 0.7,
-                id: Math.floor(Math.random() * 10) + 1
-            };
-            console.log('[Debug] Testing fingerprint:', status);
-            fingerprintStatusHandler.update(JSON.stringify(status));
-        }
-
-        function testRFID() {
-            const detection = {
-                uid: '04:' + Math.random().toString(16).substr(2, 8).toUpperCase(),
-                authorized: Math.random() > 0.7,
-                message: 'Thẻ RFID được phát hiện'
-            };
-            console.log('[Debug] Testing RFID:', detection);
-            rfidStatusHandler.update(JSON.stringify(detection));
-        }
-
-        function testConnectionLoss() {
-            console.log('[Debug] Simulating connection loss');
-            configs = {};
-            actions = {};
-            updateConnectionStatus(false);
-            enableOfflineMode();
-        }
-
-        function testReconnection() {
-            console.log('[Debug] Simulating reconnection');
-            // Simulate successful connection
-            actions.doorControl = { id: 'V0' };
-            actions.fingerprintControl = { id: 'V4' };
-            actions.rfidControl = { id: 'V5' };
-            actions.cameraControl = { id: 'V7' };
-            updateConnectionStatus(true);
-            showAlert('<i class="fas fa-check-circle"></i> Kết nối lại thành công', 'success');
-        }
-
-        // Make enhanced test functions available globally for debugging
-        window.debugTest = {
-            door: testDoorStatus,
-            motion: testMotion,
-            fingerprint: testFingerprint,
-            rfid: testRFID,
-            disconnect: testConnectionLoss,
-            reconnect: testReconnection,
-            
-            // Test all functions at once
-            all: () => {
-                testDoorStatus();
-                setTimeout(testMotion, 1000);
-                setTimeout(testFingerprint, 2000);
-                setTimeout(testRFID, 3000);
-            }
-        };
-
-        // Add keyboard shortcuts for quick testing (Ctrl+Shift+T)
-        document.addEventListener('keydown', function(e) {
-            if (e.ctrlKey && e.shiftKey && e.key === 'T') {
-                console.log('[Debug] Running all tests...');
-                window.debugTest.all();
-            }
-        });
-
-        console.log('=== Debug Functions Available ===');
-        console.log('window.debugTest.door() - Test door status');
-        console.log('window.debugTest.motion() - Test motion detection');
-        console.log('window.debugTest.fingerprint() - Test fingerprint scan');
-        console.log('window.debugTest.rfid() - Test RFID detection');
-        console.log('window.debugTest.disconnect() - Test connection loss');
-        console.log('window.debugTest.reconnect() - Test reconnection');
-        console.log('window.debugTest.all() - Test all functions');
-        console.log('Ctrl+Shift+T - Quick test all functions');
-        console.log('================================');
+        console.log('=== Debug functions available ===');
+        console.log('- debugTest.connection()');
+        console.log('- debugTest.door()');
+        console.log('- debugTest.motion()');
+        console.log('- debugTest.fingerprint()');
+        console.log('- debugTest.rfid()');
+        console.log('- debugTest.camera()');
+        console.log('- debugTest.clearData()');
+        console.log('===============================');
     </script>
 </body>
 </html>
