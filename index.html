@@ -1187,17 +1187,20 @@
         let configFingerprintResult = null; // V11: Fingerprint result
         let configRfidResult = null;        // V12: RFID result
 
-        // Action mapping
-        let actionDoorOpen = null;          // V0=1: Open door
-        let actionDoorClose = null;         // V0=0: Close door  
-        let actionDoorStop = null;          // V0=2: Stop door
-        let actionFingerprintTest = null;   // V4 commands
-        let actionFingerprintEnroll = null;
-        let actionFingerprintDelete = null;
-        let actionRfidTest = null;          // V5 commands
-        let actionRfidEnroll = null;
-        let actionRfidDelete = null;
-        let actionCameraManual = null;      // V7=2: Manual camera trigger
+        // Action mapping - Match với 13 actions trong E-Ra config
+        let actionDoorClose = null;             // action[0]: V0=0
+        let actionDoorOpen = null;              // action[1]: V0=1  
+        let actionDoorStop = null;              // action[2]: V0=2
+        let actionFingerprintTestScan = null;   // action[3]: V4=1
+        let actionFingerprintTestStop = null;   // action[4]: V4=2
+        let actionFingerprintEnroll = null;     // action[5]: V4=3
+        let actionFingerprintDelete = null;     // action[6]: V4=4
+        let actionRfidTestScan = null;          // action[7]: V5=1
+        let actionRfidAdd = null;               // action[8]: V5=2
+        let actionRfidRemove = null;            // action[9]: V5=3
+        let actionRfidTestStop = null;          // action[10]: V5=4
+        let actionCameraMotionTrigger = null;   // action[11]: V7=1
+        let actionCameraManualTrigger = null;   // action[12]: V7=2
 
         // System State
         let systemState = {
@@ -1211,7 +1214,11 @@
             accessHistory: [],
             isConnected: false,
             failedAttempts: 0,
-            lastCaptureTime: null
+            lastCaptureTime: null,
+            // Camera image chunk handling
+            imageChunks: null,
+            imageSize: 0,
+            imageTotalChunks: 0
         };
 
         // Alert Manager
@@ -1293,6 +1300,7 @@
                 if (!connectionManager.testConnection()) return;
                 
                 if (actionDoorOpen && actionDoorOpen.action) {
+                    // Trigger separate open door action
                     eraWidget.triggerAction(actionDoorOpen.action, null);
                     alertManager.show('door-opening', '🚪 Đang mở cửa...', 'success', 3000);
                     doorStatusHandler.update('opening');
@@ -1303,6 +1311,7 @@
                 if (!connectionManager.testConnection()) return;
                 
                 if (actionDoorClose && actionDoorClose.action) {
+                    // Trigger separate close door action
                     eraWidget.triggerAction(actionDoorClose.action, null);
                     alertManager.show('door-closing', '🚪 Đang đóng cửa...', 'warning', 3000);
                     doorStatusHandler.update('closing');
@@ -1313,6 +1322,7 @@
                 if (!connectionManager.testConnection()) return;
                 
                 if (actionDoorStop && actionDoorStop.action) {
+                    // Trigger separate stop door action
                     eraWidget.triggerAction(actionDoorStop.action, null);
                     alertManager.show('door-stopping', '⏸️ Đang dừng cửa...', 'warning', 2000);
                 }
@@ -1383,9 +1393,9 @@
             startScan() {
                 if (!connectionManager.testConnection()) return;
                 
-                if (actionFingerprintTest && actionFingerprintTest.action) {
-                    // Send fingerprint test command
-                    eraWidget.triggerAction(actionFingerprintTest.action, JSON.stringify({cmd: 1}));
+                if (actionFingerprintTestScan && actionFingerprintTestScan.action) {
+                    // Trigger fingerprint test scan action
+                    eraWidget.triggerAction(actionFingerprintTestScan.action, null);
                     
                     systemState.fingerprintScanActive = true;
                     document.getElementById('startScanBtn').style.display = 'none';
@@ -1402,8 +1412,9 @@
             },
 
             stopScan() {
-                if (actionFingerprintTest && actionFingerprintTest.action) {
-                    eraWidget.triggerAction(actionFingerprintTest.action, JSON.stringify({cmd: 2}));
+                if (actionFingerprintTestStop && actionFingerprintTestStop.action) {
+                    // Trigger fingerprint test stop action
+                    eraWidget.triggerAction(actionFingerprintTestStop.action, null);
                 }
                 
                 this.resetScanUI();
@@ -1423,6 +1434,7 @@
                 statusEl.style.color = 'var(--text-primary)';
             },
 
+            // Thêm vân tay đã quét với tên
             enrollVerified() {
                 const name = document.getElementById('fingerprintName').value.trim();
                 
@@ -1432,16 +1444,16 @@
                 }
 
                 if (!systemState.currentVerifiedFingerprintId) {
-                    alertManager.show('fp-no-verified', '⚠️ Không có vân tay xác minh', 'warning', 3000);
+                    alertManager.show('fp-no-verified', '⚠️ Không có vân tay được quét', 'warning', 3000);
                     return;
                 }
 
                 if (actionFingerprintEnroll && actionFingerprintEnroll.action) {
-                    const enrollData = JSON.stringify({
-                        cmd: 3,
+                    // Trigger fingerprint enroll action với data
+                    const enrollData = {
                         id: systemState.currentVerifiedFingerprintId,
                         name: name
-                    });
+                    };
                     
                     eraWidget.triggerAction(actionFingerprintEnroll.action, enrollData);
                     
@@ -1453,15 +1465,17 @@
                     });
                     systemState.fingerprintList.sort((a, b) => a.id - b.id);
                     
-                    alertManager.show('fp-enrolled', `✅ Đã thêm vân tay "${name}"`, 'success', 5000);
+                    alertManager.show('fp-enrolled', `✅ Đã thêm vân tay "${name}" với ID ${systemState.currentVerifiedFingerprintId}`, 'success', 5000);
                     
+                    // Reset form
                     document.getElementById('fingerprintName').value = '';
                     systemState.currentVerifiedFingerprintId = null;
-                    this.stopScan();
+                    document.getElementById('fingerprintEnrollSection').style.display = 'none';
                     this.updateList();
                 }
             },
 
+            // Thêm vân tay thủ công
             enrollManual() {
                 const id = parseInt(document.getElementById('manualFingerprintId').value);
                 const name = document.getElementById('manualFingerprintName').value.trim();
@@ -1482,18 +1496,18 @@
                 }
 
                 if (actionFingerprintEnroll && actionFingerprintEnroll.action) {
-                    const enrollData = JSON.stringify({
-                        cmd: 3,
+                    // Trigger fingerprint enroll action với data
+                    const enrollData = {
                         id: id,
                         name: name
-                    });
+                    };
                     
                     eraWidget.triggerAction(actionFingerprintEnroll.action, enrollData);
                     
                     systemState.fingerprintList.push({ id, name });
                     systemState.fingerprintList.sort((a, b) => a.id - b.id);
                     
-                    alertManager.show('fp-manual-enrolled', `✅ Đã thêm vân tay "${name}"`, 'success', 3000);
+                    alertManager.show('fp-manual-enrolled', `✅ Đã thêm vân tay "${name}" với ID ${id}`, 'success', 3000);
                     
                     document.getElementById('manualFingerprintId').value = '';
                     document.getElementById('manualFingerprintName').value = '';
@@ -1508,10 +1522,8 @@
                 if (!confirm(`Xác nhận xóa vân tay "${fingerprint.name}"?`)) return;
                 
                 if (actionFingerprintDelete && actionFingerprintDelete.action) {
-                    const deleteData = JSON.stringify({
-                        cmd: 4,
-                        id: id
-                    });
+                    // Trigger fingerprint delete action với data
+                    const deleteData = { id: id };
                     
                     eraWidget.triggerAction(actionFingerprintDelete.action, deleteData);
                     systemState.fingerprintList = systemState.fingerprintList.filter(fp => fp.id !== id);
@@ -1561,8 +1573,9 @@
             testScan() {
                 if (!connectionManager.testConnection()) return;
 
-                if (actionRfidTest && actionRfidTest.action) {
-                    eraWidget.triggerAction(actionRfidTest.action, JSON.stringify({cmd: 1}));
+                if (actionRfidTestScan && actionRfidTestScan.action) {
+                    // Trigger RFID test scan action
+                    eraWidget.triggerAction(actionRfidTestScan.action, null);
                     
                     document.getElementById('rfidDetectSection').classList.add('detecting');
                     
@@ -1571,19 +1584,54 @@
                     statusEl.style.background = 'var(--primary-color)';
                     statusEl.style.color = 'white';
                     
-                    alertManager.show('rfid-scan-start', '💳 Bắt đầu quét thẻ RFID!', 'success', 3000);
+                    // Show stop button
+                    const testBtn = document.querySelector('#rfidTab .btn-primary');
+                    testBtn.style.display = 'none';
                     
-                    setTimeout(() => {
-                        document.getElementById('rfidDetectSection').classList.remove('detecting');
-                        if (statusEl.textContent.includes('Đang quét')) {
-                            statusEl.textContent = 'Nhấn nút để bắt đầu quét thẻ RFID';
-                            statusEl.style.background = 'var(--surface-light)';
-                            statusEl.style.color = 'var(--text-primary)';
-                        }
-                    }, 10000);
+                    const stopBtn = document.createElement('button');
+                    stopBtn.className = 'btn btn-danger';
+                    stopBtn.style.width = '100%';
+                    stopBtn.style.marginTop = '12px';
+                    stopBtn.id = 'rfidStopBtn';
+                    stopBtn.innerHTML = '<i class="fas fa-stop"></i><span>Dừng Quét</span>';
+                    stopBtn.onclick = () => this.stopScan();
+                    
+                    testBtn.parentElement.appendChild(stopBtn);
+                    
+                    alertManager.show('rfid-scan-start', '💳 Bắt đầu quét thẻ RFID!', 'success', 3000);
                 }
             },
 
+            stopScan() {
+                if (actionRfidTestStop && actionRfidTestStop.action) {
+                    // Trigger RFID test stop action
+                    eraWidget.triggerAction(actionRfidTestStop.action, null);
+                }
+                
+                this.resetScanUI();
+                alertManager.show('rfid-scan-stop', '⏹️ Đã dừng quét thẻ RFID', 'warning', 2000);
+            },
+
+            resetScanUI() {
+                document.getElementById('rfidDetectSection').classList.remove('detecting');
+                
+                const statusEl = document.getElementById('rfidDetectionStatus');
+                statusEl.textContent = 'Nhấn nút để bắt đầu quét thẻ RFID';
+                statusEl.style.background = 'var(--surface-light)';
+                statusEl.style.color = 'var(--text-primary)';
+                
+                // Reset buttons
+                const testBtn = document.querySelector('#rfidTab .btn-primary');
+                const stopBtn = document.getElementById('rfidStopBtn');
+                
+                if (testBtn) testBtn.style.display = 'inline-flex';
+                if (stopBtn) stopBtn.remove();
+                
+                // Hide management section
+                document.getElementById('rfidManagementSection').style.display = 'none';
+            },
+
+            // Thêm thẻ RFID đã quét với tên
             addScanned() {
                 const name = document.getElementById('rfidCardName').value.trim();
                 
@@ -1597,14 +1645,14 @@
                     return;
                 }
 
-                if (actionRfidEnroll && actionRfidEnroll.action) {
-                    const enrollData = JSON.stringify({
-                        cmd: 3,
+                if (actionRfidAdd && actionRfidAdd.action) {
+                    // Trigger RFID add action với data
+                    const addData = {
                         uid: systemState.currentScannedRfidUid,
                         name: name
-                    });
+                    };
                     
-                    eraWidget.triggerAction(actionRfidEnroll.action, enrollData);
+                    eraWidget.triggerAction(actionRfidAdd.action, addData);
                     
                     const newCard = {
                         uid: systemState.currentScannedRfidUid,
@@ -1614,21 +1662,18 @@
                     systemState.rfidList = systemState.rfidList.filter(card => card.uid !== newCard.uid);
                     systemState.rfidList.push(newCard);
                     
-                    alertManager.show('rfid-added', `✅ Đã thêm thẻ "${name}"`, 'success', 5000);
+                    alertManager.show('rfid-added', `✅ Đã thêm thẻ "${name}" với UID ${systemState.currentScannedRfidUid}`, 'success', 5000);
                     
+                    // Reset form
                     document.getElementById('rfidCardName').value = '';
                     document.getElementById('rfidManagementSection').style.display = 'none';
                     systemState.currentScannedRfidUid = null;
-                    
-                    const statusEl = document.getElementById('rfidDetectionStatus');
-                    statusEl.textContent = 'Nhấn nút để bắt đầu quét thẻ RFID';
-                    statusEl.style.background = 'var(--surface-light)';
-                    statusEl.style.color = 'var(--text-primary)';
-                    
+                    this.resetScanUI();
                     this.updateList();
                 }
             },
 
+            // Thêm thẻ RFID thủ công
             addManual() {
                 const uid = document.getElementById('manualRfidUid').value.trim().toUpperCase();
                 const name = document.getElementById('manualRfidName').value.trim();
@@ -1648,18 +1693,18 @@
                     return;
                 }
 
-                if (actionRfidEnroll && actionRfidEnroll.action) {
-                    const enrollData = JSON.stringify({
-                        cmd: 3,
+                if (actionRfidAdd && actionRfidAdd.action) {
+                    // Trigger RFID add action với data
+                    const addData = {
                         uid: uid,
                         name: name
-                    });
+                    };
                     
-                    eraWidget.triggerAction(actionRfidEnroll.action, enrollData);
+                    eraWidget.triggerAction(actionRfidAdd.action, addData);
                     
                     systemState.rfidList.push({ uid, name });
                     
-                    alertManager.show('rfid-manual-added', `✅ Đã thêm thẻ "${name}"`, 'success', 3000);
+                    alertManager.show('rfid-manual-added', `✅ Đã thêm thẻ "${name}" với UID ${uid}`, 'success', 3000);
                     
                     document.getElementById('manualRfidUid').value = '';
                     document.getElementById('manualRfidName').value = '';
@@ -1673,13 +1718,11 @@
                 
                 if (!confirm(`Xác nhận xóa thẻ "${card.name}"?`)) return;
                 
-                if (actionRfidDelete && actionRfidDelete.action) {
-                    const deleteData = JSON.stringify({
-                        cmd: 4,
-                        uid: uid
-                    });
+                if (actionRfidRemove && actionRfidRemove.action) {
+                    // Trigger RFID remove action với data
+                    const removeData = { uid: uid };
                     
-                    eraWidget.triggerAction(actionRfidDelete.action, deleteData);
+                    eraWidget.triggerAction(actionRfidRemove.action, removeData);
                     systemState.rfidList = systemState.rfidList.filter(c => c.uid !== uid);
                     
                     alertManager.show('rfid-removed', `🗑️ Đã xóa thẻ "${card.name}"`, 'success', 3000);
@@ -1727,13 +1770,36 @@
             manualCapture() {
                 if (!connectionManager.testConnection()) return;
 
-                if (actionCameraManual && actionCameraManual.action) {
-                    eraWidget.triggerAction(actionCameraManual.action, null);
+                if (actionCameraManualTrigger && actionCameraManualTrigger.action) {
+                    // Trigger camera manual action
+                    eraWidget.triggerAction(actionCameraManualTrigger.action, null);
                     alertManager.show('camera-manual', '📸 Đang chụp ảnh thủ công...', 'success', 5000);
                     
                     document.getElementById('cameraStatus').innerHTML = '<i class="fas fa-camera"></i> Đang chụp ảnh...';
                     systemState.lastCaptureTime = new Date();
                     document.getElementById('lastCaptureTime').textContent = systemState.lastCaptureTime.toLocaleTimeString('vi-VN');
+                }
+            },
+
+            handleImageChunks(size, chunkIndex, totalChunks) {
+                // Handle image chunks from ESP32-CAM (V14, V15, V16)
+                if (!systemState.imageChunks) {
+                    systemState.imageChunks = [];
+                    systemState.imageSize = size;
+                    systemState.imageTotalChunks = totalChunks;
+                }
+                
+                console.log(`Received chunk ${chunkIndex} of ${totalChunks}`);
+                
+                // When all chunks received, reconstruct image
+                if (systemState.imageChunks.length === totalChunks) {
+                    const completeImage = systemState.imageChunks.join('');
+                    this.displayImage(completeImage);
+                    
+                    // Reset chunk state
+                    systemState.imageChunks = null;
+                    systemState.imageSize = 0;
+                    systemState.imageTotalChunks = 0;
                 }
             },
 
@@ -1908,21 +1974,26 @@
                 configIntruderAlert = configuration.realtime_configs[5];     // V6
                 configSystemStatus = configuration.realtime_configs[6];      // V8
                 configCameraStatus = configuration.realtime_configs[7];      // V9
-                configCameraImage = configuration.realtime_configs[8];       // V10
-                configFingerprintResult = configuration.realtime_configs[9]; // V11
-                configRfidResult = configuration.realtime_configs[10];       // V12
+                configFingerprintResult = configuration.realtime_configs[8]; // V11
+                configRfidResult = configuration.realtime_configs[9];        // V12
+                configCameraImageSize = configuration.realtime_configs[10];  // V14 (ESP32-CAM)
+                configCameraChunkIndex = configuration.realtime_configs[11]; // V15 (ESP32-CAM)
+                configCameraChunkTotal = configuration.realtime_configs[12]; // V16 (ESP32-CAM)
 
-                // Map actions to ESP32 Virtual Pin commands
-                actionDoorOpen = configuration.actions[0];          // V0=1
-                actionDoorClose = configuration.actions[1];         // V0=0
-                actionDoorStop = configuration.actions[2];          // V0=2
-                actionFingerprintTest = configuration.actions[3];   // V4 JSON commands
-                actionFingerprintEnroll = configuration.actions[4]; // V4 JSON commands
-                actionFingerprintDelete = configuration.actions[5]; // V4 JSON commands
-                actionRfidTest = configuration.actions[6];          // V5 JSON commands
-                actionRfidEnroll = configuration.actions[7];        // V5 JSON commands
-                actionRfidDelete = configuration.actions[8];        // V5 JSON commands
-                actionCameraManual = configuration.actions[9];      // V7=2
+                // Map actions theo đúng 13 actions trong E-Ra config
+                actionDoorClose = configuration.actions[0];                 // V0=0
+                actionDoorOpen = configuration.actions[1];                  // V0=1
+                actionDoorStop = configuration.actions[2];                  // V0=2
+                actionFingerprintTestScan = configuration.actions[3];       // V4=1
+                actionFingerprintTestStop = configuration.actions[4];       // V4=2
+                actionFingerprintEnroll = configuration.actions[5];         // V4=3
+                actionFingerprintDelete = configuration.actions[6];         // V4=4
+                actionRfidTestScan = configuration.actions[7];              // V5=1
+                actionRfidAdd = configuration.actions[8];                   // V5=2
+                actionRfidRemove = configuration.actions[9];                // V5=3
+                actionRfidTestStop = configuration.actions[10];             // V5=4
+                actionCameraMotionTrigger = configuration.actions[11];      // V7=1
+                actionCameraManualTrigger = configuration.actions[12];      // V7=2
 
                 connectionManager.updateStatus(true);
             },
@@ -1930,22 +2001,22 @@
             onValues: (values) => {
                 console.log('E-Ra Values received:', values);
                 
-                // Update door status
+                // Update door status from ESP32 Door Controller
                 if (configDoorStatus && values[configDoorStatus.id]) {
                     doorStatusHandler.update(values[configDoorStatus.id].value);
                 }
 
-                // Update PIR motion
+                // Update PIR motion from ESP32 Door Controller
                 if (configPirMotion && values[configPirMotion.id]) {
                     motionHandler.update(values[configPirMotion.id].value);
                 }
 
-                // Update access log
+                // Update access log from ESP32 Door Controller
                 if (configAccessLog && values[configAccessLog.id]) {
                     historyController.addEntry(values[configAccessLog.id].value);
                 }
 
-                // Update fingerprint list
+                // Update fingerprint list from ESP32 Door Controller
                 if (configFingerprintList && values[configFingerprintList.id]) {
                     try {
                         const fpList = JSON.parse(values[configFingerprintList.id].value);
@@ -1956,7 +2027,7 @@
                     }
                 }
 
-                // Update RFID list
+                // Update RFID list from ESP32 Door Controller
                 if (configRfidList && values[configRfidList.id]) {
                     try {
                         const rfidList = JSON.parse(values[configRfidList.id].value);
@@ -1967,14 +2038,14 @@
                     }
                 }
 
-                // Handle intruder alert
+                // Handle intruder alert from ESP32 Door Controller
                 if (configIntruderAlert && values[configIntruderAlert.id]) {
                     if (values[configIntruderAlert.id].value == 1) {
                         alertManager.show('intruder-alert', '🚨 CẢNH BÁO: Phát hiện xâm nhập!', 'danger', 10000);
                     }
                 }
 
-                // Handle camera status
+                // Handle camera status from ESP32-CAM
                 if (configCameraStatus && values[configCameraStatus.id]) {
                     const status = values[configCameraStatus.id].value;
                     const statusMap = {
@@ -1991,43 +2062,92 @@
                     document.getElementById('cameraStatus').innerHTML = `<i class="fas fa-camera"></i> ${statusText}`;
                 }
 
-                // Handle camera image
-                if (configCameraImage && values[configCameraImage.id]) {
-                    cameraController.displayImage(values[configCameraImage.id].value);
-                }
-
-                // Handle fingerprint result
+                // Handle fingerprint result from ESP32 Door Controller (V11)
                 if (configFingerprintResult && values[configFingerprintResult.id]) {
                     const result = values[configFingerprintResult.id].value;
                     
-                    if (result > 0) {
-                        alertManager.show('fp-recognized', `✅ Vân tay được nhận dạng: ID ${result}`, 'success', 3000);
-                    } else if (result < 0) {
-                        const id = Math.abs(result);
-                        systemState.currentVerifiedFingerprintId = id;
-                        document.getElementById('verifiedFingerprintId').value = id;
-                        document.getElementById('fingerprintEnrollSection').style.display = 'block';
-                        document.getElementById('fingerprintName').focus();
-                        
-                        alertManager.show('fp-new-detected', `🆕 Vân tay mới! Có thể thêm với ID ${id}`, 'warning', 5000);
+                    // Check if this is a number (fingerprint result) vs image size
+                    if (typeof result === 'number' || !isNaN(result)) {
+                        if (result > 0) {
+                            // Existing fingerprint recognized
+                            alertManager.show('fp-recognized', `✅ Vân tay được nhận dạng: ID ${result}`, 'success', 3000);
+                            
+                            const statusEl = document.getElementById('fingerprintScanStatus');
+                            statusEl.textContent = `✅ Vân tay đã có! ID: ${result}`;
+                            statusEl.style.background = 'var(--success-color)';
+                            statusEl.style.color = 'white';
+                            
+                        } else if (result < 0) {
+                            // New fingerprint detected, ready to enroll
+                            const availableId = Math.abs(result);
+                            systemState.currentVerifiedFingerprintId = availableId;
+                            
+                            document.getElementById('verifiedFingerprintId').value = availableId;
+                            document.getElementById('fingerprintEnrollSection').style.display = 'block';
+                            document.getElementById('fingerprintName').focus();
+                            
+                            const statusEl = document.getElementById('fingerprintScanStatus');
+                            statusEl.textContent = `🆕 Vân tay mới! ID khả dụng: ${availableId}`;
+                            statusEl.style.background = 'var(--warning-color)';
+                            statusEl.style.color = 'white';
+                            
+                            alertManager.show('fp-new-detected', `🆕 Phát hiện vân tay mới! ID khả dụng: ${availableId}`, 'warning', 5000);
+                        }
+                    } else {
+                        // This might be image size from ESP32-CAM, handle as camera data
+                        console.log('Received image size from ESP32-CAM:', result);
                     }
                 }
 
-                // Handle RFID result
+                // Handle RFID result from ESP32 Door Controller (V12)
                 if (configRfidResult && values[configRfidResult.id]) {
                     const result = values[configRfidResult.id].value;
                     
-                    if (result.startsWith('NEW:')) {
-                        const uid = result.substring(4);
-                        systemState.currentScannedRfidUid = uid;
-                        document.getElementById('rfidUid').value = uid;
-                        document.getElementById('rfidManagementSection').style.display = 'block';
-                        document.getElementById('rfidCardName').focus();
-                        
-                        alertManager.show('rfid-new-detected', `💳 Thẻ RFID mới: ${uid}`, 'info', 5000);
+                    // Check if this is a string (RFID result) vs chunk index
+                    if (typeof result === 'string' && result.length > 2) {
+                        if (result.startsWith('NEW:')) {
+                            // New RFID card detected
+                            const uid = result.substring(4);
+                            systemState.currentScannedRfidUid = uid;
+                            
+                            document.getElementById('rfidUid').value = uid;
+                            document.getElementById('rfidManagementSection').style.display = 'block';
+                            document.getElementById('rfidCardName').focus();
+                            
+                            const statusEl = document.getElementById('rfidDetectionStatus');
+                            statusEl.textContent = `💳 Thẻ mới! UID: ${uid}`;
+                            statusEl.style.background = 'var(--warning-color)';
+                            statusEl.style.color = 'white';
+                            
+                            alertManager.show('rfid-new-detected', `💳 Phát hiện thẻ RFID mới: ${uid}`, 'info', 5000);
+                            
+                        } else {
+                            // Existing RFID card recognized
+                            alertManager.show('rfid-recognized', `✅ Thẻ RFID được nhận dạng: ${result}`, 'success', 3000);
+                            
+                            const statusEl = document.getElementById('rfidDetectionStatus');
+                            statusEl.textContent = `✅ Thẻ đã có! UID: ${result}`;
+                            statusEl.style.background = 'var(--success-color)';
+                            statusEl.style.color = 'white';
+                        }
                     } else {
-                        alertManager.show('rfid-recognized', `✅ Thẻ RFID được nhận dạng: ${result}`, 'success', 3000);
+                        // This might be chunk index from ESP32-CAM, handle as camera data
+                        console.log('Received chunk index from ESP32-CAM:', result);
                     }
+                }
+
+                // Handle camera image chunks from ESP32-CAM (V11=size, V12=index, V13=total)
+                // Note: There's a conflict with V11, V12 from ESP32 Door Controller
+                // In practice, you might need to use different Virtual Pins or device IDs to separate them
+                if (configCameraImageSize && values[configCameraImageSize.id] && 
+                    configCameraChunkIndex && values[configCameraChunkIndex.id] &&
+                    configCameraChunkTotal && values[configCameraChunkTotal.id]) {
+                    
+                    const imageSize = values[configCameraImageSize.id].value;
+                    const chunkIndex = values[configCameraChunkIndex.id].value;
+                    const totalChunks = values[configCameraChunkTotal.id].value;
+                    
+                    cameraController.handleImageChunks(imageSize, chunkIndex, totalChunks);
                 }
             }
         });
