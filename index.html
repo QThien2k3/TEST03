@@ -1365,15 +1365,15 @@
                     return;
                 }
 
+                // Send test data code (simplified for ERa Number compatibility)
+                eraWidget.triggerAction(actions.dataPayload.action, 1);
+                // Send enroll command
+                eraWidget.triggerAction(actions.fingerprintEnroll.action, null);
+                
                 const enrollData = {
                     id: systemState.currentVerifiedFingerprintId,
                     name: name
                 };
-
-                // Send data via V7
-                eraWidget.triggerAction(actions.dataPayload.action, JSON.stringify(enrollData));
-                // Send enroll command via V3=2
-                eraWidget.triggerAction(actions.fingerprintEnroll.action, null);
                 
                 systemState.fingerprintList = systemState.fingerprintList.filter(fp => fp.id !== enrollData.id);
                 systemState.fingerprintList.push(enrollData);
@@ -1408,9 +1408,9 @@
 
                 const enrollData = { id, name };
 
-                // Send data via V7
-                eraWidget.triggerAction(actions.dataPayload.action, JSON.stringify(enrollData));
-                // Send enroll command via V3=2
+                // Send test data code
+                eraWidget.triggerAction(actions.dataPayload.action, 1);
+                // Send enroll command
                 eraWidget.triggerAction(actions.fingerprintEnroll.action, null);
 
                 systemState.fingerprintList.push(enrollData);
@@ -1429,9 +1429,9 @@
                 
                 if (!confirm(`Xác nhận xóa vân tay "${fingerprint.name}"?`)) return;
                 
-                // Send delete data via V7
-                eraWidget.triggerAction(actions.dataPayload.action, JSON.stringify({ id: id }));
-                // Send delete command via V3=3
+                // Send delete data code
+                eraWidget.triggerAction(actions.dataPayload.action, 3);
+                // Send delete command
                 eraWidget.triggerAction(actions.fingerprintDelete.action, null);
                 
                 systemState.fingerprintList = systemState.fingerprintList.filter(fp => fp.id !== id);
@@ -1518,9 +1518,9 @@
                     name: name
                 };
 
-                // Send data via V7
-                eraWidget.triggerAction(actions.dataPayload.action, JSON.stringify(newCard));
-                // Send add command via V4=2
+                // Send test data code
+                eraWidget.triggerAction(actions.dataPayload.action, 2);
+                // Send add command
                 eraWidget.triggerAction(actions.rfidAdd.action, null);
                 
                 systemState.rfidList = systemState.rfidList.filter(card => card.uid !== newCard.uid);
@@ -1561,9 +1561,9 @@
 
                 const newCard = { uid, name };
 
-                // Send data via V7
-                eraWidget.triggerAction(actions.dataPayload.action, JSON.stringify(newCard));
-                // Send add command via V4=2
+                // Send test data code
+                eraWidget.triggerAction(actions.dataPayload.action, 2);
+                // Send add command
                 eraWidget.triggerAction(actions.rfidAdd.action, null);
 
                 systemState.rfidList.push(newCard);
@@ -1581,9 +1581,9 @@
                 
                 if (!confirm(`Xác nhận xóa thẻ "${card.name}"?`)) return;
                 
-                // Send delete data via V7
-                eraWidget.triggerAction(actions.dataPayload.action, JSON.stringify({ uid: uid }));
-                // Send remove command via V4=3
+                // Send delete data code
+                eraWidget.triggerAction(actions.dataPayload.action, 3);
+                // Send remove command
                 eraWidget.triggerAction(actions.rfidRemove.action, null);
                 
                 systemState.rfidList = systemState.rfidList.filter(c => c.uid !== uid);
@@ -1629,28 +1629,38 @@
 
         // Camera Controller
         const cameraController = {
-            displayImage(imageData) {
-                if (!imageData || imageData.length < 100) return;
-                
-                const cameraFeed = document.getElementById('cameraFeed');
-                const img = document.createElement('img');
-                img.className = 'camera-image';
-                img.src = imageData.startsWith('data:') ? imageData : `data:image/jpeg;base64,${imageData}`;
-                
-                img.onload = () => {
-                    cameraFeed.innerHTML = '';
-                    cameraFeed.appendChild(img);
-                    alertManager.show('camera-image', '📸 Đã nhận ảnh từ ESP32-CAM', 'success', 3000);
+            displayImage(flag) {
+                // V11 now receives: 0 = camera active, 1 = new image captured
+                if (flag === 1) {
+                    // New image captured - show notification
+                    alertManager.show('camera-image', '📸 Camera đã chụp ảnh an ninh!', 'success', 3000);
                     
+                    // Update camera feed with capture indicator
+                    const cameraFeed = document.getElementById('cameraFeed');
+                    cameraFeed.innerHTML = `
+                        <div class="camera-placeholder">
+                            <i class="fas fa-camera" style="color: var(--success-color);"></i>
+                            <div style="color: var(--success-color);">Đã chụp ảnh - Email đang được gửi</div>
+                            <div style="font-size: 14px; margin-top: 10px; opacity: 0.7;">
+                                Thời gian: ${new Date().toLocaleTimeString('vi-VN')}
+                            </div>
+                        </div>
+                    `;
+                    
+                    // Reset after 10 seconds
                     setTimeout(() => {
                         cameraFeed.innerHTML = `
                             <div class="camera-placeholder">
                                 <i class="fas fa-camera"></i>
                                 <div>Camera sẽ tự động chụp khi có chuyển động</div>
+                                <div style="font-size: 14px; margin-top: 10px; opacity: 0.7;">
+                                    Ảnh sẽ được gửi về email ngay lập tức
+                                </div>
                             </div>
                         `;
-                    }, 30000);
-                };
+                    }, 10000);
+                }
+                // flag === 0 means camera is active/alive (periodic status)
             }
         };
 
@@ -1754,13 +1764,13 @@
                     console.log('Configuration received:', configuration);
                     
                     configs = {
-                        configDoorStatus: configuration.realtime_configs[0],      // V0
-                        configMotionStatus: configuration.realtime_configs[1],    // V2 
-                        configFpList: configuration.realtime_configs[2],          // V5
-                        configRfidList: configuration.realtime_configs[3],        // V6
-                        configErrorCount: configuration.realtime_configs[4],      // V8
-                        configIntruderAlert: configuration.realtime_configs[5],   // V9
-                        configCameraImage: configuration.realtime_configs[6]      // V11
+                        configDoorStatus: configuration.realtime_configs[0],      // V0 (Number: 0/1)
+                        configMotionStatus: configuration.realtime_configs[1],    // V2 (Number: 0/1)
+                        configFpList: configuration.realtime_configs[2],          // V5 (Number: count)
+                        configRfidList: configuration.realtime_configs[3],        // V6 (Number: count)
+                        configErrorCount: configuration.realtime_configs[4],      // V8 (Number: 0-5)
+                        configIntruderAlert: configuration.realtime_configs[5],   // V9 (Number: 0/1)
+                        configCameraImage: configuration.realtime_configs[6]      // V11 (Number: 0/1)
                     };
                    
                     actions = {
@@ -1772,7 +1782,19 @@
                         rfidTestScan: configuration.actions[5],             // V4=1
                         rfidAdd: configuration.actions[6],                  // V4=2
                         rfidRemove: configuration.actions[7],               // V4=3
-                        dataPayload: configuration.actions[8]               // V7= JSON data payload
+                        dataPayload: configuration.actions[8]               // V7 (Number codes: 1/2/3)
+                    };
+                   
+                    actions = {
+                        closeDoor: configuration.actions[0],                // V1=0
+                        openDoor: configuration.actions[1],                 // V1=1
+                        fingerprintTestScan: configuration.actions[2],      // V3=1
+                        fingerprintEnroll: configuration.actions[3],        // V3=2
+                        fingerprintDelete: configuration.actions[4],        // V3=3
+                        rfidTestScan: configuration.actions[5],             // V4=1
+                        rfidAdd: configuration.actions[6],                  // V4=2
+                        rfidRemove: configuration.actions[7],               // V4=3
+                        dataPayload: configuration.actions[8]               // V7 (Number: data codes)
                     };
                    
                     connectionManager.updateStatus(true);
@@ -1790,21 +1812,17 @@
                     }
                     
                     if (configs.configFpList && values[configs.configFpList.id]) {
-                        try {
-                            systemState.fingerprintList = JSON.parse(values[configs.configFpList.id].value);
-                            fingerprintController.updateList();
-                        } catch (e) {
-                            console.error('Error parsing fingerprint list:', e);
-                        }
+                        // V5 contains fingerprint count from ESP32
+                        const fpCount = values[configs.configFpList.id].value;
+                        console.log('ESP32 Fingerprint count:', fpCount);
+                        alertManager.show('fp-sync', `📊 ESP32: ${fpCount} vân tay`, 'info', 2000);
                     }
                     
                     if (configs.configRfidList && values[configs.configRfidList.id]) {
-                        try {
-                            systemState.rfidList = JSON.parse(values[configs.configRfidList.id].value);
-                            rfidController.updateList();
-                        } catch (e) {
-                            console.error('Error parsing RFID list:', e);
-                        }
+                        // V6 contains RFID count from ESP32
+                        const rfidCount = values[configs.configRfidList.id].value;
+                        console.log('ESP32 RFID count:', rfidCount);
+                        alertManager.show('rfid-sync', `📊 ESP32: ${rfidCount} thẻ RFID`, 'info', 2000);
                     }
                     
                     if (configs.configErrorCount && values[configs.configErrorCount.id]) {
