@@ -2226,10 +2226,22 @@
             };
         }
 
-        // Camera stream management
+        // Camera stream management  
         function toggleCameraStream() {
+            // In test mode, allow streaming regardless of camera status
+            if (!systemState.isConnected) {
+                // Test mode - always allow
+                if (systemState.isStreaming) {
+                    stopCameraStream();
+                } else {
+                    startCameraStream();
+                }
+                return;
+            }
+            
+            // When connected to E-Ra, check camera status
             if (!systemState.cameraOnline) {
-                alertManager.show('camera-offline', '❌ Camera không trực tuyến!', 'danger');
+                alertManager.show('camera-offline', '❌ Camera không trực tuyến! Kiểm tra kết nối ESP32-CAM', 'danger');
                 return;
             }
             
@@ -2241,7 +2253,11 @@
         }
         
         function startCameraStream() {
+            // Use configured stream URL or fallback to default
             const streamUrl = systemState.cameraStreamUrl || 'http://192.168.1.91/stream';
+            
+            // Show what URL we're trying to connect to
+            alertManager.show('stream-connecting', `🔗 Đang kết nối: ${streamUrl}`, 'info');
             
             elements.cameraFeed.innerHTML = `
                 <img class="camera-stream" src="${streamUrl}" 
@@ -2254,13 +2270,13 @@
             elements.btnStreamToggle.innerHTML = '<div class="loading"></div> Đang kết nối...';
             elements.btnStreamToggle.disabled = true;
             
+            // Timeout fallback
             setTimeout(() => {
-                if (systemState.isStreaming) {
-                    elements.btnStreamToggle.innerHTML = '<i class="fas fa-stop"></i><span>Tắt Stream</span>';
-                    elements.btnStreamToggle.disabled = false;
-                    elements.btnStreamToggle.className = 'btn btn-danger';
+                if (elements.btnStreamToggle.innerHTML.includes('Đang kết nối')) {
+                    // Still connecting after 5 seconds - trigger error handler
+                    window.handleStreamError();
                 }
-            }, 3000);
+            }, 5000);
         }
         
         function stopCameraStream() {
@@ -2284,13 +2300,14 @@
         // Global functions for stream handling
         window.handleStreamError = function(img) {
             console.error('Stream error');
+            systemState.isStreaming = false;
             elements.cameraFeed.classList.remove('loading');
             elements.cameraFeed.innerHTML = `
                 <div class="camera-placeholder">
                     <i class="fas fa-exclamation-triangle"></i>
                     <div>Không thể kết nối camera stream</div>
                     <div style="font-size: 14px; margin-top: 10px; opacity: 0.7;">
-                        Kiểm tra kết nối ESP32-CAM
+                        Kiểm tra kết nối ESP32-CAM tại địa chỉ: ${systemState.cameraStreamUrl || 'http://192.168.1.91/stream'}
                     </div>
                 </div>
             `;
@@ -2299,14 +2316,17 @@
             elements.btnStreamToggle.disabled = false;
             elements.btnStreamToggle.className = 'btn btn-warning';
             
-            alertManager.show('stream-error', '❌ Lỗi kết nối camera stream!', 'danger');
+            alertManager.show('stream-error', '❌ Lỗi kết nối camera stream! Kiểm tra ESP32-CAM', 'danger');
         };
         
         window.handleStreamSuccess = function(img) {
             console.log('Stream connected successfully');
             systemState.isStreaming = true;
             elements.cameraFeed.classList.remove('loading');
-            alertManager.show('stream-started', '📺 Camera stream đã kết nối!', 'success');
+            elements.btnStreamToggle.innerHTML = '<i class="fas fa-stop"></i><span>Tắt Stream</span>';
+            elements.btnStreamToggle.disabled = false;
+            elements.btnStreamToggle.className = 'btn btn-danger';
+            alertManager.show('stream-started', '📺 Camera stream đã kết nối thành công!', 'success');
         };
 
         // Initialize UI with COMPLETE SETUP
@@ -2320,8 +2340,8 @@
             // Initialize tries remaining
             updateTriesRemaining(3);
             
-            // Initialize camera status
-            updateCameraStatus(false);
+            // Initialize camera status - SET TO ONLINE IMMEDIATELY IN TEST MODE
+            updateCameraStatus(true, '192.168.1.91');
             
             // Enable all controls for testing
             document.querySelectorAll('.btn').forEach(btn => {
@@ -2358,17 +2378,7 @@
             // Set today's date
             document.getElementById('filterDate').value = new Date().toISOString().split('T')[0];
             
-            // Simulate camera IP detection
-            setTimeout(() => {
-                const testCameraIP = '192.168.1.91';
-                systemState.cameraStreamUrl = `http://${testCameraIP}/stream`;
-                elements.cameraIpDisplay.textContent = `Stream: http://${testCameraIP}/stream`;
-                
-                // Test camera connection in test mode
-                updateCameraStatus(true, testCameraIP);
-            }, 2000);
-            
-            alertManager.show('dashboard-ready', '🎉 Dashboard sẵn sàng! (Enhanced Mode)', 'success');
+            alertManager.show('dashboard-ready', '🎉 Dashboard sẵn sàng! Camera stream có thể test với IP: 192.168.1.91', 'success');
         }
 
         // Update UI based on received values with COMPLETE HANDLING
@@ -2493,16 +2503,20 @@
                 if (ipAddress) {
                     elements.cameraIpDisplay.textContent = `Stream: http://${ipAddress}/stream`;
                     systemState.cameraStreamUrl = `http://${ipAddress}/stream`;
+                } else {
+                    elements.cameraIpDisplay.textContent = `Stream: ${systemState.cameraStreamUrl || 'http://192.168.1.91/stream'}`;
                 }
                 
                 elements.btnStreamToggle.disabled = false;
+                alertManager.show('camera-online', '📹 Camera đã sẵn sàng streaming!', 'success', 3000);
             } else {
                 elements.cameraStatusIndicator.className = 'camera-status-indicator offline';
                 elements.cameraStatusText.textContent = 'Camera Offline';
                 document.querySelector('.camera-status-dot').className = 'camera-status-dot offline';
                 elements.cameraIpDisplay.textContent = 'Stream: Chờ kết nối...';
                 
-                elements.btnStreamToggle.disabled = true;
+                // In test mode, still allow streaming
+                elements.btnStreamToggle.disabled = systemState.isConnected;
                 
                 // Stop streaming if currently active
                 if (systemState.isStreaming) {
