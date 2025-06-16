@@ -2241,7 +2241,7 @@
         }
         
         function startCameraStream() {
-            const streamUrl = systemState.cameraStreamUrl || 'http://192.168.1.100/stream';
+            const streamUrl = systemState.cameraStreamUrl || 'http://192.168.1.91/stream';
             
             elements.cameraFeed.innerHTML = `
                 <img class="camera-stream" src="${streamUrl}" 
@@ -2360,7 +2360,7 @@
             
             // Simulate camera IP detection
             setTimeout(() => {
-                const testCameraIP = '192.168.1.100';
+                const testCameraIP = '192.168.1.91';
                 systemState.cameraStreamUrl = `http://${testCameraIP}/stream`;
                 elements.cameraIpDisplay.textContent = `Stream: http://${testCameraIP}/stream`;
                 
