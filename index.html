@@ -1323,12 +1323,6 @@
                     <div class="card-title">Quản Lý Thẻ RFID</div>
                 </div>
 
-                <!-- Tries Remaining Display -->
-                <div class="tries-remaining" id="triesRemaining">
-                    <i class="fas fa-exclamation-circle"></i>
-                    <span>Còn lại <span class="tries-count" id="triesCount">3</span> lần thử</span>
-                </div>
-
                 <div class="section">
                     <div class="section-header">
                         <i class="fas fa-plus-circle"></i>
@@ -1353,7 +1347,7 @@
                 <div class="section">
                     <div class="section-header">
                         <i class="fas fa-wifi"></i>
-                        <strong>Quét thẻ RFID</strong>
+                        <strong>Quét thẻ RFID để lấy UID</strong>
                     </div>
                     
                     <div class="detect-section" id="rfidDetectSection">
@@ -1389,13 +1383,6 @@
                             <p>Chưa có thẻ RFID nào được lưu</p>
                         </div>
                     </div>
-                </div>
-
-                <!-- Lockout Message (hidden by default) -->
-                <div class="lockout-message" id="lockoutMessage" style="display: none;">
-                    <i class="fas fa-lock"></i>
-                    <strong>Hệ thống đã bị khóa!</strong><br>
-                    Quá số lần thử cho phép. Vui lòng đợi hoặc liên hệ quản trị viên.
                 </div>
             </div>
 
@@ -1572,15 +1559,14 @@
         // Initialize EraWidget
         const eraWidget = new EraWidget();
         
-        // Configuration variables - UPDATED FOR AUTO IP DETECTION
+        // Configuration variables - UPDATED WITHOUT TRIES REMAINING
         let config = {
             doorStatus: null,        // V0
             motionStatus: null,      // V2
             rfidResult: null,        // V4
             rfidList: null,          // V5
-            triesRemaining: null,    // V6
-            camStatus: null,         // V7
-            camIP: null              // V11 - Auto IP detection
+            camStatus: null,         // V6
+            camIP: null              // V10 - Auto IP detection
         };
         
         let actions = {
@@ -1590,26 +1576,25 @@
             rfidStop: null,          // V3=2
             rfidAdd: null,           // V3=3
             rfidRemove: null,        // V3=4
-            cameraCapture: null,     // V8=1
-            // V9 and V10 are for payload
+            cameraCapture: null,     // V7=1
+            // V8 and V9 are for payload
         };
 
-        // System State
+        // System State - SIMPLIFIED WITHOUT LOCK SYSTEM
         let systemState = {
             doorStatus: 'closed',
             motionDetected: false,
             rfidList: [],
             accessHistory: [],
             isConnected: false,
-            triesRemaining: 3,
-            isSystemLocked: false,
             cameraOnline: false,
             cameraStreamUrl: '',
             isStreaming: false,
-            operationTimeouts: new Map()
+            operationTimeouts: new Map(),
+            lastDetectedUID: '' // Store last scanned UID for adding cards
         };
 
-        // DOM Elements
+        // DOM Elements - SIMPLIFIED
         const elements = {
             doorPanel: document.getElementById('doorPanel'),
             doorStatus: document.getElementById('doorStatus'),
@@ -1636,9 +1621,6 @@
             rfidNameInput: document.getElementById('rfid-name'),
             rfidResult: document.getElementById('rfid-result'),
             historyTableBody: document.getElementById('historyTableBody'),
-            triesRemaining: document.getElementById('triesRemaining'),
-            triesCount: document.getElementById('triesCount'),
-            lockoutMessage: document.getElementById('lockoutMessage'),
             connectionStatus: document.getElementById('connectionStatus'),
             filterDate: document.getElementById('filterDate'),
             filterMethod: document.getElementById('filterMethod'),
@@ -1721,23 +1703,22 @@
             onConfiguration: (configuration) => {
                 console.log('Configuration received:', configuration);
                 
-                // Map realtime configs - AUTO IP DETECTION VERSION
+                // Map realtime configs - SIMPLIFIED VERSION
                 config.doorStatus = configuration.realtime_configs[0];      // V0
                 config.motionStatus = configuration.realtime_configs[1];    // V2  
                 config.rfidResult = configuration.realtime_configs[2];      // V4
                 config.rfidList = configuration.realtime_configs[3];        // V5
-                config.triesRemaining = configuration.realtime_configs[4];  // V6
-                config.camStatus = configuration.realtime_configs[5];       // V7
-                config.camIP = configuration.realtime_configs[6];           // V11 - Camera IP
+                config.camStatus = configuration.realtime_configs[4];       // V6
+                config.camIP = configuration.realtime_configs[5];           // V10 - Camera IP
                 
-                // Map actions - RFID ONLY VERSION
+                // Map actions - SIMPLIFIED VERSION
                 actions.closeDoor = configuration.actions[0];        // V1=0
                 actions.openDoor = configuration.actions[1];         // V1=1
                 actions.rfidScan = configuration.actions[2];         // V3=1
                 actions.rfidStop = configuration.actions[3];         // V3=2
                 actions.rfidAdd = configuration.actions[4];          // V3=3
                 actions.rfidRemove = configuration.actions[5];       // V3=4
-                actions.cameraCapture = configuration.actions[6];    // V8=1
+                actions.cameraCapture = configuration.actions[6];    // V7=1
                 
                 // Update connection status
                 elements.connectionStatus.className = 'connection-status connected';
@@ -1813,19 +1794,17 @@
             }
         };
 
-        // Bind event listeners with RFID ONLY INTEGRATION
+        // Bind event listeners with SIMPLIFIED RFID WORKFLOW
         function bindEventListeners() {
-            // Door controls with timeout management
+            // Door controls
             elements.btnOpen.onclick = (e) => {
                 e.preventDefault();
-                if (systemState.isSystemLocked) return;
-                
                 operationManager.startOperation('doorOperation', 15000);
                 
                 if (actions.openDoor) {
                     eraWidget.triggerAction(actions.openDoor.action, 1);
                 } else {
-                    // Test mode - simulate door opening
+                    // Test mode
                     updateDoorStatus(2); // Opening
                     setTimeout(() => {
                         updateDoorStatus(1); // Open
@@ -1837,14 +1816,12 @@
             
             elements.btnClose.onclick = (e) => {
                 e.preventDefault();
-                if (systemState.isSystemLocked) return;
-                
                 operationManager.startOperation('doorOperation', 15000);
                 
                 if (actions.closeDoor) {
                     eraWidget.triggerAction(actions.closeDoor.action, 0);
                 } else {
-                    // Test mode - simulate door closing
+                    // Test mode
                     updateDoorStatus(3); // Closing
                     setTimeout(() => {
                         updateDoorStatus(0); // Closed
@@ -1854,43 +1831,47 @@
                 alertManager.show(null, '🔒 Đang đóng cửa...', 'info');
             };
             
-            // RFID controls with PAYLOAD INTEGRATION
+            // RFID Scanning - UPDATED WORKFLOW
             elements.btnRfidScan.onclick = (e) => {
                 e.preventDefault();
-                if (systemState.isSystemLocked) return;
-                
                 operationManager.startOperation('rfidScan', 30000);
                 
                 if (actions.rfidScan) {
                     eraWidget.triggerAction(actions.rfidScan.action, 1);
                 } else {
-                    // Test mode with realistic simulation
-                    elements.rfidDetectionStatus.textContent = 'Test mode - đang quét thẻ RFID...';
-                    elements.rfidDetectionStatus.style.background = 'var(--primary-color)';
-                    elements.rfidDetectionStatus.style.color = 'white';
-                    
+                    // Test mode
                     setTimeout(() => {
-                        const testResults = [
-                            { uid: 'A1B2C3D4', name: 'John Doe', success: true },
-                            { uid: 'E5F6G7H8', name: 'Jane Smith', success: true },
-                            { uid: '12345678', name: 'Unknown', success: false },
-                            { uid: 'ABCD1234', name: 'Test User', success: true }
-                        ];
-                        const result = testResults[Math.floor(Math.random() * testResults.length)];
+                        const testUIDs = ['A1B2C3D4', 'E5F6G7H8', '12345678', 'ABCD1234'];
+                        const randomUID = testUIDs[Math.floor(Math.random() * testUIDs.length)];
+                        systemState.lastDetectedUID = randomUID;
                         
-                        if (result.success && systemState.rfidList.find(card => card.uid === result.uid)) {
-                            updateRfidResult(1, result); // success
-                        } else {
-                            updateRfidResult(-1, result); // unknown
-                        }
+                        elements.rfidDetectionStatus.innerHTML = `
+                            <div style="color: var(--success-color); font-weight: bold;">
+                                ✅ Đã quét được thẻ: ${randomUID}
+                            </div>
+                            <div style="font-size: 12px; margin-top: 4px;">
+                                Copy UID này vào form bên dưới để thêm thẻ
+                            </div>
+                        `;
+                        
+                        // Auto-fill UID vào input
+                        elements.rfidUidInput.value = randomUID;
+                        elements.rfidNameInput.focus();
+                        
+                        updateRfidScanResult(randomUID);
                         operationManager.clearOperation('rfidScan');
-                    }, 3000);
+                    }, 2000);
                 }
                 
-                alertManager.show(null, '🎫 Bắt đầu quét RFID!', 'success');
+                alertManager.show(null, '🎫 Đang quét thẻ RFID...', 'info');
                 elements.btnRfidScan.innerHTML = '<div class="loading"></div> Đang quét...';
                 elements.btnRfidScan.disabled = true;
                 elements.btnRfidStop.style.display = 'inline-flex';
+                elements.rfidDetectionStatus.innerHTML = `
+                    <div style="color: var(--warning-color);">
+                        🔍 Đang quét... Vui lòng đặt thẻ RFID lên cảm biến
+                    </div>
+                `;
                 document.getElementById('rfidDetectSection').classList.add('detecting');
             };
             
@@ -1900,22 +1881,20 @@
                 
                 if (actions.rfidStop) {
                     eraWidget.triggerAction(actions.rfidStop.action, 2);
-                } else {
-                    updateRfidResult(0); // stopped
                 }
                 alertManager.show(null, '⏹️ Dừng quét RFID', 'warning');
                 resetRfidScanButton();
             };
             
+            // RFID Add Card
             elements.btnRfidAdd.onclick = (e) => {
                 e.preventDefault();
-                if (systemState.isSystemLocked) return;
                 
                 const uid = elements.rfidUidInput.value.trim().toUpperCase();
                 const name = elements.rfidNameInput.value.trim();
                 
                 if (!uid || !name) {
-                    alertManager.show(null, '❌ Vui lòng nhập đầy đủ thông tin', 'danger');
+                    alertManager.show(null, '❌ Vui lòng nhập đầy đủ UID và tên', 'danger');
                     return;
                 }
                 
@@ -1925,15 +1904,15 @@
                 }
                 
                 if (actions.rfidAdd) {
-                    // PAYLOAD INTEGRATION - Send data before adding
-                    eraWidget.send(9, uid);    // V9 - payloadID (UID for RFID)
-                    eraWidget.send(10, name);   // V10 - payloadName
+                    // PAYLOAD INTEGRATION
+                    eraWidget.send(8, uid);    // V8 - payloadID (UID for RFID)
+                    eraWidget.send(9, name);   // V9 - payloadName
                     
                     setTimeout(() => {
                         eraWidget.triggerAction(actions.rfidAdd.action, 3);
-                    }, 100); // Small delay to ensure payload is sent
+                    }, 100);
                 } else {
-                    // Test mode - add to table
+                    // Test mode
                     const newCard = { uid: uid, name: name };
                     systemState.rfidList.push(newCard);
                     updateRfidList();
@@ -1944,6 +1923,7 @@
                 // Clear inputs
                 elements.rfidUidInput.value = '';
                 elements.rfidNameInput.value = '';
+                systemState.lastDetectedUID = '';
             };
             
             // Camera controls with ENHANCED INTEGRATION
@@ -1985,22 +1965,16 @@
                 }
             };
             
-            // Clear buttons with confirmation
+            // Clear buttons
             document.getElementById('btn-rfid-clear').onclick = () => {
-                if (systemState.isSystemLocked) return;
                 if (confirm('Xác nhận xóa tất cả thẻ RFID? Hành động này không thể hoàn tác!')) {
                     systemState.rfidList = [];
                     updateRfidList();
                     alertManager.show(null, '🗑️ Đã xóa tất cả thẻ RFID', 'warning');
-                    
-                    // Send clear signal to Arduino if connected
-                    if (systemState.isConnected) {
-                        // Could implement a clear all function in Arduino
-                    }
                 }
             };
             
-            // FIXED Filter button
+            // Filter button
             elements.btnFilter.onclick = () => {
                 const date = elements.filterDate.value;
                 const method = elements.filterMethod.value;
@@ -2009,17 +1983,45 @@
                 alertManager.show(null, '🔍 Đã áp dụng bộ lọc', 'info');
             };
             
-            // FIXED Date input change listener
+            // Date input change listener
             elements.filterDate.addEventListener('change', () => {
                 const selectedDate = elements.filterDate.value;
                 if (selectedDate) {
                     alertManager.show(null, `📅 Đã chọn ngày: ${selectedDate}`, 'info', 2000);
-                    // Auto apply filter when date changes
                     const method = elements.filterMethod.value;
                     const result = elements.filterResult.value;
                     applyHistoryFilter(selectedDate, method, result);
                 }
             });
+        }
+
+        // 🆕 Update RFID scan result display
+        function updateRfidScanResult(uid) {
+            elements.rfidResult.innerHTML = `
+                <div style="padding: 16px; border-radius: 12px; background: var(--success-color); color: white; text-align: center;">
+                    <div style="font-size: 18px; font-weight: bold; margin-bottom: 8px;">
+                        ✅ Đã quét được thẻ RFID
+                    </div>
+                    <div style="font-size: 24px; font-family: monospace; background: rgba(255,255,255,0.2); padding: 8px; border-radius: 6px; margin: 8px 0;">
+                        ${uid}
+                    </div>
+                    <div style="font-size: 14px; opacity: 0.9;">
+                        UID đã được tự động điền vào form thêm thẻ
+                    </div>
+                </div>
+            `;
+        }
+
+        // Reset RFID scan button
+        function resetRfidScanButton() {
+            elements.btnRfidScan.innerHTML = '<i class="fas fa-id-card"></i><span>Bắt Đầu Quét</span>';
+            elements.btnRfidScan.disabled = false;
+            elements.btnRfidStop.style.display = 'none';
+            document.getElementById('rfidDetectSection').classList.remove('detecting');
+            
+            elements.rfidDetectionStatus.innerHTML = 'Nhấn nút để bắt đầu quét thẻ RFID';
+            elements.rfidDetectionStatus.style.background = 'var(--surface-light)';
+            elements.rfidDetectionStatus.style.color = 'var(--text-primary)';
         }
 
         // Camera stream management for always-on streaming
@@ -2127,7 +2129,7 @@
             alertManager.show(null, '🎉 Dashboard sẵn sàng! (Auto IP Detection)', 'success');
         }
 
-        // Update UI based on received values with AUTO IP DETECTION
+        // Update UI based on received values - SIMPLIFIED VERSION
         function updateUI(values) {
             // Update door status
             if (config.doorStatus && values[config.doorStatus.id]) {
@@ -2155,12 +2157,6 @@
                 parseRfidList(rfidList);
             }
             
-            // Update tries remaining
-            if (config.triesRemaining && values[config.triesRemaining.id]) {
-                const triesValue = values[config.triesRemaining.id].value;
-                updateTriesRemaining(triesValue);
-            }
-            
             // Update camera status
             if (config.camStatus && values[config.camStatus.id]) {
                 const camValue = values[config.camStatus.id].value;
@@ -2168,7 +2164,7 @@
                 operationManager.clearOperation('cameraCapture');
             }
             
-            // 🆕 AUTO IP DETECTION - Update camera IP
+            // AUTO IP DETECTION - Update camera IP
             if (config.camIP && values[config.camIP.id]) {
                 const cameraIP = values[config.camIP.id].value;
                 if (cameraIP && cameraIP !== "0.0.0.0") {
@@ -2367,7 +2363,7 @@
             systemState.motionDetected = detected;
         }
 
-        // Update RFID result with ENHANCED PROCESSING
+        // Update RFID result with SIMPLE PROCESSING
         function updateRfidResult(resultCode, cardData = null) {
             let resultText = '';
             
@@ -2383,7 +2379,6 @@
                                 eraWidget.triggerAction(actions.openDoor.action, 1);
                             }, 500);
                         }
-                        updateTriesRemaining(3); // Reset tries
                     } else {
                         resultText = 'Quét thành công';
                     }
@@ -2396,14 +2391,9 @@
                         resultText = `Thẻ không được nhận dạng: ${cardData.uid}`;
                         addToHistory('🎫 RFID', cardData.uid, 'Unknown', '❌ Thất bại', 'Từ chối');
                         alertManager.show(null, '❌ Thẻ RFID không được nhận dạng', 'danger');
-                        updateTriesRemaining(Math.max(0, systemState.triesRemaining - 1));
                     } else {
                         resultText = 'Thẻ không được nhận dạng';
                     }
-                    break;
-                case -2: // Max tries
-                    resultText = 'Đã vượt quá số lần thử cho phép';
-                    alertManager.show(null, '🔒 Hệ thống bị khóa do quá số lần thử!', 'danger');
                     break;
                 case 2: // Added
                     resultText = 'Đã thêm thẻ thành công';
@@ -2693,14 +2683,6 @@
                         // Auto refresh stream if camera is online but not streaming
                         refreshCameraStream();
                     }
-                    
-                    // Auto-reset tries after 5 minutes if locked
-                    if (systemState.isSystemLocked) {
-                        setTimeout(() => {
-                            updateTriesRemaining(3);
-                            alertManager.show(null, '🔓 Hệ thống đã tự động mở khóa', 'success');
-                        }, 300000); // 5 minutes
-                    }
                 }
             }, 30000); // Check every 30 seconds
             
@@ -2724,7 +2706,7 @@
         window.operationManager = operationManager;
         window.eraWidget = eraWidget;
         
-        console.log('🚀 Smart Door Dashboard v5.0 - RFID Only Version Ready!');
+        console.log('🚀 Smart Door Dashboard v6.0 - Simplified RFID Workflow Ready!');
     </script>
 </body>
 </html>
