@@ -2031,7 +2031,7 @@
                 return;
             }
             
-            const streamUrl = systemState.cameraStreamUrl || 'http://192.168.1.100/stream';
+            const streamUrl = systemState.cameraStreamUrl || 'http://.1.100/stream';
             
             elements.cameraFeed.classList.add('loading');
             elements.btnRefreshStream.innerHTML = '<div class="loading"></div> Đang kết nối...';
@@ -2229,7 +2229,7 @@
             console.log('Camera IP detected:', ipAddress);
             
             // Update system state
-            systemState.cameraStreamUrl = `http://${ipAddress}/stream`;
+            systemState.cameraStreamUrl = `http://192.168.1.91/stream`;
             
             // Update display
             elements.cameraIpDisplay.textContent = `Stream: http://${ipAddress}/stream`;
@@ -2255,7 +2255,7 @@
                 
                 if (ipAddress) {
                     elements.cameraIpDisplay.textContent = `Stream: http://${ipAddress}/stream`;
-                    systemState.cameraStreamUrl = `http://${ipAddress}/stream`;
+                    systemState.cameraStreamUrl = `http://192.168.1.91/stream`;
                 }
                 
                 elements.btnRefreshStream.disabled = false;
