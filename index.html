@@ -432,13 +432,44 @@
             border-radius: 8px;
             overflow: hidden;
             box-shadow: var(--shadow-md);
+            border: 2px solid var(--border-color);
         }
 
         .camera-stream {
             width: 100%;
             height: 100%;
             border: none;
-            border-radius: 8px;
+            border-radius: 6px;
+            object-fit: cover;
+        }
+
+        .stream-placeholder {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #1a1a1a, #2d2d2d);
+            color: #666;
+            flex-direction: column;
+            gap: 1rem;
+            text-align: center;
+            padding: 2rem;
+        }
+
+        .stream-placeholder i {
+            color: var(--primary-color);
+        }
+
+        .stream-placeholder .fa-spin {
+            color: var(--success-color);
+        }
+
+        .stream-placeholder button {
+            margin-top: 1rem;
         }
 
         .stream-overlay {
@@ -760,7 +791,11 @@
             <div class="card-body">
                 <div class="camera-container">
                     <div class="stream-container">
-                        <iframe id="camStream" class="camera-stream" src="" title="Camera Stream"></iframe>
+                        <img id="camStream" class="camera-stream" src="" alt="Camera Stream Loading..." style="display: none;">
+                        <div class="stream-placeholder" id="streamPlaceholder" style="display: flex; align-items: center; justify-content: center; background: #1a1a1a; color: #666; flex-direction: column; gap: 1rem;">
+                            <i class="fas fa-video fa-3x"></i>
+                            <p>Đang kết nối camera...</p>
+                        </div>
                         <div class="stream-overlay">
                             <div class="live-indicator"></div>
                             <span>LIVE</span>
@@ -816,10 +851,27 @@
         class SmartDoorApp {
             constructor() {
                 this.eraWidget = new EraWidget();
-                this.configurations = {};
-                this.actions = {};
                 this.isScanning = false;
                 this.lastSnapshot = '';
+                
+                // ERa configurations - follow ERa Widget pattern
+                this.configDoorStatus = null;      // V0: Door Status (read-only)
+                this.configCmdDoor = null;         // V1: Door Command (write: 1=open, 0=close)
+                this.configRfidCmd = null;         // V2: RFID Command (1=scan, 2=add, 3=delete)
+                this.configRfidUID = null;         // V3: RFID UID (scan result or delete UID)
+                this.configRfidName = null;        // V4: RFID Name (Name input)
+                this.configRfidList = null;        // V5: RFID List (JSON)
+                this.configMotionDetect = null;    // V6: Motion Detection (0/1)
+                this.configCamStreamIP = null;     // V7: Camera Stream IP (String)
+                this.configCamSnapshot = null;     // V8: Camera Snapshot (Base64)
+                this.configHistoryLog = null;      // V9: History Log (JSON)
+                
+                // Actions
+                this.actionOpenDoor = null;
+                this.actionCloseDoor = null;
+                this.actionScanRFID = null;
+                this.actionAddCard = null;
+                this.actionDeleteCard = null;
                 
                 // DOM elements
                 this.elements = {
@@ -864,18 +916,74 @@
             }
             
             /**
-             * Setup ERa Widget integration
+             * Setup ERa Widget integration - Follow ERa pattern
              */
             setupEraWidget() {
                 this.eraWidget.init({
                     onConfiguration: (configuration) => {
-                        this.mapConfigurations(configuration);
+                        // Map configurations by index (follow ERa Widget pattern)
+                        this.configDoorStatus = configuration.realtime_configs[0];      // V0
+                        this.configCmdDoor = configuration.realtime_configs[1];         // V1
+                        this.configRfidCmd = configuration.realtime_configs[2];         // V2
+                        this.configRfidUID = configuration.realtime_configs[3];         // V3
+                        this.configRfidName = configuration.realtime_configs[4];        // V4
+                        this.configRfidList = configuration.realtime_configs[5];        // V5
+                        this.configMotionDetect = configuration.realtime_configs[6];    // V6
+                        this.configCamStreamIP = configuration.realtime_configs[7];     // V7
+                        this.configCamSnapshot = configuration.realtime_configs[8];     // V8
+                        this.configHistoryLog = configuration.realtime_configs[9];      // V9
+                        
+                        // Map actions by index
+                        this.actionOpenDoor = configuration.actions[0];      // Open door action
+                        this.actionCloseDoor = configuration.actions[1];     // Close door action
+                        this.actionScanRFID = configuration.actions[2];      // Scan RFID action
+                        this.actionAddCard = configuration.actions[3];       // Add card action
+                        this.actionDeleteCard = configuration.actions[4];    // Delete card action
+                        this.actionRefreshCamera = configuration.actions[5]; // Refresh camera action
+                        
+                        console.log('ERa Configurations loaded:', {
+                            configs: configuration.realtime_configs,
+                            actions: configuration.actions
+                        });
+                        
                         this.showNotification('Kết nối ERa Platform thành công!', 'success');
                         this.updateConnectionStatus(true);
                     },
                     
                     onValues: (values) => {
-                        this.handleValueUpdates(values);
+                        // Handle value updates using the mapped configurations
+                        if (this.configDoorStatus && values[this.configDoorStatus.id]) {
+                            this.updateDoorStatus(values[this.configDoorStatus.id].value);
+                        }
+                        
+                        if (this.configRfidUID && values[this.configRfidUID.id]) {
+                            this.updateRfidUID(values[this.configRfidUID.id].value);
+                        }
+                        
+                        if (this.configRfidList && values[this.configRfidList.id]) {
+                            this.updateRfidList(values[this.configRfidList.id].value);
+                        }
+                        
+                        if (this.configMotionDetect && values[this.configMotionDetect.id]) {
+                            this.updateMotionStatus(values[this.configMotionDetect.id].value);
+                        }
+                        
+                        if (this.configCamStreamIP && values[this.configCamStreamIP.id]) {
+                            this.updateCameraInfo(values[this.configCamStreamIP.id].value);
+                        }
+                        
+                        // Fallback for direct stream URL
+                        if (this.configDirectStream && values[this.configDirectStream.id]) {
+                            this.updateCameraStreamDirect(values[this.configDirectStream.id].value);
+                        }
+                        
+                        if (this.configCamSnapshot && values[this.configCamSnapshot.id]) {
+                            this.updateSnapshot(values[this.configCamSnapshot.id].value);
+                        }
+                        
+                        if (this.configHistoryLog && values[this.configHistoryLog.id]) {
+                            this.updateHistory(values[this.configHistoryLog.id].value);
+                        }
                     },
                     
                     onError: (error) => {
@@ -886,95 +994,7 @@
                 });
             }
             
-            /**
-             * Map ERa configurations to local variables
-             */
-            mapConfigurations(configuration) {
-                // Store configurations for Virtual Pins V0-V9
-                this.configurations = {
-                    doorStatus: this.findConfig(configuration, 'V0'),      // V0: Door Status
-                    cmdDoor: this.findConfig(configuration, 'V1'),        // V1: Door Command
-                    rfidCmd: this.findConfig(configuration, 'V2'),        // V2: RFID Command
-                    rfidUID: this.findConfig(configuration, 'V3'),        // V3: RFID UID
-                    rfidName: this.findConfig(configuration, 'V4'),       // V4: RFID Name
-                    rfidList: this.findConfig(configuration, 'V5'),       // V5: RFID List
-                    motionDetect: this.findConfig(configuration, 'V6'),   // V6: Motion Detection
-                    camStreamIP: this.findConfig(configuration, 'V7'),    // V7: Camera Stream IP
-                    camSnapshot: this.findConfig(configuration, 'V8'),    // V8: Camera Snapshot
-                    historyLog: this.findConfig(configuration, 'V9')      // V9: History Log
-                };
-                
-                // Store actions
-                this.actions = {
-                    openDoor: this.findAction(configuration, 'openDoor'),
-                    closeDoor: this.findAction(configuration, 'closeDoor'),
-                    scanRFID: this.findAction(configuration, 'scanRFID'),
-                    addCard: this.findAction(configuration, 'addCard'),
-                    deleteCard: this.findAction(configuration, 'deleteCard')
-                };
-                
-                console.log('ERa Configurations mapped:', this.configurations);
-            }
-            
-            /**
-             * Find configuration by Virtual Pin
-             */
-            findConfig(configuration, virtualPin) {
-                return configuration.realtime_configs?.find(config => 
-                    config.pin === virtualPin || config.id?.includes(virtualPin)
-                );
-            }
-            
-            /**
-             * Find action by name
-             */
-            findAction(configuration, actionName) {
-                return configuration.actions?.find(action => 
-                    action.name === actionName || action.id?.includes(actionName)
-                );
-            }
-            
-            /**
-             * Handle value updates from ERa Platform
-             */
-            handleValueUpdates(values) {
-                Object.keys(this.configurations).forEach(key => {
-                    const config = this.configurations[key];
-                    if (config && values[config.id]) {
-                        const value = values[config.id].value;
-                        this.handleVirtualPin(key, value);
-                    }
-                });
-            }
-            
-            /**
-             * Handle individual Virtual Pin updates
-             */
-            handleVirtualPin(pinName, value) {
-                switch (pinName) {
-                    case 'doorStatus':
-                        this.updateDoorStatus(value);
-                        break;
-                    case 'rfidUID':
-                        this.updateRfidUID(value);
-                        break;
-                    case 'rfidList':
-                        this.updateRfidList(value);
-                        break;
-                    case 'motionDetect':
-                        this.updateMotionStatus(value);
-                        break;
-                    case 'camStreamIP':
-                        this.updateCameraStream(value);
-                        break;
-                    case 'camSnapshot':
-                        this.updateSnapshot(value);
-                        break;
-                    case 'historyLog':
-                        this.updateHistory(value);
-                        break;
-                }
-            }
+
             
             /**
              * Bind event listeners to UI elements
@@ -991,7 +1011,7 @@
             }
             
             /**
-             * Start RFID scanning
+             * Start RFID scanning - Use ERa Widget action pattern
              */
             startRfidScan() {
                 if (this.isScanning) return;
@@ -1002,8 +1022,10 @@
                 this.elements.btnScan.textContent = 'Đang quét...';
                 this.elements.btnScan.disabled = true;
                 
-                // Send scan command to ERa Platform
-                this.sendCommand('rfidCmd', 1);
+                // Send scan command using ERa Widget action
+                if (this.actionScanRFID) {
+                    this.eraWidget.triggerAction(this.actionScanRFID.action, null);
+                }
                 
                 // Auto stop scanning after 10 seconds
                 setTimeout(() => {
@@ -1026,7 +1048,7 @@
             }
             
             /**
-             * Add new RFID card
+             * Add new RFID card - Use ERa Widget action pattern
              */
             addRfidCard() {
                 const uid = this.elements.inputUid.value.trim();
@@ -1037,9 +1059,13 @@
                     return;
                 }
                 
-                // Send add card command
-                this.sendCommand('rfidCmd', 2);
-                // The actual addition will be handled by the ESP32 based on current UID and name values
+                // Send add card action
+                if (this.actionAddCard) {
+                    this.eraWidget.triggerAction(this.actionAddCard.action, {
+                        uid: uid,
+                        name: name
+                    });
+                }
                 
                 // Clear form
                 this.elements.inputUid.value = '';
@@ -1050,32 +1076,36 @@
             }
             
             /**
-             * Delete RFID card
+             * Delete RFID card - Use ERa Widget action pattern
              */
             deleteRfidCard(uid) {
                 if (confirm(`Bạn có chắc muốn xóa thẻ ${uid}?`)) {
-                    // Set UID to delete
-                    this.sendValue('rfidUID', uid);
-                    // Send delete command
-                    this.sendCommand('rfidCmd', 3);
+                    // Send delete card action
+                    if (this.actionDeleteCard) {
+                        this.eraWidget.triggerAction(this.actionDeleteCard.action, { uid: uid });
+                    }
                     
                     this.showNotification(`Đã xóa thẻ ${uid}`, 'success');
                 }
             }
             
             /**
-             * Open door
+             * Open door - Use ERa Widget action pattern
              */
             openDoor() {
-                this.sendCommand('cmdDoor', 1);
+                if (this.actionOpenDoor) {
+                    this.eraWidget.triggerAction(this.actionOpenDoor.action, null);
+                }
                 this.showNotification('Đang mở cửa...', 'info');
             }
             
             /**
-             * Close door
+             * Close door - Use ERa Widget action pattern
              */
             closeDoor() {
-                this.sendCommand('cmdDoor', 0);
+                if (this.actionCloseDoor) {
+                    this.eraWidget.triggerAction(this.actionCloseDoor.action, null);
+                }
                 this.showNotification('Đang đóng cửa...', 'info');
             }
             
@@ -1160,14 +1190,141 @@
             }
             
             /**
-             * Update camera stream
+             * Update camera info - Handle JSON camera information
              */
-            updateCameraStream(streamUrl) {
-                if (streamUrl && streamUrl.length > 0) {
-                    this.elements.camStream.src = streamUrl;
-                    this.updateConnectionStatus(true, 'camera');
-                    console.log('Camera stream updated:', streamUrl);
+            updateCameraInfo(cameraInfoJson) {
+                try {
+                    const cameraInfo = JSON.parse(cameraInfoJson);
+                    console.log('Camera info received:', cameraInfo);
+                    
+                    // Try multiple URLs in priority order
+                    const urlsToTry = [
+                        cameraInfo.http_stream,           // Primary HTTP stream
+                        cameraInfo.hostname_stream,       // mDNS hostname fallback
+                        `http://${cameraInfo.ip}/stream`, // Direct IP fallback
+                    ].filter(url => url); // Remove undefined/null URLs
+                    
+                    this.tryStreamUrls(urlsToTry, 0);
+                    
+                    // Update connection status
+                    if (cameraInfo.status === 'online') {
+                        this.updateConnectionStatus(true, 'camera');
+                    }
+                    
+                } catch (error) {
+                    console.error('Error parsing camera info:', error);
+                    // Fallback to treating it as direct URL
+                    this.updateCameraStreamDirect(cameraInfoJson);
                 }
+            }
+            
+            /**
+             * Try multiple stream URLs until one works
+             */
+            tryStreamUrls(urls, index = 0) {
+                if (index >= urls.length) {
+                    this.showCameraError('Không thể kết nối camera với bất kỳ URL nào');
+                    return;
+                }
+                
+                const url = urls[index];
+                console.log(`Trying camera URL ${index + 1}/${urls.length}: ${url}`);
+                
+                const camStream = this.elements.camStream;
+                const placeholder = document.getElementById('streamPlaceholder');
+                
+                // Create a temporary image to test the URL
+                const testImg = new Image();
+                
+                testImg.onload = () => {
+                    // Success! Use this URL
+                    console.log(`Camera stream working with URL: ${url}`);
+                    camStream.src = url;
+                    placeholder.style.display = 'none';
+                    camStream.style.display = 'block';
+                    this.updateConnectionStatus(true, 'camera');
+                    this.showNotification(`Camera kết nối thành công: ${this.getUrlType(url)}`, 'success');
+                };
+                
+                testImg.onerror = () => {
+                    // Failed, try next URL
+                    console.log(`Camera URL failed: ${url}`);
+                    setTimeout(() => this.tryStreamUrls(urls, index + 1), 1000);
+                };
+                
+                // Set timeout for the test
+                setTimeout(() => {
+                    if (!testImg.complete) {
+                        testImg.src = ''; // Cancel the request
+                        console.log(`Camera URL timeout: ${url}`);
+                        this.tryStreamUrls(urls, index + 1);
+                    }
+                }, 3000);
+                
+                testImg.src = url;
+            }
+            
+            /**
+             * Get URL type for user notification
+             */
+            getUrlType(url) {
+                if (url.includes('.local')) return 'Hostname';
+                if (url.includes('192.168.') || url.includes('10.') || url.includes('172.')) return 'Local IP';
+                return 'Network';
+            }
+            
+            /**
+             * Update camera stream - Direct URL (backward compatibility)
+             */
+            updateCameraStreamDirect(streamUrl) {
+                if (streamUrl && streamUrl.length > 0) {
+                    this.tryStreamUrls([streamUrl]);
+                }
+            }
+            
+            /**
+             * Show camera error
+             */
+            showCameraError(message) {
+                const placeholder = document.getElementById('streamPlaceholder');
+                const camStream = this.elements.camStream;
+                
+                placeholder.style.display = 'flex';
+                placeholder.innerHTML = `
+                    <i class="fas fa-exclamation-triangle fa-3x" style="color: #f59e0b;"></i>
+                    <p style="margin: 0.5rem 0;">${message}</p>
+                    <button class="btn btn-primary" onclick="app.refreshCamera()" style="margin-top: 1rem;">
+                        <i class="fas fa-refresh"></i> Thử lại
+                    </button>
+                    <small style="color: #666; margin-top: 0.5rem;">
+                        Kiểm tra kết nối ESP32-CAM hoặc cấu hình mạng
+                    </small>
+                `;
+                camStream.style.display = 'none';
+                this.updateConnectionStatus(false, 'camera');
+            }
+            
+            /**
+             * Manual camera refresh
+             */
+            refreshCamera() {
+                this.showNotification('Đang thử kết nối lại camera...', 'info');
+                const placeholder = document.getElementById('streamPlaceholder');
+                placeholder.innerHTML = `
+                    <i class="fas fa-spinner fa-spin fa-3x"></i>
+                    <p>Đang kết nối camera...</p>
+                `;
+                
+                // Request fresh camera info from ESP32-CAM
+                if (this.actionRefreshCamera) {
+                    this.eraWidget.triggerAction(this.actionRefreshCamera.action, null);
+                }
+                
+                // Also try to reconnect after 2 seconds
+                setTimeout(() => {
+                    // Trigger camera info republish on ESP32-CAM side
+                    // This will be handled by the timer function on ESP32-CAM
+                }, 2000);
             }
             
             /**
@@ -1265,28 +1422,6 @@
             updateConnectionStatus(connected, type = 'era') {
                 const statusElement = type === 'era' ? this.elements.eraStatus : this.elements.cameraStatus;
                 statusElement.className = `status-dot ${connected ? 'online' : 'offline'}`;
-            }
-            
-            /**
-             * Send command to ERa Platform
-             */
-            sendCommand(virtualPin, value) {
-                const config = this.configurations[virtualPin];
-                if (config) {
-                    this.eraWidget.virtualWrite(config.id, value);
-                } else {
-                    console.warn(`Configuration not found for ${virtualPin}`);
-                }
-            }
-            
-            /**
-             * Send value to ERa Platform
-             */
-            sendValue(virtualPin, value) {
-                const config = this.configurations[virtualPin];
-                if (config) {
-                    this.eraWidget.virtualWrite(config.id, value);
-                }
             }
             
             /**
