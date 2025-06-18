@@ -1586,24 +1586,24 @@
                 try {
                     // Map configs
                     const configs = configuration.realtime_configs || [];
-                    config.doorStatus = configs.find(c => c.pin === 'V0');
-                    config.motionStatus = configs.find(c => c.pin === 'V1');
-                    config.rfidResult = configs.find(c => c.pin === 'V2');
-                    config.rfidList = configs.find(c => c.pin === 'V3');
-                    config.triesRemaining = configs.find(c => c.pin === 'V4');
-                    config.camStatus = configs.find(c => c.pin === 'V5');
-                    config.lastImage = configs.find(c => c.pin === 'V6');
-                    config.camIP = configs.find(c => c.pin === 'V7');
-                    config.historyJson = configs.find(c => c.pin === 'V10');
+                    config.doorStatus = configs.find(c => c.pin === 0);
+                    config.motionStatus = configs.find(c => c.pin === 1);
+                    config.rfidResult = configs.find(c => c.pin === 2);
+                    config.rfidList = configs.find(c => c.pin === 3);
+                    config.triesRemaining = configs.find(c => c.pin === 4);
+                    config.camStatus = configs.find(c => c.pin === 5);
+                    config.lastImage = configs.find(c => c.pin === 6);
+                    config.camIP = configs.find(c => c.pin === 7);
+                    config.historyJson = configs.find(c => c.pin === 10);
                     
                     // Map actions
                     const actionList = configuration.actions || [];
-                    actions.doorOpen = actionList.find(a => a.pin === 'V8' && a.value === 1);
-                    actions.doorClose = actionList.find(a => a.pin === 'V8' && a.value === 0);
-                    actions.rfidScan = actionList.find(a => a.pin === 'V9' && a.value === 1);
-                    actions.rfidAdd = actionList.find(a => a.pin === 'V9' && a.value === 2);
-                    actions.rfidRemove = actionList.find(a => a.pin === 'V9' && a.value === 3);
-                    actions.captureImage = actionList.find(a => a.pin === 'V11' && a.value === 1);
+                    actions.doorOpen = actionList.find(a => a.pin === 8 && a.value === 1);
+                    actions.doorClose = actionList.find(a => a.pin === 8 && a.value === 0);
+                    actions.rfidScan = actionList.find(a => a.pin === 9 && a.value === 1);
+                    actions.rfidAdd = actionList.find(a => a.pin === 9 && a.value === 2);
+                    actions.rfidRemove = actionList.find(a => a.pin === 9 && a.value === 3);
+                    actions.captureImage = actionList.find(a => a.pin === 11 && a.value === 1);
                     
                     updateConnectionStatus(true);
                     debugLogger.log('E-Ra configured successfully');
