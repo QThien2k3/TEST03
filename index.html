@@ -464,14 +464,6 @@
             color: var(--primary-color);
         }
 
-        .stream-placeholder .fa-spin {
-            color: var(--success-color);
-        }
-
-        .stream-placeholder button {
-            margin-top: 1rem;
-        }
-
         .stream-overlay {
             position: absolute;
             top: 1rem;
@@ -556,6 +548,31 @@
             font-size: 12px;
             max-width: 400px;
             z-index: 9999;
+        }
+
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .container {
+                grid-template-columns: 1fr;
+                padding: 1rem;
+            }
+
+            .header-content {
+                padding: 0 1rem;
+            }
+
+            .rfid-controls {
+                grid-template-columns: 1fr;
+            }
+
+            .door-controls {
+                flex-direction: column;
+            }
+
+            .snapshot-container {
+                grid-template-columns: 1fr;
+                text-align: center;
+            }
         }
     </style>
 </head>
@@ -692,7 +709,7 @@
                         <div class="stream-placeholder" id="streamPlaceholder">
                             <i class="fas fa-video fa-3x"></i>
                             <p>Đang kết nối camera...</p>
-                            <button class="btn btn-primary" onclick="app.manualRefreshCamera()">
+                            <button class="btn btn-primary" onclick="app.refreshCamera()">
                                 <i class="fas fa-refresh"></i> Thử lại
                             </button>
                         </div>
@@ -714,29 +731,49 @@
         </div>
     </div>
 
-    <!-- Debug Info (removable in production) -->
-    <div class="debug-info" id="debugInfo" style="display: none;">
-        <div>ERa Status: <span id="debugEra">Disconnected</span></div>
-        <div>Last Camera URL: <span id="debugCamUrl">None</span></div>
-        <div>Last RFID Scan: <span id="debugRfid">None</span></div>
-        <div>Door Status: <span id="debugDoor">Unknown</span></div>
+    <!-- Debug Info -->
+    <div class="debug-info" id="debugInfo">
+        <div><strong>ERa Widget Debug</strong></div>
+        <div>Status: <span id="debugStatus">Initializing...</span></div>
+        <div>Door: <span id="debugDoor">-</span></div>
+        <div>RFID: <span id="debugRfid">-</span></div>
+        <div>Camera: <span id="debugCamera">-</span></div>
+        <div>Last Update: <span id="debugTime">-</span></div>
     </div>
 
+    <!-- ERa Widget Integration -->
+    <script src="https://www.unpkg.com/@eohjsc/era-widget@1.1.3/src/index.js"></script>
+    
     <script>
         /**
-         * FIXED Smart Door Dashboard Application
-         * Direct API calls without ERa Widget dependency
+         * Smart Door Dashboard Application using ERa Widget
+         * Clear Virtual Pin mapping for easy understanding
          */
         class SmartDoorApp {
             constructor() {
-                // FIXED: Add your ERa Auth Token here
-                this.ERA_AUTH_TOKEN = "de14b27e-60fc-4c67-a12e-024d34569bc1";
-                this.ERA_BASE_URL = "https://sg1.eoh.io";
-                
+                this.eraWidget = new EraWidget();
                 this.isScanning = false;
                 this.lastSnapshot = '';
-                this.pollInterval = null;
-                this.cameraCheckInterval = null;
+                
+                // Virtual Pin Configurations (follow ERa Widget pattern)
+                this.configDoorStatus = null;      // V0: Door Status (read-only: 0=closed, 1=open)
+                this.configCmdDoor = null;         // V1: Door Command (write: 0=close, 1=open)
+                this.configRfidCmd = null;         // V2: RFID Command (write: 1=scan, 2=add, 3=delete)
+                this.configRfidUID = null;         // V3: RFID UID (read: scanned UID, write: UID for add/delete)
+                this.configRfidName = null;        // V4: RFID Name (write: name for adding card)
+                this.configRfidList = null;        // V5: RFID List (read: JSON array of cards)
+                this.configMotionDetect = null;    // V6: Motion Detection (read: 0/1)
+                this.configCamStreamIP = null;     // V7: Camera Stream Info (read: JSON with URLs)
+                this.configCamSnapshot = null;     // V8: Camera Snapshot (read: Base64 image, write: "trigger")
+                this.configHistoryLog = null;      // V9: History Log (read: JSON array of events)
+                
+                // Action Configurations
+                this.actionOpenDoor = null;        // Action 0: Open door
+                this.actionCloseDoor = null;       // Action 1: Close door  
+                this.actionScanRFID = null;        // Action 2: Start RFID scan
+                this.actionAddCard = null;         // Action 3: Add new card
+                this.actionDeleteCard = null;      // Action 4: Delete card
+                this.actionRefreshCamera = null;   // Action 5: Refresh camera info
                 
                 // DOM elements
                 this.elements = {
@@ -750,7 +787,6 @@
                     rfidTableBody: document.getElementById('rfidTableBody'),
                     
                     // Door elements
-                    doorAnimation: document.getElementById('doorAnimation'),
                     doorPanel: document.getElementById('doorPanel'),
                     doorStatus: document.getElementById('doorStatus'),
                     btnOpen: document.getElementById('btnOpen'),
@@ -768,10 +804,11 @@
                     
                     // Debug elements
                     debugInfo: document.getElementById('debugInfo'),
-                    debugEra: document.getElementById('debugEra'),
-                    debugCamUrl: document.getElementById('debugCamUrl'),
+                    debugStatus: document.getElementById('debugStatus'),
+                    debugDoor: document.getElementById('debugDoor'),
                     debugRfid: document.getElementById('debugRfid'),
-                    debugDoor: document.getElementById('debugDoor')
+                    debugCamera: document.getElementById('debugCamera'),
+                    debugTime: document.getElementById('debugTime')
                 };
                 
                 this.init();
@@ -781,172 +818,121 @@
              * Initialize the application
              */
             init() {
+                this.setupEraWidget();
                 this.bindEventListeners();
-                this.showNotification('Đang kết nối đến ERa Platform...', 'info');
-                this.startPolling();
-                this.testConnection();
-                
-                // Show debug info for troubleshooting
-                this.elements.debugInfo.style.display = 'block';
+                this.showNotification('Đang khởi tạo ERa Widget...', 'info');
+                this.updateDebug('Initializing ERa Widget...');
             }
             
             /**
-             * Test ERa connection
+             * Setup ERa Widget integration with clear Virtual Pin mapping
              */
-            async testConnection() {
-                try {
-                    const response = await this.makeEraRequest('GET', '/api/v1/auth/info');
-                    if (response) {
-                        this.showNotification('Kết nối ERa Platform thành công!', 'success');
+            setupEraWidget() {
+                this.eraWidget.init({
+                    onConfiguration: (configuration) => {
+                        console.log('ERa Widget Configuration:', configuration);
+                        
+                        // Map Virtual Pin configurations by index (V0-V9)
+                        this.configDoorStatus = configuration.realtime_configs[0];      // V0: Door Status
+                        this.configCmdDoor = configuration.realtime_configs[1];         // V1: Door Command  
+                        this.configRfidCmd = configuration.realtime_configs[2];         // V2: RFID Command
+                        this.configRfidUID = configuration.realtime_configs[3];         // V3: RFID UID
+                        this.configRfidName = configuration.realtime_configs[4];        // V4: RFID Name
+                        this.configRfidList = configuration.realtime_configs[5];        // V5: RFID List
+                        this.configMotionDetect = configuration.realtime_configs[6];    // V6: Motion Detection
+                        this.configCamStreamIP = configuration.realtime_configs[7];     // V7: Camera Stream Info
+                        this.configCamSnapshot = configuration.realtime_configs[8];     // V8: Camera Snapshot
+                        this.configHistoryLog = configuration.realtime_configs[9];      // V9: History Log
+                        
+                        // Map Action configurations by index
+                        this.actionOpenDoor = configuration.actions[0];      // Action 0: Open door
+                        this.actionCloseDoor = configuration.actions[1];     // Action 1: Close door
+                        this.actionScanRFID = configuration.actions[2];      // Action 2: Scan RFID
+                        this.actionAddCard = configuration.actions[3];       // Action 3: Add card
+                        this.actionDeleteCard = configuration.actions[4];    // Action 4: Delete card
+                        this.actionRefreshCamera = configuration.actions[5]; // Action 5: Refresh camera
+                        
+                        console.log('Virtual Pin Mapping:', {
+                            'V0 (Door Status)': this.configDoorStatus,
+                            'V1 (Door Command)': this.configCmdDoor,
+                            'V2 (RFID Command)': this.configRfidCmd,
+                            'V3 (RFID UID)': this.configRfidUID,
+                            'V4 (RFID Name)': this.configRfidName,
+                            'V5 (RFID List)': this.configRfidList,
+                            'V6 (Motion Detect)': this.configMotionDetect,
+                            'V7 (Camera Info)': this.configCamStreamIP,
+                            'V8 (Camera Snapshot)': this.configCamSnapshot,
+                            'V9 (History Log)': this.configHistoryLog
+                        });
+                        
+                        this.showNotification('ERa Widget kết nối thành công!', 'success');
                         this.updateConnectionStatus(true);
-                        this.elements.debugEra.textContent = 'Connected';
-                    }
-                } catch (error) {
-                    console.error('ERa connection test failed:', error);
-                    this.showNotification('Lỗi kết nối ERa Platform: ' + error.message, 'error');
-                    this.updateConnectionStatus(false);
-                    this.elements.debugEra.textContent = 'Failed: ' + error.message;
-                }
-            }
-            
-            /**
-             * Make ERa API request
-             */
-            async makeEraRequest(method, endpoint, data = null) {
-                const url = `${this.ERA_BASE_URL}${endpoint}`;
-                const options = {
-                    method: method,
-                    headers: {
-                        'Authorization': `Bearer ${this.ERA_AUTH_TOKEN}`,
-                        'Content-Type': 'application/json',
-                    }
-                };
-                
-                if (data && method !== 'GET') {
-                    options.body = JSON.stringify(data);
-                }
-                
-                const response = await fetch(url, options);
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-                }
-                
-                return await response.json();
-            }
-            
-            /**
-             * Read virtual pin value
-             */
-            async readVirtualPin(pin) {
-                try {
-                    const response = await this.makeEraRequest('GET', `/api/v1/data/virtual/${pin}`);
-                    return response.value;
-                } catch (error) {
-                    console.error(`Error reading V${pin}:`, error);
-                    return null;
-                }
-            }
-            
-            /**
-             * Write virtual pin value
-             */
-            async writeVirtualPin(pin, value) {
-                try {
-                    await this.makeEraRequest('POST', `/api/v1/data/virtual/${pin}`, { value: value });
-                    console.log(`Written V${pin} = ${value}`);
-                    return true;
-                } catch (error) {
-                    console.error(`Error writing V${pin}:`, error);
-                    return false;
-                }
-            }
-            
-            /**
-             * Start polling for data updates
-             */
-            startPolling() {
-                // Poll every 2 seconds for real-time updates
-                this.pollInterval = setInterval(() => {
-                    this.pollData();
-                }, 2000);
-                
-                // Check camera every 10 seconds
-                this.cameraCheckInterval = setInterval(() => {
-                    this.checkCameraStatus();
-                }, 10000);
-                
-                // Initial poll
-                this.pollData();
-            }
-            
-            /**
-             * Poll data from ERa
-             */
-            async pollData() {
-                try {
-                    // Read all virtual pins
-                    const [doorStatus, rfidUID, rfidList, motionDetect, cameraInfo, snapshot] = await Promise.all([
-                        this.readVirtualPin(0), // V0: Door Status
-                        this.readVirtualPin(3), // V3: RFID UID
-                        this.readVirtualPin(5), // V5: RFID List
-                        this.readVirtualPin(6), // V6: Motion Detection
-                        this.readVirtualPin(7), // V7: Camera Info
-                        this.readVirtualPin(8)  // V8: Camera Snapshot
-                    ]);
+                        this.updateDebug('ERa Widget connected successfully');
+                    },
                     
-                    // Update UI with received data
-                    if (doorStatus !== null) {
-                        this.updateDoorStatus(doorStatus);
-                        this.elements.debugDoor.textContent = doorStatus ? 'Open' : 'Closed';
+                    onValues: (values) => {
+                        console.log('ERa Values Update:', values);
+                        this.updateDebug('Last update: ' + new Date().toLocaleTimeString());
+                        
+                        // Handle V0: Door Status (0=closed, 1=open)
+                        if (this.configDoorStatus && values[this.configDoorStatus.id]) {
+                            const doorStatus = values[this.configDoorStatus.id].value;
+                            this.updateDoorStatus(doorStatus);
+                            this.elements.debugDoor.textContent = doorStatus ? 'Open' : 'Closed';
+                        }
+                        
+                        // Handle V3: RFID UID (scan result)
+                        if (this.configRfidUID && values[this.configRfidUID.id]) {
+                            const rfidUID = values[this.configRfidUID.id].value;
+                            if (rfidUID && rfidUID !== '' && rfidUID !== 'null') {
+                                this.updateRfidUID(rfidUID);
+                                this.elements.debugRfid.textContent = rfidUID;
+                            }
+                        }
+                        
+                        // Handle V5: RFID List (JSON array)
+                        if (this.configRfidList && values[this.configRfidList.id]) {
+                            const rfidList = values[this.configRfidList.id].value;
+                            this.updateRfidList(rfidList);
+                        }
+                        
+                        // Handle V6: Motion Detection (0/1)
+                        if (this.configMotionDetect && values[this.configMotionDetect.id]) {
+                            const motionDetected = values[this.configMotionDetect.id].value;
+                            this.updateMotionStatus(motionDetected);
+                        }
+                        
+                        // Handle V7: Camera Stream Info (JSON)
+                        if (this.configCamStreamIP && values[this.configCamStreamIP.id]) {
+                            const cameraInfo = values[this.configCamStreamIP.id].value;
+                            if (cameraInfo && cameraInfo !== '' && cameraInfo !== 'null') {
+                                this.updateCameraInfo(cameraInfo);
+                                this.elements.debugCamera.textContent = 'Stream received';
+                            }
+                        }
+                        
+                        // Handle V8: Camera Snapshot (Base64)
+                        if (this.configCamSnapshot && values[this.configCamSnapshot.id]) {
+                            const snapshot = values[this.configCamSnapshot.id].value;
+                            if (snapshot && snapshot !== '' && snapshot !== 'trigger' && snapshot !== 'null') {
+                                this.updateSnapshot(snapshot);
+                            }
+                        }
+                        
+                        // Handle V9: History Log (JSON array)
+                        if (this.configHistoryLog && values[this.configHistoryLog.id]) {
+                            const historyLog = values[this.configHistoryLog.id].value;
+                            this.updateHistory(historyLog);
+                        }
+                    },
+                    
+                    onError: (error) => {
+                        console.error('ERa Widget Error:', error);
+                        this.showNotification('Lỗi ERa Widget: ' + error.message, 'error');
+                        this.updateConnectionStatus(false);
+                        this.updateDebug('ERa Error: ' + error.message);
                     }
-                    
-                    if (rfidUID !== null && rfidUID !== '') {
-                        this.updateRfidUID(rfidUID);
-                        this.elements.debugRfid.textContent = rfidUID;
-                    }
-                    
-                    if (rfidList !== null) {
-                        this.updateRfidList(rfidList);
-                    }
-                    
-                    if (motionDetect !== null) {
-                        this.updateMotionStatus(motionDetect);
-                    }
-                    
-                    if (cameraInfo !== null) {
-                        this.updateCameraInfo(cameraInfo);
-                        this.elements.debugCamUrl.textContent = cameraInfo.substring(0, 50) + '...';
-                    }
-                    
-                    if (snapshot !== null && snapshot !== '' && snapshot !== 'trigger') {
-                        this.updateSnapshot(snapshot);
-                    }
-                    
-                    this.updateConnectionStatus(true);
-                    this.elements.debugEra.textContent = 'Connected';
-                    
-                } catch (error) {
-                    console.error('Error polling data:', error);
-                    this.updateConnectionStatus(false);
-                    this.elements.debugEra.textContent = 'Poll Error: ' + error.message;
-                }
-            }
-            
-            /**
-             * Check camera status periodically
-             */
-            async checkCameraStatus() {
-                // Try to get fresh camera info
-                try {
-                    const cameraInfo = await this.readVirtualPin(7);
-                    const directStream = await this.readVirtualPin(11);
-                    
-                    if (cameraInfo || directStream) {
-                        this.updateCameraInfo(cameraInfo || directStream);
-                    }
-                } catch (error) {
-                    console.error('Camera status check failed:', error);
-                }
+                });
             }
             
             /**
@@ -962,7 +948,7 @@
                 this.elements.btnOpen.addEventListener('click', () => this.openDoor());
                 this.elements.btnClose.addEventListener('click', () => this.closeDoor());
                 
-                // Camera stream error handling
+                // Camera error handling
                 this.elements.camStream.addEventListener('error', () => {
                     this.showCameraError('Camera stream connection failed');
                 });
@@ -972,13 +958,14 @@
                     this.elements.camStream.style.display = 'block';
                     this.elements.streamOverlay.style.display = 'flex';
                     this.updateConnectionStatus(true, 'camera');
+                    this.elements.debugCamera.textContent = 'Stream active';
                 });
             }
             
             /**
-             * Start RFID scanning
+             * Start RFID scanning using ERa Widget action
              */
-            async startRfidScan() {
+            startRfidScan() {
                 if (this.isScanning) return;
                 
                 this.isScanning = true;
@@ -987,16 +974,19 @@
                 this.elements.btnScan.textContent = 'Đang quét...';
                 this.elements.btnScan.disabled = true;
                 
-                // Send scan command to ESP32
-                const success = await this.writeVirtualPin(2, 1);
-                
-                if (!success) {
-                    this.stopRfidScan();
-                    this.showNotification('Lỗi gửi lệnh quét', 'error');
-                    return;
+                // Method 1: Use ERa Widget action (if available)
+                if (this.actionScanRFID) {
+                    this.eraWidget.triggerAction(this.actionScanRFID.action, null);
+                    console.log('Triggered RFID scan action');
+                } 
+                // Method 2: Write to Virtual Pin V2 (RFID Command)
+                else if (this.configRfidCmd) {
+                    this.eraWidget.writePin(this.configRfidCmd.id, 1); // 1 = start scan
+                    console.log('Sent RFID scan command to V2');
                 }
                 
-                this.showNotification('Đã gửi lệnh quét. Đặt thẻ lên cảm biến...', 'info');
+                this.showNotification('Đã gửi lệnh quét RFID. Đặt thẻ lên cảm biến...', 'info');
+                this.updateDebug('RFID scan started');
                 
                 // Auto stop scanning after 15 seconds
                 setTimeout(() => {
@@ -1016,12 +1006,13 @@
                 this.elements.scanAnimation.classList.remove('active');
                 this.elements.btnScan.innerHTML = '<i class="fas fa-search"></i> Bắt đầu quét';
                 this.elements.btnScan.disabled = false;
+                this.updateDebug('RFID scan stopped');
             }
             
             /**
-             * Add new RFID card
+             * Add new RFID card using ERa Widget
              */
-            async addRfidCard() {
+            addRfidCard() {
                 const uid = this.elements.inputUid.value.trim();
                 const name = this.elements.inputName.value.trim();
                 
@@ -1030,61 +1021,93 @@
                     return;
                 }
                 
-                // Send UID and name to ESP32
-                const success1 = await this.writeVirtualPin(3, uid);
-                const success2 = await this.writeVirtualPin(4, name);
-                
-                if (success1 && success2) {
-                    // Clear form
-                    this.elements.inputUid.value = '';
-                    this.elements.inputName.value = '';
-                    this.validateAddForm();
-                    
-                    this.showNotification(`Đã thêm thẻ ${uid} cho ${name}`, 'success');
-                } else {
-                    this.showNotification('Lỗi thêm thẻ', 'error');
-                }
-            }
-            
-            /**
-             * Delete RFID card
-             */
-            async deleteRfidCard(uid) {
-                if (confirm(`Bạn có chắc muốn xóa thẻ ${uid}?`)) {
-                    // Send delete command
-                    const success1 = await this.writeVirtualPin(2, 3); // Delete command
-                    const success2 = await this.writeVirtualPin(3, uid); // UID to delete
-                    
-                    if (success1 && success2) {
-                        this.showNotification(`Đã xóa thẻ ${uid}`, 'success');
-                    } else {
-                        this.showNotification('Lỗi xóa thẻ', 'error');
+                // Method 1: Use ERa Widget action (if available)
+                if (this.actionAddCard) {
+                    this.eraWidget.triggerAction(this.actionAddCard.action, {
+                        uid: uid,
+                        name: name
+                    });
+                    console.log('Triggered add card action');
+                } 
+                // Method 2: Write to Virtual Pins
+                else {
+                    if (this.configRfidUID && this.configRfidName) {
+                        this.eraWidget.writePin(this.configRfidUID.id, uid);      // V3: UID
+                        this.eraWidget.writePin(this.configRfidName.id, name);    // V4: Name
+                        this.eraWidget.writePin(this.configRfidCmd.id, 2);        // V2: Add command
+                        console.log('Sent add card command via Virtual Pins');
                     }
                 }
+                
+                // Clear form
+                this.elements.inputUid.value = '';
+                this.elements.inputName.value = '';
+                this.validateAddForm();
+                
+                this.showNotification(`Đã thêm thẻ ${uid} cho ${name}`, 'success');
+                this.updateDebug(`Added card: ${uid} - ${name}`);
             }
             
             /**
-             * Open door
+             * Delete RFID card using ERa Widget
              */
-            async openDoor() {
-                const success = await this.writeVirtualPin(1, 1);
-                if (success) {
-                    this.showNotification('Đang mở cửa...', 'info');
-                } else {
-                    this.showNotification('Lỗi gửi lệnh mở cửa', 'error');
+            deleteRfidCard(uid) {
+                if (confirm(`Bạn có chắc muốn xóa thẻ ${uid}?`)) {
+                    // Method 1: Use ERa Widget action (if available)
+                    if (this.actionDeleteCard) {
+                        this.eraWidget.triggerAction(this.actionDeleteCard.action, { uid: uid });
+                        console.log('Triggered delete card action');
+                    } 
+                    // Method 2: Write to Virtual Pins
+                    else {
+                        if (this.configRfidUID && this.configRfidCmd) {
+                            this.eraWidget.writePin(this.configRfidUID.id, uid);      // V3: UID to delete
+                            this.eraWidget.writePin(this.configRfidCmd.id, 3);        // V2: Delete command
+                            console.log('Sent delete card command via Virtual Pins');
+                        }
+                    }
+                    
+                    this.showNotification(`Đã xóa thẻ ${uid}`, 'success');
+                    this.updateDebug(`Deleted card: ${uid}`);
                 }
             }
             
             /**
-             * Close door
+             * Open door using ERa Widget
              */
-            async closeDoor() {
-                const success = await this.writeVirtualPin(1, 0);
-                if (success) {
-                    this.showNotification('Đang đóng cửa...', 'info');
-                } else {
-                    this.showNotification('Lỗi gửi lệnh đóng cửa', 'error');
+            openDoor() {
+                // Method 1: Use ERa Widget action (if available)
+                if (this.actionOpenDoor) {
+                    this.eraWidget.triggerAction(this.actionOpenDoor.action, null);
+                    console.log('Triggered open door action');
+                } 
+                // Method 2: Write to Virtual Pin V1
+                else if (this.configCmdDoor) {
+                    this.eraWidget.writePin(this.configCmdDoor.id, 1); // 1 = open
+                    console.log('Sent open door command to V1');
                 }
+                
+                this.showNotification('Đang mở cửa...', 'info');
+                this.updateDebug('Door open command sent');
+            }
+            
+            /**
+             * Close door using ERa Widget
+             */
+            closeDoor() {
+                // Method 1: Use ERa Widget action (if available)
+                if (this.actionCloseDoor) {
+                    this.eraWidget.triggerAction(this.actionCloseDoor.action, null);
+                    console.log('Triggered close door action');
+                } 
+                // Method 2: Write to Virtual Pin V1
+                else if (this.configCmdDoor) {
+                    this.eraWidget.writePin(this.configCmdDoor.id, 0); // 0 = close
+                    console.log('Sent close door command to V1');
+                }
+                
+                this.showNotification('Đang đóng cửa...', 'info');
+                this.updateDebug('Door close command sent');
             }
             
             /**
@@ -1124,7 +1147,7 @@
             updateRfidList(jsonString) {
                 try {
                     let cards = [];
-                    if (typeof jsonString === 'string' && jsonString !== 'null') {
+                    if (typeof jsonString === 'string' && jsonString !== 'null' && jsonString !== '') {
                         cards = JSON.parse(jsonString);
                     } else if (Array.isArray(jsonString)) {
                         cards = jsonString;
@@ -1167,10 +1190,10 @@
              * Update motion detection status
              */
             updateMotionStatus(detected) {
-                // Could add visual indicator for motion detection
                 if (detected) {
                     console.log('Motion detected');
-                    // Could show temporary notification or visual indicator
+                    // Could add visual indicator for motion detection
+                    this.showNotification('Phát hiện chuyển động!', 'info');
                 }
             }
             
@@ -1191,12 +1214,14 @@
                             `http://${cameraInfo.ip}/stream`,
                         ].filter(url => url);
                         
-                        this.tryStreamUrls(urlsToTry, 0);
+                        if (urlsToTry.length > 0) {
+                            this.tryStreamUrls(urlsToTry, 0);
+                        }
                         
                         if (cameraInfo.status === 'online') {
                             this.updateConnectionStatus(true, 'camera');
                         }
-                    } else {
+                    } else if (cameraInfoString.startsWith('http')) {
                         // Treat as direct URL
                         this.tryStreamUrls([cameraInfoString], 0);
                     }
@@ -1222,14 +1247,14 @@
                 const url = urls[index];
                 console.log(`Trying camera URL ${index + 1}/${urls.length}: ${url}`);
                 
-                // Test the URL by setting it to the image src
+                // Create a test image to check if URL works
                 const testImg = new Image();
                 
                 testImg.onload = () => {
                     console.log(`Camera stream working with URL: ${url}`);
-                    this.elements.camStream.src = url + '?t=' + new Date().getTime(); // Add timestamp to prevent caching
+                    this.elements.camStream.src = url + '?t=' + new Date().getTime();
                     this.updateConnectionStatus(true, 'camera');
-                    this.showNotification(`Camera kết nối thành công: ${this.getUrlType(url)}`, 'success');
+                    this.showNotification(`Camera kết nối thành công!`, 'success');
                 };
                 
                 testImg.onerror = () => {
@@ -1250,41 +1275,31 @@
             }
             
             /**
-             * Get URL type for user notification
-             */
-            getUrlType(url) {
-                if (url.includes('.local')) return 'Hostname';
-                if (url.includes('192.168.') || url.includes('10.') || url.includes('172.')) return 'Local IP';
-                return 'Network';
-            }
-            
-            /**
              * Show camera error
              */
             showCameraError(message) {
                 const placeholder = this.elements.streamPlaceholder;
-                const camStream = this.elements.camStream;
                 
                 placeholder.style.display = 'flex';
                 placeholder.innerHTML = `
                     <i class="fas fa-exclamation-triangle fa-3x" style="color: #f59e0b;"></i>
                     <p style="margin: 0.5rem 0;">${message}</p>
-                    <button class="btn btn-primary" onclick="app.manualRefreshCamera()" style="margin-top: 1rem;">
+                    <button class="btn btn-primary" onclick="app.refreshCamera()" style="margin-top: 1rem;">
                         <i class="fas fa-refresh"></i> Thử lại
                     </button>
                     <small style="color: #666; margin-top: 0.5rem;">
-                        Kiểm tra kết nối ESP32-CAM và đảm bảo cùng mạng WiFi
+                        Kiểm tra kết nối ESP32-CAM hoặc cấu hình mạng
                     </small>
                 `;
-                camStream.style.display = 'none';
+                this.elements.camStream.style.display = 'none';
                 this.elements.streamOverlay.style.display = 'none';
                 this.updateConnectionStatus(false, 'camera');
             }
             
             /**
-             * Manual camera refresh
+             * Refresh camera
              */
-            async manualRefreshCamera() {
+            refreshCamera() {
                 this.showNotification('Đang thử kết nối lại camera...', 'info');
                 const placeholder = this.elements.streamPlaceholder;
                 placeholder.innerHTML = `
@@ -1292,17 +1307,15 @@
                     <p>Đang kết nối camera...</p>
                 `;
                 
-                // Wait a bit then check for camera info
-                setTimeout(async () => {
-                    const cameraInfo = await this.readVirtualPin(7);
-                    const directStream = await this.readVirtualPin(11);
-                    
-                    if (cameraInfo || directStream) {
-                        this.updateCameraInfo(cameraInfo || directStream);
-                    } else {
-                        this.showCameraError('Không nhận được thông tin camera từ ESP32-CAM');
-                    }
-                }, 3000);
+                // Request fresh camera info
+                if (this.actionRefreshCamera) {
+                    this.eraWidget.triggerAction(this.actionRefreshCamera.action, null);
+                } else if (this.configCamStreamIP) {
+                    // Request camera to republish info
+                    this.eraWidget.writePin(this.configCamStreamIP.id, 'refresh');
+                }
+                
+                this.updateDebug('Camera refresh requested');
             }
             
             /**
@@ -1316,6 +1329,24 @@
                     this.lastSnapshot = base64Data;
                     
                     this.showNotification('Đã chụp ảnh khi phát hiện chuyển động', 'info');
+                }
+            }
+            
+            /**
+             * Update history log
+             */
+            updateHistory(jsonString) {
+                try {
+                    let history = [];
+                    if (typeof jsonString === 'string' && jsonString !== 'null') {
+                        history = JSON.parse(jsonString);
+                    } else if (Array.isArray(jsonString)) {
+                        history = jsonString;
+                    }
+                    // Could implement history table rendering here
+                    console.log('History updated:', history);
+                } catch (error) {
+                    console.error('Error parsing history:', error);
                 }
             }
             
@@ -1334,6 +1365,14 @@
             updateConnectionStatus(connected, type = 'era') {
                 const statusElement = type === 'era' ? this.elements.eraStatus : this.elements.cameraStatus;
                 statusElement.className = `status-dot ${connected ? 'online' : 'offline'}`;
+            }
+            
+            /**
+             * Update debug info
+             */
+            updateDebug(message) {
+                this.elements.debugStatus.textContent = message;
+                this.elements.debugTime.textContent = new Date().toLocaleTimeString();
             }
             
             /**
