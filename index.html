@@ -736,9 +736,14 @@
         <div><strong>ERa Widget Debug</strong></div>
         <div>Status: <span id="debugStatus">Initializing...</span></div>
         <div>Door: <span id="debugDoor">-</span></div>
-        <div>RFID: <span id="debugRfid">-</span></div>
+        <div>RFID Status: <span id="debugRfidStatus">-</span></div>
+        <div>RFID Last: <span id="debugRfid">-</span></div>
         <div>Camera: <span id="debugCamera">-</span></div>
         <div>Last Update: <span id="debugTime">-</span></div>
+        <div style="margin-top: 10px;">
+            <button onclick="app.testRfidConnection()" style="padding: 5px; margin-right: 5px;">Test RFID</button>
+            <button onclick="app.toggleDebugInfo()" style="padding: 5px;">Hide Debug</button>
+        </div>
     </div>
 
     <!-- ERa Widget Integration -->
@@ -806,6 +811,7 @@
                     debugInfo: document.getElementById('debugInfo'),
                     debugStatus: document.getElementById('debugStatus'),
                     debugDoor: document.getElementById('debugDoor'),
+                    debugRfidStatus: document.getElementById('debugRfidStatus'),
                     debugRfid: document.getElementById('debugRfid'),
                     debugCamera: document.getElementById('debugCamera'),
                     debugTime: document.getElementById('debugTime')
@@ -843,6 +849,7 @@
                         this.configCamStreamIP = configuration.realtime_configs[7];     // V7: Camera Stream Info
                         this.configCamSnapshot = configuration.realtime_configs[8];     // V8: Camera Snapshot
                         this.configHistoryLog = configuration.realtime_configs[9];      // V9: History Log
+                        this.configDirectStream = configuration.realtime_configs[10];   // V11: Direct Stream URL (backup)
                         
                         // Map Action configurations by index
                         this.actionOpenDoor = configuration.actions[0];      // Action 0: Open door
@@ -881,12 +888,18 @@
                             this.elements.debugDoor.textContent = doorStatus ? 'Open' : 'Closed';
                         }
                         
+                        // Handle V2: RFID Command Response (scan status)
+                        if (this.configRfidCmd && values[this.configRfidCmd.id]) {
+                            const rfidCmd = values[this.configRfidCmd.id].value;
+                            this.handleRfidCommandResponse(rfidCmd);
+                        }
+                        
                         // Handle V3: RFID UID (scan result)
                         if (this.configRfidUID && values[this.configRfidUID.id]) {
                             const rfidUID = values[this.configRfidUID.id].value;
                             if (rfidUID && rfidUID !== '' && rfidUID !== 'null') {
                                 this.updateRfidUID(rfidUID);
-                                this.elements.debugRfid.textContent = rfidUID;
+                                this.elements.debugRfid.textContent = 'Scanned: ' + rfidUID;
                             }
                         }
                         
@@ -907,7 +920,16 @@
                             const cameraInfo = values[this.configCamStreamIP.id].value;
                             if (cameraInfo && cameraInfo !== '' && cameraInfo !== 'null') {
                                 this.updateCameraInfo(cameraInfo);
-                                this.elements.debugCamera.textContent = 'Stream received';
+                                this.elements.debugCamera.textContent = 'V7: ' + cameraInfo.substring(0, 30);
+                            }
+                        }
+                        
+                        // Handle V11: Direct Stream URL (backup)
+                        if (this.configDirectStream && values[this.configDirectStream.id]) {
+                            const directStreamUrl = values[this.configDirectStream.id].value;
+                            if (directStreamUrl && directStreamUrl !== '' && directStreamUrl !== 'null') {
+                                this.updateCameraStreamDirect(directStreamUrl);
+                                this.elements.debugCamera.textContent = 'V11: ' + directStreamUrl;
                             }
                         }
                         
@@ -963,16 +985,23 @@
             }
             
             /**
-             * Start RFID scanning using ERa Widget action
+             * Start RFID scanning using ERa Widget
              */
             startRfidScan() {
-                if (this.isScanning) return;
+                if (this.isScanning) {
+                    this.showNotification('Đang quét, vui lòng chờ...', 'warning');
+                    return;
+                }
                 
                 this.isScanning = true;
                 this.elements.scanSection.classList.add('active');
                 this.elements.scanAnimation.classList.add('active');
-                this.elements.btnScan.textContent = 'Đang quét...';
+                this.elements.btnScan.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang quét...';
                 this.elements.btnScan.disabled = true;
+                
+                // Clear previous UID
+                this.elements.inputUid.value = '';
+                this.validateAddForm();
                 
                 // Method 1: Use ERa Widget action (if available)
                 if (this.actionScanRFID) {
@@ -983,18 +1012,42 @@
                 else if (this.configRfidCmd) {
                     this.eraWidget.writePin(this.configRfidCmd.id, 1); // 1 = start scan
                     console.log('Sent RFID scan command to V2');
+                } else {
+                    this.showNotification('Lỗi: Không thể gửi lệnh quét RFID', 'error');
+                    this.stopRfidScan();
+                    return;
                 }
                 
                 this.showNotification('Đã gửi lệnh quét RFID. Đặt thẻ lên cảm biến...', 'info');
-                this.updateDebug('RFID scan started');
+                this.updateDebug('RFID scan command sent');
                 
-                // Auto stop scanning after 15 seconds
-                setTimeout(() => {
+                // Auto stop scanning after 20 seconds
+                this.scanTimeout = setTimeout(() => {
                     if (this.isScanning) {
                         this.stopRfidScan();
-                        this.showNotification('Hết thời gian quét. Vui lòng thử lại.', 'warning');
+                        this.showNotification('Hết thời gian quét. Không phát hiện thẻ nào.', 'warning');
                     }
-                }, 15000);
+                }, 20000);
+            }
+            
+            /**
+             * Handle RFID command response from ESP32
+             */
+            handleRfidCommandResponse(cmdValue) {
+                if (cmdValue === 1 || cmdValue === '1') {
+                    // ESP32 confirmed scanning is active
+                    if (this.isScanning) {
+                        console.log('ESP32 confirmed RFID scanning active');
+                        this.updateDebug('ESP32 scanning active');
+                    }
+                } else if (cmdValue === 0 || cmdValue === '0') {
+                    // ESP32 stopped scanning (timeout or card found)
+                    if (this.isScanning) {
+                        console.log('ESP32 stopped RFID scanning');
+                        this.updateDebug('ESP32 scan completed');
+                        // Don't stop UI scanning here - wait for UID or timeout
+                    }
+                }
             }
             
             /**
@@ -1006,6 +1059,13 @@
                 this.elements.scanAnimation.classList.remove('active');
                 this.elements.btnScan.innerHTML = '<i class="fas fa-search"></i> Bắt đầu quét';
                 this.elements.btnScan.disabled = false;
+                
+                // Clear timeout
+                if (this.scanTimeout) {
+                    clearTimeout(this.scanTimeout);
+                    this.scanTimeout = null;
+                }
+                
                 this.updateDebug('RFID scan stopped');
             }
             
@@ -1021,6 +1081,12 @@
                     return;
                 }
                 
+                // Validate UID format (basic check)
+                if (uid.length < 8) {
+                    this.showNotification('UID không hợp lệ (quá ngắn)', 'warning');
+                    return;
+                }
+                
                 // Method 1: Use ERa Widget action (if available)
                 if (this.actionAddCard) {
                     this.eraWidget.triggerAction(this.actionAddCard.action, {
@@ -1031,7 +1097,7 @@
                 } 
                 // Method 2: Write to Virtual Pins
                 else {
-                    if (this.configRfidUID && this.configRfidName) {
+                    if (this.configRfidUID && this.configRfidName && this.configRfidCmd) {
                         this.eraWidget.writePin(this.configRfidUID.id, uid);      // V3: UID
                         this.eraWidget.writePin(this.configRfidName.id, name);    // V4: Name
                         this.eraWidget.writePin(this.configRfidCmd.id, 2);        // V2: Add command
@@ -1044,8 +1110,13 @@
                 this.elements.inputName.value = '';
                 this.validateAddForm();
                 
-                this.showNotification(`Đã thêm thẻ ${uid} cho ${name}`, 'success');
+                this.showNotification(`✅ Đã thêm thẻ ${uid} cho ${name}`, 'success');
                 this.updateDebug(`Added card: ${uid} - ${name}`);
+                
+                // Request updated card list
+                setTimeout(() => {
+                    // The card list should auto-update via V5, but we can request refresh if needed
+                }, 1000);
             }
             
             /**
@@ -1135,9 +1206,14 @@
             updateRfidUID(uid) {
                 if (uid && uid.length > 0 && uid !== 'null') {
                     this.elements.inputUid.value = uid;
-                    this.stopRfidScan();
+                    this.stopRfidScan(); // Stop scanning when UID received
                     this.validateAddForm();
-                    this.showNotification(`Đã quét thẻ: ${uid}`, 'success');
+                    this.showNotification(`✅ Đã quét thẻ thành công: ${uid}`, 'success');
+                    
+                    // Auto focus to name input for easy card addition
+                    setTimeout(() => {
+                        this.elements.inputName.focus();
+                    }, 100);
                 }
             }
             
@@ -1185,7 +1261,51 @@
                     tbody.appendChild(row);
                 });
             }
+            /**
+             * Test RFID connection
+             */
+            testRfidConnection() {
+                this.showNotification('🧪 Testing RFID connection...', 'info');
+                
+                // Send test command
+                if (this.configRfidCmd) {
+                    this.eraWidget.writePin(this.configRfidCmd.id, 1);
+                    this.elements.debugRfidStatus.textContent = 'Test command sent';
+                    
+                    // Check response after 3 seconds
+                    setTimeout(() => {
+                        if (this.isScanning) {
+                            this.showNotification('✅ RFID connection OK - ESP32 responding', 'success');
+                        } else {
+                            this.showNotification('❌ RFID connection issue - No response from ESP32', 'error');
+                        }
+                    }, 3000);
+                } else {
+                    this.showNotification('❌ RFID config not found', 'error');
+                }
+            }
             
+            /**
+             * Toggle debug info visibility
+             */
+            toggleDebugInfo() {
+                const debugInfo = this.elements.debugInfo;
+                if (debugInfo.style.display === 'none') {
+                    debugInfo.style.display = 'block';
+                } else {
+                    debugInfo.style.display = 'none';
+                }
+            }
+            
+            /**
+             * Update camera stream - Direct URL (for V11)
+             */
+            updateCameraStreamDirect(streamUrl) {
+                if (streamUrl && streamUrl.startsWith('http')) {
+                    console.log('Direct stream URL received:', streamUrl);
+                    this.tryStreamUrls([streamUrl], 0);
+                }
+            }
             /**
              * Update motion detection status
              */
