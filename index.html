@@ -1,10 +1,11 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Smart Door Control Dashboard</title>
-    <script src="https://www.unpkg.com/@eohjsc/era-widget@1.1.3/src/index.js"></script>
+    <title>Smart Door Dashboard</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         * {
             margin: 0;
@@ -12,58 +13,122 @@
             box-sizing: border-box;
         }
 
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
-            color: #333;
+        :root {
+            --primary-color: #6366f1;
+            --secondary-color: #8b5cf6;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --error-color: #ef4444;
+            --dark-color: #1f2937;
+            --light-color: #f8fafc;
+            --border-color: #e5e7eb;
+            --glass-bg: rgba(255, 255, 255, 0.95);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            --shadow-xl: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
         }
 
-        .dashboard {
-            max-width: 1400px;
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #667eea 100%);
+            background-size: 400% 400%;
+            animation: gradientShift 10s ease infinite;
+            min-height: 100vh;
+            color: var(--dark-color);
+        }
+
+        @keyframes gradientShift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        .main-header {
+            text-align: center;
+            padding: 30px 20px;
+            margin-bottom: 20px;
+        }
+
+        .main-title {
+            font-size: 3rem;
+            font-weight: 700;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+            margin-bottom: 10px;
+            letter-spacing: -0.02em;
+        }
+
+        .main-subtitle {
+            font-size: 1.2rem;
+            color: rgba(255, 255, 255, 0.9);
+            font-weight: 400;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+        }
+
+        .dashboard-container {
+            max-width: 1600px;
             margin: 0 auto;
+            padding: 0 20px 40px;
             display: grid;
             grid-template-columns: 1fr 1fr;
             grid-template-rows: auto auto auto;
-            gap: 20px;
-            height: calc(100vh - 40px);
+            gap: 25px;
         }
 
         .card {
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 20px;
-            padding: 25px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            background: var(--glass-bg);
+            border-radius: 24px;
+            padding: 30px;
+            box-shadow: var(--shadow-xl);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+            border-radius: 24px 24px 0 0;
         }
 
         .card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+            transform: translateY(-8px);
+            box-shadow: var(--shadow-xl), 0 0 40px rgba(99, 102, 241, 0.15);
         }
 
-        .card h2 {
-            color: #2c3e50;
-            margin-bottom: 20px;
-            font-size: 1.5em;
+        .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 25px;
+            font-size: 1.5rem;
             font-weight: 600;
-            text-align: center;
-            position: relative;
+            color: var(--dark-color);
         }
 
-        .card h2:after {
-            content: '';
-            position: absolute;
-            bottom: -10px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 50px;
-            height: 3px;
-            background: linear-gradient(45deg, #667eea, #764ba2);
-            border-radius: 2px;
+        .card-header .icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            color: white;
+            font-size: 1.2rem;
+        }
+
+        .card-title {
+            display: flex;
+            align-items: center;
+            flex: 1;
         }
 
         /* RFID Management Section */
@@ -74,35 +139,49 @@
 
         .rfid-tabs {
             display: flex;
-            background: #f8f9fa;
-            border-radius: 15px;
-            padding: 5px;
-            margin-bottom: 20px;
+            margin-bottom: 25px;
+            border-radius: 16px;
+            overflow: hidden;
+            background: var(--light-color);
+            border: 1px solid var(--border-color);
         }
 
-        .rfid-tab {
+        .tab-button {
             flex: 1;
-            padding: 10px 15px;
-            text-align: center;
-            border-radius: 10px;
+            padding: 16px 24px;
+            border: none;
+            background: transparent;
             cursor: pointer;
             transition: all 0.3s ease;
             font-weight: 500;
+            font-size: 0.95rem;
+            color: #6b7280;
+            position: relative;
         }
 
-        .rfid-tab.active {
-            background: linear-gradient(45deg, #667eea, #764ba2);
+        .tab-button.active {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
             color: white;
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+            font-weight: 600;
         }
 
-        .rfid-content {
+        .tab-button:hover:not(.active) {
+            background: rgba(99, 102, 241, 0.1);
+            color: var(--primary-color);
+        }
+
+        .tab-content {
             display: none;
         }
 
-        .rfid-content.active {
+        .tab-content.active {
             display: block;
-            animation: fadeIn 0.3s ease;
+            animation: fadeInUp 0.3s ease;
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         .scan-section {
@@ -110,109 +189,131 @@
         }
 
         .scan-button {
-            background: linear-gradient(45deg, #4CAF50, #45a049);
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
             color: white;
             border: none;
-            padding: 15px 30px;
-            border-radius: 50px;
-            font-size: 16px;
+            padding: 18px 36px;
+            border-radius: 16px;
+            font-size: 1.1rem;
+            font-weight: 600;
             cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
-            margin: 10px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            margin-bottom: 25px;
+            box-shadow: 0 10px 25px rgba(99, 102, 241, 0.3);
         }
 
         .scan-button:hover {
             transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4);
+            box-shadow: 0 15px 35px rgba(99, 102, 241, 0.4);
         }
 
-        .uid-display {
-            background: #f8f9fa;
-            border: 2px dashed #ddd;
-            border-radius: 15px;
+        .scan-button:disabled {
+            background: linear-gradient(135deg, #9ca3af, #d1d5db);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .scanned-uid {
+            background: linear-gradient(135deg, #ecfdf5, #f0fdf4);
+            border: 2px solid var(--success-color);
+            border-radius: 16px;
             padding: 20px;
-            margin: 15px 0;
+            margin-top: 15px;
+            font-family: 'SF Mono', Monaco, monospace;
+            font-size: 1.1rem;
             text-align: center;
             min-height: 60px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-family: monospace;
-            font-size: 18px;
-            font-weight: bold;
-            color: #666;
-        }
-
-        .uid-display.scanned {
-            background: linear-gradient(45deg, #e8f5e8, #f0f8f0);
-            border-color: #4CAF50;
-            color: #2e7d32;
+            color: #065f46;
+            font-weight: 500;
         }
 
         .form-group {
-            margin: 15px 0;
+            margin-bottom: 20px;
         }
 
         .form-group label {
             display: block;
             margin-bottom: 8px;
             font-weight: 500;
-            color: #555;
+            color: var(--dark-color);
+            font-size: 0.95rem;
         }
 
         .form-group input {
             width: 100%;
-            padding: 12px 15px;
-            border: 2px solid #e0e0e0;
-            border-radius: 10px;
-            font-size: 14px;
-            transition: border-color 0.3s ease;
+            padding: 16px 20px;
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: white;
         }
 
         .form-group input:focus {
             outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
         }
 
-        .add-button {
-            background: linear-gradient(45deg, #667eea, #764ba2);
+        .add-card-button {
+            background: linear-gradient(135deg, var(--success-color), #059669);
             color: white;
             border: none;
-            padding: 12px 25px;
-            border-radius: 25px;
+            padding: 16px 32px;
+            border-radius: 12px;
+            font-weight: 600;
             cursor: pointer;
             transition: all 0.3s ease;
             width: 100%;
-            font-size: 16px;
-            font-weight: 500;
+            font-size: 1rem;
         }
 
-        .add-button:hover {
+        .add-card-button:hover {
             transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.3);
+            box-shadow: 0 10px 25px rgba(16, 185, 129, 0.3);
         }
 
         .card-list {
-            max-height: 300px;
+            max-height: 350px;
             overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: var(--primary-color) var(--light-color);
+        }
+
+        .card-list::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .card-list::-webkit-scrollbar-track {
+            background: var(--light-color);
+            border-radius: 3px;
+        }
+
+        .card-list::-webkit-scrollbar-thumb {
+            background: var(--primary-color);
+            border-radius: 3px;
         }
 
         .card-item {
-            background: #f8f9fa;
-            border-radius: 10px;
-            padding: 15px;
-            margin: 10px 0;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            padding: 20px;
+            margin-bottom: 12px;
+            background: white;
+            border-radius: 16px;
+            border-left: 4px solid var(--primary-color);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
             transition: all 0.3s ease;
         }
 
         .card-item:hover {
-            background: #e9ecef;
-            transform: translateX(5px);
+            transform: translateX(4px);
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
         }
 
         .card-info {
@@ -220,37 +321,35 @@
         }
 
         .card-uid {
-            font-family: monospace;
-            font-weight: bold;
-            color: #495057;
+            font-family: 'SF Mono', Monaco, monospace;
+            font-weight: 600;
+            color: var(--dark-color);
+            font-size: 0.95rem;
         }
 
         .card-name {
-            color: #6c757d;
-            font-size: 14px;
-            margin-top: 5px;
+            color: #6b7280;
+            margin-top: 4px;
+            font-weight: 500;
         }
 
-        .delete-btn {
-            background: #dc3545;
+        .delete-button {
+            background: linear-gradient(135deg, var(--error-color), #dc2626);
             color: white;
             border: none;
-            width: 35px;
-            height: 35px;
-            border-radius: 50%;
+            padding: 10px 16px;
+            border-radius: 10px;
             cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
             transition: all 0.3s ease;
+            font-size: 0.9rem;
         }
 
-        .delete-btn:hover {
-            background: #c82333;
-            transform: scale(1.1);
+        .delete-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);
         }
 
-        /* Door Control Section */
+        /* Door Status Section */
         .door-section {
             grid-column: 2;
             grid-row: 1;
@@ -258,348 +357,564 @@
         }
 
         .door-visual {
-            width: 200px;
-            height: 200px;
-            margin: 20px auto;
             position: relative;
-            background: #f8f9fa;
-            border-radius: 15px;
-            border: 3px solid #ddd;
+            width: 220px;
+            height: 320px;
+            margin: 25px auto;
+            background: linear-gradient(145deg, #4a5568, #2d3748);
+            border-radius: 16px;
             overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
         }
 
         .door-frame {
             position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            border: 10px solid #1a202c;
+            border-radius: 16px;
+        }
+
+        .door-panel {
+            position: absolute;
             top: 10px;
-            right: 10px;
-            bottom: 10px;
             left: 10px;
-            border: 3px solid #8B4513;
-            border-radius: 10px;
-            background: #DEB887;
-            transition: all 0.8s ease;
+            width: calc(100% - 20px);
+            height: calc(100% - 20px);
+            background: linear-gradient(145deg, #8b4513, #a0522d, #cd853f);
+            border-radius: 8px;
+            transition: transform 1s cubic-bezier(0.4, 0, 0.2, 1);
+            transform-origin: left center;
+            box-shadow: inset 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .door-panel.open {
+            transform: perspective(600px) rotateY(-85deg);
         }
 
         .door-handle {
             position: absolute;
-            right: 15px;
+            right: 25px;
             top: 50%;
             transform: translateY(-50%);
-            width: 15px;
-            height: 30px;
-            background: #FFD700;
-            border-radius: 8px;
-            box-shadow: 2px 2px 5px rgba(0,0,0,0.3);
+            width: 18px;
+            height: 45px;
+            background: linear-gradient(135deg, #ffd700, #ffed4e);
+            border-radius: 9px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
         }
 
-        .door-frame.open {
-            transform: perspective(200px) rotateY(-45deg);
-            transform-origin: left center;
-        }
-
-        .door-status {
-            font-size: 18px;
-            font-weight: bold;
-            margin: 20px 0;
-            padding: 10px;
-            border-radius: 10px;
+        .door-status-text {
+            font-size: 1.6rem;
+            font-weight: 700;
+            margin-bottom: 25px;
+            padding: 20px;
+            border-radius: 16px;
             transition: all 0.3s ease;
         }
 
-        .door-status.closed {
-            background: linear-gradient(45deg, #ff6b6b, #ee5a52);
-            color: white;
+        .door-status-text.open {
+            background: linear-gradient(135deg, #d1fae5, #a7f3d0);
+            color: #065f46;
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.2);
         }
 
-        .door-status.open {
-            background: linear-gradient(45deg, #4CAF50, #45a049);
-            color: white;
+        .door-status-text.closed {
+            background: linear-gradient(135deg, #fee2e2, #fecaca);
+            color: #991b1b;
+            box-shadow: 0 4px 15px rgba(239, 68, 68, 0.2);
         }
 
         .door-controls {
             display: flex;
-            gap: 15px;
+            gap: 20px;
             justify-content: center;
-            margin: 20px 0;
+            margin-top: 25px;
         }
 
-        .door-btn {
-            padding: 15px 25px;
+        .door-button {
+            padding: 16px 32px;
             border: none;
-            border-radius: 25px;
-            font-size: 16px;
+            border-radius: 16px;
             font-weight: 600;
             cursor: pointer;
-            transition: all 0.3s ease;
-            min-width: 100px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            font-size: 1rem;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
         }
 
-        .open-btn {
-            background: linear-gradient(45deg, #4CAF50, #45a049);
+        .open-button {
+            background: linear-gradient(135deg, var(--success-color), #059669);
             color: white;
-            box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
         }
 
-        .close-btn {
-            background: linear-gradient(45deg, #f44336, #d32f2f);
-            color: white;
-            box-shadow: 0 4px 15px rgba(244, 67, 54, 0.3);
-        }
-
-        .door-btn:hover {
+        .open-button:hover {
             transform: translateY(-3px);
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 12px 30px rgba(16, 185, 129, 0.3);
         }
 
-        /* Camera Section */
+        .close-button {
+            background: linear-gradient(135deg, var(--error-color), #dc2626);
+            color: white;
+        }
+
+        .close-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 30px rgba(239, 68, 68, 0.3);
+        }
+
+        /* Enhanced Camera Section with Advanced Radar */
         .camera-section {
             grid-column: 1 / -1;
             grid-row: 2;
         }
 
-        .camera-container {
-            display: flex;
-            gap: 20px;
-            height: 300px;
+        .camera-layout {
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            gap: 30px;
+            align-items: start;
         }
 
-        .video-stream {
-            flex: 2;
-            background: #000;
-            border-radius: 15px;
-            overflow: hidden;
-            position: relative;
+        .camera-stream-container {
+            text-align: center;
         }
 
-        .video-stream iframe {
+        .camera-stream {
             width: 100%;
-            height: 100%;
-            border: none;
-            border-radius: 15px;
-        }
-
-        .video-stream img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            border-radius: 15px;
-        }
-
-        .camera-info {
-            flex: 1;
-            background: #f8f9fa;
-            padding: 20px;
-            border-radius: 15px;
-            border: 2px solid #e9ecef;
-        }
-
-        .motion-indicator {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 15px;
-            border-radius: 10px;
-            margin: 15px 0;
-            font-weight: 500;
+            max-width: 700px;
+            height: auto;
+            border-radius: 20px;
+            border: 3px solid var(--border-color);
+            margin: 0 auto;
+            display: block;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
             transition: all 0.3s ease;
         }
 
-        .motion-indicator.active {
-            background: linear-gradient(45deg, #ff9800, #f57c00);
-            color: white;
-            animation: pulse 1s infinite;
+        .camera-stream:hover {
+            transform: scale(1.02);
+            box-shadow: 0 20px 45px rgba(0, 0, 0, 0.2);
         }
 
-        .motion-indicator.inactive {
-            background: #e8f5e8;
-            color: #2e7d32;
+        /* Advanced Radar System */
+        .radar-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .radar-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            text-align: center;
+            color: var(--dark-color);
+        }
+
+        .radar {
+            position: relative;
+            width: 250px;
+            height: 250px;
+            border: 4px solid #1f2937;
+            border-radius: 50%;
+            background: radial-gradient(circle at center, #0f172a 0%, #1e293b 30%, #334155 100%);
+            overflow: hidden;
+            box-shadow: 
+                0 0 30px rgba(0, 0, 0, 0.3),
+                inset 0 0 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .radar::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 8px;
+            height: 8px;
+            background: #00ff41;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            box-shadow: 
+                0 0 20px #00ff41,
+                0 0 40px #00ff41,
+                0 0 60px #00ff41;
+            z-index: 10;
+        }
+
+        .radar-sweep {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            width: 3px;
+            height: 50%;
+            background: linear-gradient(180deg, 
+                rgba(0, 255, 65, 0.9) 0%, 
+                rgba(0, 255, 65, 0.7) 30%,
+                rgba(0, 255, 65, 0.3) 70%,
+                transparent 100%);
+            transform-origin: bottom center;
+            animation: radarSweep 3s linear infinite;
+            border-radius: 2px;
+            box-shadow: 0 0 15px rgba(0, 255, 65, 0.5);
+        }
+
+        .radar-sweep.active {
+            animation-duration: 0.8s;
+            background: linear-gradient(180deg, 
+                rgba(255, 0, 65, 0.9) 0%, 
+                rgba(255, 0, 65, 0.7) 30%,
+                rgba(255, 0, 65, 0.3) 70%,
+                transparent 100%);
+            box-shadow: 
+                0 0 20px rgba(255, 0, 65, 0.7),
+                0 0 40px rgba(255, 0, 65, 0.3);
+        }
+
+        @keyframes radarSweep {
+            0% { 
+                transform: rotate(0deg);
+                opacity: 1;
+            }
+            100% { 
+                transform: rotate(360deg);
+                opacity: 1;
+            }
+        }
+
+        .radar-grid {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        .radar-crosshair {
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: rgba(0, 255, 65, 0.3);
+            transform: translateY(-50%);
+        }
+
+        .radar-crosshair:nth-child(2) {
+            top: 0;
+            bottom: 0;
+            left: 50%;
+            width: 2px;
+            height: 100%;
+            transform: translateX(-50%);
+        }
+
+        .radar-ring {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            border: 1px solid rgba(0, 255, 65, 0.2);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .radar-ring:nth-child(3) { 
+            width: 25%; 
+            height: 25%; 
+            border-color: rgba(0, 255, 65, 0.4);
+        }
+        .radar-ring:nth-child(4) { 
+            width: 50%; 
+            height: 50%; 
+            border-color: rgba(0, 255, 65, 0.3);
+        }
+        .radar-ring:nth-child(5) { 
+            width: 75%; 
+            height: 75%; 
+            border-color: rgba(0, 255, 65, 0.25);
+        }
+        .radar-ring:nth-child(6) { 
+            width: 100%; 
+            height: 100%; 
+            border-color: rgba(0, 255, 65, 0.2);
+        }
+
+        .radar-blip {
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            background: #ff0040;
+            border-radius: 50%;
+            box-shadow: 
+                0 0 10px #ff0040,
+                0 0 20px #ff0040;
+            opacity: 0;
+            animation: blipPulse 2s ease-in-out infinite;
+        }
+
+        @keyframes blipPulse {
+            0%, 100% { 
+                opacity: 0;
+                transform: scale(0.5);
+            }
+            50% { 
+                opacity: 1;
+                transform: scale(1.2);
+            }
+        }
+
+        .motion-status {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .motion-indicator {
+            display: inline-flex;
+            align-items: center;
+            padding: 15px 25px;
+            border-radius: 30px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            font-size: 1.1rem;
+        }
+
+        .motion-indicator.detected {
+            background: linear-gradient(135deg, #fee2e2, #fecaca);
+            color: #991b1b;
+            animation: pulse 1.5s ease-in-out infinite;
+            box-shadow: 0 0 20px rgba(239, 68, 68, 0.3);
+        }
+
+        .motion-indicator.clear {
+            background: linear-gradient(135deg, #d1fae5, #a7f3d0);
+            color: #065f46;
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.2);
         }
 
         @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.7; }
+            0%, 100% { 
+                transform: scale(1);
+                box-shadow: 0 0 20px rgba(239, 68, 68, 0.3);
+            }
+            50% { 
+                transform: scale(1.05);
+                box-shadow: 0 0 30px rgba(239, 68, 68, 0.5);
+            }
         }
 
-        .motion-dot {
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            background: currentColor;
-        }
-
-        .camera-stats {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            margin-top: 20px;
-        }
-
-        .stat-item {
-            background: white;
-            padding: 15px;
-            border-radius: 10px;
-            text-align: center;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-        }
-
-        .stat-value {
-            font-size: 24px;
-            font-weight: bold;
-            color: #667eea;
-        }
-
-        .stat-label {
-            font-size: 12px;
-            color: #666;
-            margin-top: 5px;
-        }
-
-        /* Access Log Section */
-        .log-section {
+        /* Access History Section */
+        .history-section {
             grid-column: 1 / -1;
             grid-row: 3;
         }
 
-        .log-container {
-            max-height: 300px;
+        .history-list {
+            max-height: 450px;
             overflow-y: auto;
-            background: #f8f9fa;
-            border-radius: 15px;
-            padding: 15px;
+            scrollbar-width: thin;
+            scrollbar-color: var(--primary-color) var(--light-color);
         }
 
-        .log-item {
-            background: white;
-            border-radius: 10px;
-            padding: 15px;
-            margin: 10px 0;
-            border-left: 4px solid #ddd;
-            transition: all 0.3s ease;
+        .history-list::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .history-list::-webkit-scrollbar-track {
+            background: var(--light-color);
+            border-radius: 4px;
+        }
+
+        .history-list::-webkit-scrollbar-thumb {
+            background: var(--primary-color);
+            border-radius: 4px;
+        }
+
+        .history-item {
             display: flex;
             justify-content: space-between;
             align-items: center;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-radius: 16px;
+            transition: all 0.3s ease;
+            background: white;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
         }
 
-        .log-item.success {
-            border-left-color: #4CAF50;
-            background: linear-gradient(to right, #e8f5e8, white);
+        .history-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
         }
 
-        .log-item.failed {
-            border-left-color: #f44336;
-            background: linear-gradient(to right, #ffebee, white);
+        .history-item.success {
+            border-left: 5px solid var(--success-color);
         }
 
-        .log-item.alert {
-            border-left-color: #ff9800;
-            background: linear-gradient(to right, #fff3e0, white);
-            animation: alertBlink 2s ease-in-out 3;
+        .history-item.failed {
+            border-left: 5px solid var(--error-color);
         }
 
-        @keyframes alertBlink {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.7; }
+        .history-item.system {
+            border-left: 5px solid var(--primary-color);
         }
 
-        .log-info {
+        .history-info {
             flex: 1;
         }
 
-        .log-time {
-            color: #666;
-            font-size: 12px;
-            margin-bottom: 5px;
+        .history-uid {
+            font-family: 'SF Mono', Monaco, monospace;
+            font-weight: 600;
+            color: var(--dark-color);
+            font-size: 1rem;
         }
 
-        .log-action {
+        .history-name {
+            color: #6b7280;
+            margin-top: 4px;
             font-weight: 500;
-            color: #333;
         }
 
-        .log-uid {
-            font-family: monospace;
-            color: #666;
-            font-size: 12px;
-            margin-top: 5px;
+        .history-time {
+            color: #9ca3af;
+            font-size: 0.9rem;
+            margin-top: 2px;
         }
 
-        .log-status {
-            padding: 5px 15px;
+        .history-status {
+            padding: 8px 16px;
             border-radius: 20px;
-            font-size: 12px;
+            font-size: 0.9rem;
             font-weight: 600;
             text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
-        .log-status.success {
-            background: #4CAF50;
-            color: white;
+        .history-status.success {
+            background: linear-gradient(135deg, #d1fae5, #a7f3d0);
+            color: #065f46;
         }
 
-        .log-status.failed {
-            background: #f44336;
-            color: white;
+        .history-status.failed {
+            background: linear-gradient(135deg, #fee2e2, #fecaca);
+            color: #991b1b;
         }
 
-        .log-status.alert {
-            background: #ff9800;
-            color: white;
+        .history-status.system {
+            background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+            color: #1e40af;
+        }
+
+        /* Alert Messages */
+        .alert {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            padding: 20px 25px;
+            border-radius: 16px;
+            margin-bottom: 15px;
+            display: none;
+            animation: slideInRight 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 1000;
+            max-width: 450px;
+            font-weight: 500;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .alert.success {
+            background: linear-gradient(135deg, #d1fae5, #a7f3d0);
+            color: #065f46;
+            border: 1px solid #10b981;
+        }
+
+        .alert.error {
+            background: linear-gradient(135deg, #fee2e2, #fecaca);
+            color: #991b1b;
+            border: 1px solid #ef4444;
+        }
+
+        .alert.warning {
+            background: linear-gradient(135deg, #fef3c7, #fde68a);
+            color: #92400e;
+            border: 1px solid #f59e0b;
+        }
+
+        @keyframes slideInRight {
+            from { 
+                transform: translateX(500px); 
+                opacity: 0; 
+            }
+            to { 
+                transform: translateX(0); 
+                opacity: 1; 
+            }
         }
 
         /* Responsive Design */
-        @media (max-width: 1200px) {
-            .dashboard {
+        @media (max-width: 1400px) {
+            .dashboard-container {
                 grid-template-columns: 1fr;
                 grid-template-rows: auto auto auto auto;
             }
             
-            .door-section {
-                grid-column: 1;
-                grid-row: 2;
+            .rfid-section { grid-column: 1; grid-row: 1; }
+            .door-section { grid-column: 1; grid-row: 2; }
+            .camera-section { grid-column: 1; grid-row: 3; }
+            .history-section { grid-column: 1; grid-row: 4; }
+
+            .camera-layout {
+                grid-template-columns: 1fr;
+                gap: 25px;
             }
-            
-            .camera-section {
-                grid-column: 1;
-                grid-row: 3;
+
+            .radar-container {
+                margin-top: 25px;
             }
-            
-            .log-section {
-                grid-column: 1;
-                grid-row: 4;
+
+            .main-title {
+                font-size: 2.5rem;
             }
         }
 
         @media (max-width: 768px) {
-            .camera-container {
-                flex-direction: column;
-                height: auto;
+            .dashboard-container {
+                padding: 0 15px 30px;
+                gap: 20px;
             }
-            
-            .video-stream {
-                height: 250px;
+
+            .card {
+                padding: 20px;
             }
-            
+
+            .main-title {
+                font-size: 2rem;
+            }
+
+            .main-subtitle {
+                font-size: 1rem;
+            }
+
             .door-controls {
                 flex-direction: column;
-                align-items: center;
+                gap: 15px;
             }
-            
-            .door-btn {
+
+            .radar {
                 width: 200px;
+                height: 200px;
             }
         }
 
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
+        /* Loading Animation */
         .loading {
             display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 3px solid #f3f3f3;
-            border-top: 3px solid #667eea;
+            width: 24px;
+            height: 24px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-top: 3px solid white;
             border-radius: 50%;
             animation: spin 1s linear infinite;
         }
@@ -609,576 +924,687 @@
             100% { transform: rotate(360deg); }
         }
 
-        .alert {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            padding: 15px 20px;
-            border-radius: 10px;
-            color: white;
-            font-weight: 500;
-            z-index: 1000;
-            animation: slideIn 0.3s ease;
+        /* Enhanced Status Indicators */
+        .status-dot {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+            animation: statusPulse 2s ease-in-out infinite;
         }
 
-        .alert.success { background: #4CAF50; }
-        .alert.error { background: #f44336; }
-        .alert.warning { background: #ff9800; }
+        .status-dot.online {
+            background: var(--success-color);
+            box-shadow: 0 0 10px var(--success-color);
+        }
 
-        @keyframes slideIn {
-            from { transform: translateX(100%); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
+        .status-dot.offline {
+            background: var(--error-color);
+            box-shadow: 0 0 10px var(--error-color);
+        }
+
+        @keyframes statusPulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
         }
     </style>
 </head>
 <body>
-    <div class="dashboard">
+    <!-- Main Header -->
+    <div class="main-header">
+        <h1 class="main-title">
+            <i class="fas fa-shield-alt"></i>
+            Smart Door Dashboard
+        </h1>
+        <p class="main-subtitle">
+            <i class="fas fa-microchip"></i>
+            Advanced Security & Access Control System
+        </p>
+    </div>
+
+    <div class="dashboard-container">
         <!-- RFID Management Section -->
         <div class="card rfid-section">
-            <h2>🔐 Quản lý thẻ RFID</h2>
+            <div class="card-header">
+                <div class="card-title">
+                    <div class="icon">
+                        <i class="fas fa-id-card"></i>
+                    </div>
+                    RFID Card Management
+                </div>
+                <span class="status-dot online"></span>
+            </div>
             
             <div class="rfid-tabs">
-                <div class="rfid-tab active" onclick="switchTab('scan')">Quét thẻ</div>
-                <div class="rfid-tab" onclick="switchTab('add')">Thêm thẻ</div>
-                <div class="rfid-tab" onclick="switchTab('list')">Danh sách</div>
+                <button class="tab-button active" onclick="switchTab('scan')">
+                    <i class="fas fa-qrcode"></i> Scan Card
+                </button>
+                <button class="tab-button" onclick="switchTab('add')">
+                    <i class="fas fa-plus-circle"></i> Add Card
+                </button>
+                <button class="tab-button" onclick="switchTab('list')">
+                    <i class="fas fa-list-ul"></i> Card List
+                </button>
             </div>
 
             <!-- Scan Tab -->
-            <div class="rfid-content active" id="scan-content">
+            <div id="scan-tab" class="tab-content active">
                 <div class="scan-section">
-                    <button class="scan-button" id="scanBtn" onclick="startScan()">
-                        📡 Quét thẻ RFID
+                    <button id="scan-button" class="scan-button" onclick="requestScan()">
+                        <i class="fas fa-wifi"></i> Start Scanning
                     </button>
-                    <div class="uid-display" id="uidDisplay">
-                        Nhấn nút "Quét thẻ" và đặt thẻ lên cảm biến
+                    <div id="scanned-uid" class="scanned-uid">
+                        <i class="fas fa-hand-holding-medical"></i>
+                        Place your card near the RFID reader...
                     </div>
                 </div>
             </div>
 
             <!-- Add Tab -->
-            <div class="rfid-content" id="add-content">
+            <div id="add-tab" class="tab-content">
                 <div class="form-group">
-                    <label for="uidInput">UID thẻ:</label>
-                    <input type="text" id="uidInput" placeholder="UID sẽ tự động điền khi quét thẻ" readonly>
+                    <label for="uid-input">
+                        <i class="fas fa-fingerprint"></i> Card UID:
+                    </label>
+                    <input type="text" id="uid-input" placeholder="Scanned UID will appear here" readonly>
                 </div>
                 <div class="form-group">
-                    <label for="nameInput">Tên người dùng:</label>
-                    <input type="text" id="nameInput" placeholder="Nhập tên người sở hữu thẻ">
+                    <label for="name-input">
+                        <i class="fas fa-user"></i> Cardholder Name:
+                    </label>
+                    <input type="text" id="name-input" placeholder="Enter cardholder name">
                 </div>
-                <button class="add-button" onclick="addCard()">
-                    ➕ Thêm thẻ vào hệ thống
+                <button class="add-card-button" onclick="addCard()">
+                    <i class="fas fa-plus-circle"></i> Add Card to System
                 </button>
             </div>
 
             <!-- List Tab -->
-            <div class="rfid-content" id="list-content">
-                <div class="card-list" id="cardList">
-                    <div style="text-align: center; color: #666; padding: 40px;">
-                        <div class="loading"></div>
-                        <p style="margin-top: 10px;">Đang tải danh sách thẻ...</p>
-                    </div>
+            <div id="list-tab" class="tab-content">
+                <div id="card-list" class="card-list">
+                    <!-- Card list will be populated here -->
                 </div>
             </div>
         </div>
 
-        <!-- Door Control Section -->
+        <!-- Door Status Section -->
         <div class="card door-section">
-            <h2>🚪 Điều khiển cửa</h2>
+            <div class="card-header">
+                <div class="card-title">
+                    <div class="icon">
+                        <i class="fas fa-door-open"></i>
+                    </div>
+                    Door Control System
+                </div>
+                <span class="status-dot online"></span>
+            </div>
+            
+            <div id="door-status" class="door-status-text closed">
+                <i class="fas fa-lock"></i> Door is SECURED
+            </div>
             
             <div class="door-visual">
-                <div class="door-frame" id="doorFrame">
+                <div class="door-frame"></div>
+                <div id="door-panel" class="door-panel">
                     <div class="door-handle"></div>
                 </div>
             </div>
-
-            <div class="door-status" id="doorStatus">
-                🔒 Cửa đang đóng
-            </div>
-
+            
             <div class="door-controls">
-                <button class="door-btn open-btn" onclick="controlDoor(1)">
-                    🔓 Mở cửa
+                <button class="door-button open-button" onclick="controlDoor(1)">
+                    <i class="fas fa-unlock-alt"></i> Open Door
                 </button>
-                <button class="door-btn close-btn" onclick="controlDoor(0)">
-                    🔒 Đóng cửa
+                <button class="door-button close-button" onclick="controlDoor(0)">
+                    <i class="fas fa-lock"></i> Secure Door
                 </button>
             </div>
         </div>
 
-        <!-- Camera Section -->
+        <!-- Camera Section with Advanced Radar -->
         <div class="card camera-section">
-            <h2>📹 Giám sát camera</h2>
+            <div class="card-header">
+                <div class="card-title">
+                    <div class="icon">
+                        <i class="fas fa-video"></i>
+                    </div>
+                    Security Camera & Motion Detection
+                </div>
+                <span class="status-dot online"></span>
+            </div>
             
-            <div class="camera-container">
-                <div class="video-stream">
-                    <img id="cameraStream" src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAwIiBoZWlnaHQ9IjYwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMzMzIi8+CiAgPHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIyNCIgZmlsbD0iI2ZmZiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkNhbWVyYSBzdHJlYW0gbG9hZGluZy4uLjwvdGV4dD4KICA8YW5pbWF0ZSBhdHRyaWJ1dGVOYW1lPSJvcGFjaXR5IiB2YWx1ZXM9IjE7MC41OzEiIGR1cj0iMnMiIHJlcGVhdENvdW50PSJpbmRlZmluaXRlIi8+Cjwvc3ZnPg==" alt="Camera Stream">
+            <div class="camera-layout">
+                <div class="camera-stream-container">
+                    <img id="camera-stream" class="camera-stream" src="" alt="Security camera feed will appear here" 
+                         onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 640 480%22><rect width=%22640%22 height=%22480%22 fill=%22%23f0f2f5%22/><circle cx=%22320%22 cy=%22240%22 r=%2250%22 fill=%22%23cbd5e1%22/><text x=%22320%22 y=%22320%22 text-anchor=%22middle%22 fill=%22%2364748b%22 font-family=%22Inter%22 font-size=%2218%22>Camera Initializing...</text></svg>'">
                 </div>
                 
-                <div class="camera-info">
-                    <div class="motion-indicator inactive" id="motionIndicator">
-                        <div class="motion-dot"></div>
-                        <span>Không phát hiện chuyển động</span>
-                    </div>
-                    
-                    <div class="camera-stats">
-                        <div class="stat-item">
-                            <div class="stat-value" id="alertCount">0</div>
-                            <div class="stat-label">Cảnh báo hôm nay</div>
+                <div class="radar-container">
+                    <h4 class="radar-title">
+                        <i class="fas fa-satellite-dish"></i>
+                        Motion Detection Radar
+                    </h4>
+                    <div class="radar">
+                        <div class="radar-grid">
+                            <div class="radar-crosshair"></div>
+                            <div class="radar-crosshair"></div>
                         </div>
-                        <div class="stat-item">
-                            <div class="stat-value" id="accessCount">0</div>
-                            <div class="stat-label">Lượt truy cập</div>
-                        </div>
+                        <div class="radar-ring"></div>
+                        <div class="radar-ring"></div>
+                        <div class="radar-ring"></div>
+                        <div class="radar-ring"></div>
+                        <div id="radar-sweep" class="radar-sweep"></div>
                     </div>
-                    
-                    <div style="margin-top: 20px; padding: 15px; background: white; border-radius: 10px;">
-                        <h4 style="margin-bottom: 10px; color: #333;">📡 Trạng thái kết nối</h4>
-                        <div style="font-size: 14px; color: #666;">
-                            <div>Camera IP: <span id="cameraIP">Đang kết nối...</span></div>
-                            <div style="margin-top: 5px;">Trạng thái: <span id="cameraStatus">Đang khởi động...</span></div>
+                    <div class="motion-status">
+                        <div id="motion-indicator" class="motion-indicator clear">
+                            <i class="fas fa-shield-alt"></i> Perimeter Secure
                         </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Access Log Section -->
-        <div class="card log-section">
-            <h2>📋 Lịch sử truy cập</h2>
+        <!-- Access History Section -->
+        <div class="card history-section">
+            <div class="card-header">
+                <div class="card-title">
+                    <div class="icon">
+                        <i class="fas fa-history"></i>
+                    </div>
+                    Access History & Security Logs
+                </div>
+                <span class="status-dot online"></span>
+            </div>
             
-            <div class="log-container" id="logContainer">
-                <div style="text-align: center; color: #666; padding: 40px;">
-                    <div class="loading"></div>
-                    <p style="margin-top: 10px;">Đang tải lịch sử truy cập...</p>
+            <div id="access-history" class="history-list">
+                <div style="text-align: center; color: #6b7280; padding: 40px;">
+                    <i class="fas fa-clock" style="font-size: 2rem; margin-bottom: 15px; opacity: 0.5;"></i>
+                    <p>No access events recorded yet</p>
                 </div>
             </div>
         </div>
     </div>
 
+    <!-- E-Ra Widget Integration -->
+    <script src="https://www.unpkg.com/@eohjsc/era-widget@1.1.3/src/index.js"></script>
     <script>
         const eraWidget = new EraWidget();
         
-        // Configuration variables
-        let configScanRFID = null;
-        let configRFIDUID = null;
+        // Configuration variables for E-Ra
+        let configScanRequest = null;
+        let configScannedUID = null;
         let configAddCard = null;
         let configCardList = null;
         let configDeleteCard = null;
-        let configDoorControl = null;
         let configDoorStatus = null;
+        let configDoorControl = null;
         let configMotionDetected = null;
         let configAccessLog = null;
-        let configAlertIntruder = null;
+        let configAlertIntrusion = null;
         let configCamIP = null;
-        let configCamStatus = null;
-        let configCamTrigger = null;
-
+        
+        // Action variables for E-Ra (tương tự như ví dụ Home2D)
+        let actionScanCard = null;
+        let actionOpenDoor = null;
+        let actionCloseDoor = null;
+        
         // State variables
-        let currentUID = "";
+        let currentScannedUID = '';
         let doorIsOpen = false;
-        let cardListData = [];
-        let accessLogData = [];
-        let alertCountToday = 0;
-        let accessCountToday = 0;
-        let isScanning = false;
-
+        let motionDetected = false;
+        let cardList = [];
+        let accessHistory = [];
+        
         // Initialize E-Ra Widget
         eraWidget.init({
             onConfiguration: (configuration) => {
-                // Map configurations
-                configScanRFID = configuration.realtime_configs.find(c => c.name === "V_SCAN_RFID");
-                configRFIDUID = configuration.realtime_configs.find(c => c.name === "V_RFID_UID");
-                configAddCard = configuration.realtime_configs.find(c => c.name === "V_ADD_CARD");
-                configCardList = configuration.realtime_configs.find(c => c.name === "V_CARD_LIST");
-                configDeleteCard = configuration.realtime_configs.find(c => c.name === "V_DELETE_CARD");
-                configDoorControl = configuration.realtime_configs.find(c => c.name === "V_DOOR_CONTROL");
-                configDoorStatus = configuration.realtime_configs.find(c => c.name === "V_DOOR_STATUS");
-                configMotionDetected = configuration.realtime_configs.find(c => c.name === "V_MOTION_DETECTED");
-                configAccessLog = configuration.realtime_configs.find(c => c.name === "V_ACCESS_LOG");
-                configAlertIntruder = configuration.realtime_configs.find(c => c.name === "V_ALERT_INTRUDER");
-                configCamIP = configuration.realtime_configs.find(c => c.name === "V_CAM_IP");
-                configCamStatus = configuration.realtime_configs.find(c => c.name === "V_CAM_STATUS");
-                configCamTrigger = configuration.realtime_configs.find(c => c.name === "V_CAM_TRIGGER");
+                console.log('🔧 E-Ra Configuration received:', configuration);
                 
-                console.log("E-Ra configuration loaded");
+                // ✅ ĐÚNG: Map theo index như ví dụ iFrame_Home2D - Dễ quản lý
+                // Lưu các cấu hình realtime configs theo thứ tự Virtual Pins
+                configScanRequest = configuration.realtime_configs[0];     // V0 - Scan Request
+                configScannedUID = configuration.realtime_configs[1];      // V1 - Scanned UID
+                configAddCard = configuration.realtime_configs[2];         // V2 - Add Card
+                configCardList = configuration.realtime_configs[3];        // V3 - Card List
+                configDeleteCard = configuration.realtime_configs[4];      // V4 - Delete Card
+                configDoorStatus = configuration.realtime_configs[5];      // V5 - Door Status
+                configDoorControl = configuration.realtime_configs[6];     // V6 - Door Control
+                configMotionDetected = configuration.realtime_configs[7];  // V7 - Motion Detected
+                configAccessLog = configuration.realtime_configs[8];       // V8 - Access Log
+                configAlertIntrusion = configuration.realtime_configs[9];  // V9 - Alert Intrusion
+                configCamIP = configuration.realtime_configs[10];          // V12 - Camera IP
+                
+                // Lưu các cấu hình actions cho các nút điều khiển
+                if (configuration.actions && configuration.actions.length > 0) {
+                    actionScanCard = configuration.actions[0];      // Action: Start RFID scan
+                    actionOpenDoor = configuration.actions[1];      // Action: Open door
+                    actionCloseDoor = configuration.actions[2];     // Action: Close door
+                }
+                
+                console.log('✅ Smart Door configurations mapped successfully');
+                console.log('📋 Realtime Configs Count:', configuration.realtime_configs?.length || 0);
+                console.log('🎯 Actions Count:', configuration.actions?.length || 0);
             },
-
+            
             onValues: (values) => {
-                // Handle RFID UID update
-                if (configRFIDUID && values[configRFIDUID.id]) {
-                    const uid = values[configRFIDUID.id].value;
-                    if (uid && uid !== currentUID) {
-                        currentUID = uid;
-                        updateUIDDisplay(uid);
-                        document.getElementById('uidInput').value = uid;
-                        isScanning = false;
-                        updateScanButton();
+                // Handle scanned UID
+                if (configScannedUID && values[configScannedUID.id]) {
+                    const scannedUID = values[configScannedUID.id].value;
+                    if (scannedUID && scannedUID !== currentScannedUID) {
+                        handleScannedUID(scannedUID);
+                        currentScannedUID = scannedUID;
                     }
                 }
-
+                
+                // Handle card list updates
+                if (configCardList && values[configCardList.id]) {
+                    const cardListData = values[configCardList.id].value;
+                    if (cardListData) {
+                        try {
+                            cardList = JSON.parse(cardListData);
+                            updateCardListDisplay();
+                        } catch (e) {
+                            console.error('Error parsing card list:', e);
+                        }
+                    }
+                }
+                
                 // Handle door status
                 if (configDoorStatus && values[configDoorStatus.id]) {
-                    const status = values[configDoorStatus.id].value;
-                    updateDoorStatus(status == 1);
+                    const doorStatus = values[configDoorStatus.id].value;
+                    updateDoorStatus(doorStatus);
                 }
-
+                
                 // Handle motion detection
                 if (configMotionDetected && values[configMotionDetected.id]) {
                     const motion = values[configMotionDetected.id].value;
-                    updateMotionIndicator(motion == 1);
+                    updateMotionStatus(motion);
                 }
-
-                // Handle card list updates
-                if (configCardList && values[configCardList.id]) {
-                    const cardListJson = values[configCardList.id].value;
-                    try {
-                        cardListData = JSON.parse(cardListJson);
-                        updateCardList();
-                    } catch (e) {
-                        console.error("Error parsing card list:", e);
-                    }
-                }
-
-                // Handle access log updates
+                
+                // Handle access log
                 if (configAccessLog && values[configAccessLog.id]) {
-                    const logEntry = values[configAccessLog.id].value;
-                    try {
-                        const logData = JSON.parse(logEntry);
-                        addAccessLogEntry(logData);
-                    } catch (e) {
-                        console.error("Error parsing access log:", e);
+                    const logData = values[configAccessLog.id].value;
+                    if (logData) {
+                        try {
+                            const logEntry = JSON.parse(logData);
+                            addAccessLogEntry(logEntry);
+                        } catch (e) {
+                            console.error('Error parsing access log:', e);
+                        }
                     }
                 }
-
-                // Handle intruder alerts
-                if (configAlertIntruder && values[configAlertIntruder.id]) {
-                    const alert = values[configAlertIntruder.id].value;
-                    if (alert) {
-                        showAlert(alert, 'error');
-                        alertCountToday++;
-                        updateStats();
+                
+                // Handle intrusion alerts
+                if (configAlertIntrusion && values[configAlertIntrusion.id]) {
+                    const alertMsg = values[configAlertIntrusion.id].value;
+                    if (alertMsg) {
+                        showAlert(alertMsg, 'warning');
                     }
                 }
-
+                
                 // Handle camera IP
                 if (configCamIP && values[configCamIP.id]) {
-                    const ip = values[configCamIP.id].value;
-                    updateCameraStream(ip);
-                    document.getElementById('cameraIP').textContent = ip;
-                }
-
-                // Handle camera status
-                if (configCamStatus && values[configCamStatus.id]) {
-                    const status = values[configCamStatus.id].value;
-                    document.getElementById('cameraStatus').textContent = status;
+                    const camIP = values[configCamIP.id].value;
+                    if (camIP) {
+                        updateCameraStream(camIP);
+                    }
                 }
             }
         });
-
+        
         // Tab switching function
         function switchTab(tabName) {
-            // Remove active class from all tabs and contents
-            document.querySelectorAll('.rfid-tab').forEach(tab => tab.classList.remove('active'));
-            document.querySelectorAll('.rfid-content').forEach(content => content.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.tab-button').forEach(btn => {
+                btn.classList.remove('active');
+            });
             
-            // Add active class to selected tab and content
+            document.getElementById(tabName + '-tab').classList.add('active');
             event.target.classList.add('active');
-            document.getElementById(tabName + '-content').classList.add('active');
         }
-
-        // RFID Functions
-        function startScan() {
-            if (isScanning) return;
-            
-            isScanning = true;
-            updateScanButton();
-            
-            // Send scan command to E-Ra
-            if (configScanRFID) {
-                eraWidget.setValue(configScanRFID.id, 1);
-            }
-            
-            // Reset after 10 seconds if no card detected
-            setTimeout(() => {
-                if (isScanning) {
-                    isScanning = false;
-                    updateScanButton();
-                    document.getElementById('uidDisplay').innerHTML = 'Không phát hiện thẻ. Thử lại!';
-                    document.getElementById('uidDisplay').className = 'uid-display';
-                }
-            }, 10000);
-        }
-
-        function updateScanButton() {
-            const btn = document.getElementById('scanBtn');
-            if (isScanning) {
-                btn.innerHTML = '<div class="loading"></div> Đang quét...';
-                btn.disabled = true;
+        
+        // Request RFID scan
+        function requestScan() {
+            // Sử dụng action thay vì virtualWrite trực tiếp (tương tự ví dụ Home2D)
+            if (actionScanCard) {
+                eraWidget.triggerAction(actionScanCard.action, null);
+                console.log('🎯 Triggered scan action via actionScanCard');
+            } else if (configScanRequest) {
+                // Fallback: sử dụng virtualWrite nếu không có action
+                eraWidget.virtualWrite(configScanRequest.pin, 1);
+                console.log('📡 Sent scan request via virtualWrite');
             } else {
-                btn.innerHTML = '📡 Quét thẻ RFID';
-                btn.disabled = false;
-            }
-        }
-
-        function updateUIDDisplay(uid) {
-            const display = document.getElementById('uidDisplay');
-            display.textContent = uid;
-            display.className = 'uid-display scanned';
-            showAlert('Quét thẻ thành công: ' + uid, 'success');
-        }
-
-        function addCard() {
-            const uid = document.getElementById('uidInput').value;
-            const name = document.getElementById('nameInput').value;
-            
-            if (!uid || !name) {
-                showAlert('Vui lòng điền đầy đủ thông tin!', 'warning');
+                showAlert('System not ready. Please wait for connection...', 'error');
                 return;
             }
             
-            const cardData = {
-                uid: uid,
-                name: name
-            };
+            const scanButton = document.getElementById('scan-button');
+            scanButton.disabled = true;
+            scanButton.innerHTML = '<div class="loading"></div> Scanning...';
             
-            if (configAddCard) {
-                eraWidget.setValue(configAddCard.id, JSON.stringify(cardData));
+            document.getElementById('scanned-uid').innerHTML = '<i class="fas fa-spinner fa-spin"></i> Scanning... Please place your card on the reader';
+            
+            setTimeout(() => {
+                scanButton.disabled = false;
+                scanButton.innerHTML = '<i class="fas fa-wifi"></i> Start Scanning';
+            }, 10000);
+        }
+        
+        // Handle scanned UID result
+        function handleScannedUID(uid) {
+            document.getElementById('scanned-uid').innerHTML = `<i class="fas fa-check-circle"></i> Scanned UID: ${uid}`;
+            document.getElementById('uid-input').value = uid;
+            
+            const scanButton = document.getElementById('scan-button');
+            scanButton.disabled = false;
+            scanButton.innerHTML = '<i class="fas fa-check"></i> Scan Complete';
+            
+            showAlert(`Card scanned successfully: ${uid}`, 'success');
+            
+            setTimeout(() => {
+                switchTab('add');
+                document.getElementById('name-input').focus();
+            }, 1000);
+        }
+        
+        // Add new card
+        function addCard() {
+            const uid = document.getElementById('uid-input').value.trim();
+            const name = document.getElementById('name-input').value.trim();
+            
+            if (!uid || !name) {
+                showAlert('Please enter both UID and cardholder name', 'error');
+                return;
             }
             
-            // Clear form
-            document.getElementById('uidInput').value = '';
-            document.getElementById('nameInput').value = '';
-            currentUID = '';
+            if (!configAddCard) {
+                showAlert('System not ready. Please wait for connection...', 'error');
+                return;
+            }
             
-            showAlert('Thẻ đã được thêm thành công!', 'success');
+            const cardData = JSON.stringify({ uid: uid, name: name });
+            eraWidget.virtualWrite(configAddCard.pin, cardData);
             
-            // Switch to list tab
-            switchTab('list');
-            document.querySelector('.rfid-tab:nth-child(3)').click();
+            document.getElementById('uid-input').value = '';
+            document.getElementById('name-input').value = '';
+            
+            showAlert(`Card added successfully: ${name}`, 'success');
+            console.log('📡 Sent add card data:', cardData);
+            
+            setTimeout(() => {
+                switchTab('list');
+            }, 1000);
         }
-
-        function updateCardList() {
-            const container = document.getElementById('cardList');
+        
+        // Delete card
+        function deleteCard(uid) {
+            if (confirm('Are you sure you want to delete this card from the system?')) {
+                if (!configDeleteCard) {
+                    showAlert('System not ready. Please wait for connection...', 'error');
+                    return;
+                }
+                
+                eraWidget.virtualWrite(configDeleteCard.pin, uid);
+                showAlert('Card deleted successfully', 'success');
+                console.log('📡 Sent delete card UID:', uid);
+            }
+        }
+        
+        // Update card list display
+        function updateCardListDisplay() {
+            const listContainer = document.getElementById('card-list');
             
-            if (cardListData.length === 0) {
-                container.innerHTML = `
-                    <div style="text-align: center; color: #666; padding: 40px;">
-                        <p>📋 Chưa có thẻ nào được thêm</p>
-                        <p style="font-size: 14px; margin-top: 10px;">Hãy quét và thêm thẻ RFID đầu tiên!</p>
+            if (cardList.length === 0) {
+                listContainer.innerHTML = `
+                    <div style="text-align: center; color: #6b7280; padding: 40px;">
+                        <i class="fas fa-id-card" style="font-size: 2rem; margin-bottom: 15px; opacity: 0.5;"></i>
+                        <p>No cards registered in the system</p>
                     </div>
                 `;
                 return;
             }
             
-            container.innerHTML = cardListData.map(card => `
+            listContainer.innerHTML = cardList.map(card => `
                 <div class="card-item">
                     <div class="card-info">
-                        <div class="card-uid">${card.uid}</div>
-                        <div class="card-name">👤 ${card.name}</div>
+                        <div class="card-uid">
+                            <i class="fas fa-fingerprint" style="margin-right: 8px; color: var(--primary-color);"></i>
+                            ${card.uid}
+                        </div>
+                        <div class="card-name">
+                            <i class="fas fa-user" style="margin-right: 8px;"></i>
+                            ${card.name}
+                        </div>
                     </div>
-                    <button class="delete-btn" onclick="deleteCard(${card.id})" title="Xóa thẻ">
-                        🗑️
+                    <button class="delete-button" onclick="deleteCard('${card.uid}')" title="Remove card from system">
+                        <i class="fas fa-trash-alt"></i>
                     </button>
                 </div>
             `).join('');
         }
-
-        function deleteCard(cardId) {
-            if (confirm('Bạn có chắc chắn muốn xóa thẻ này?')) {
-                if (configDeleteCard) {
-                    eraWidget.setValue(configDeleteCard.id, cardId);
+        
+        // Control door
+        function controlDoor(command) {
+            // Sử dụng actions tương tự như ví dụ Home2D
+            if (command === 1 && actionOpenDoor) {
+                eraWidget.triggerAction(actionOpenDoor.action, null);
+                showAlert('Opening door via action...', 'success');
+                console.log('🎯 Triggered open door action');
+            } else if (command === 0 && actionCloseDoor) {
+                eraWidget.triggerAction(actionCloseDoor.action, null);
+                showAlert('Securing door via action...', 'success');
+                console.log('🎯 Triggered close door action');
+            } else if (configDoorControl) {
+                // Fallback: sử dụng virtualWrite nếu không có actions
+                eraWidget.virtualWrite(configDoorControl.pin, command);
+                if (command === 1) {
+                    showAlert('Opening door...', 'success');
+                } else {
+                    showAlert('Securing door...', 'success');
                 }
-                showAlert('Thẻ đã được xóa!', 'success');
-            }
-        }
-
-        // Door Control Functions
-        function controlDoor(action) {
-            if (configDoorControl) {
-                eraWidget.setValue(configDoorControl.id, action);
-            }
-            
-            const actionText = action === 1 ? 'mở' : 'đóng';
-            showAlert(`Đang ${actionText} cửa...`, 'success');
-        }
-
-        function updateDoorStatus(isOpen) {
-            doorIsOpen = isOpen;
-            const statusElement = document.getElementById('doorStatus');
-            const frameElement = document.getElementById('doorFrame');
-            
-            if (isOpen) {
-                statusElement.textContent = '🔓 Cửa đang mở';
-                statusElement.className = 'door-status open';
-                frameElement.classList.add('open');
+                console.log('📡 Sent door control via virtualWrite:', command);
             } else {
-                statusElement.textContent = '🔒 Cửa đang đóng';
-                statusElement.className = 'door-status closed';
-                frameElement.classList.remove('open');
+                showAlert('System not ready. Please wait for connection...', 'error');
             }
         }
-
-        // Motion Detection Functions
-        function updateMotionIndicator(isActive) {
-            const indicator = document.getElementById('motionIndicator');
+        
+        // Update door status
+        function updateDoorStatus(status) {
+            doorIsOpen = (status === 1);
+            const statusElement = document.getElementById('door-status');
+            const panelElement = document.getElementById('door-panel');
             
-            if (isActive) {
-                indicator.innerHTML = '<div class="motion-dot"></div><span>⚠️ Phát hiện chuyển động!</span>';
-                indicator.className = 'motion-indicator active';
+            if (doorIsOpen) {
+                statusElement.className = 'door-status-text open';
+                statusElement.innerHTML = '<i class="fas fa-unlock-alt"></i> Door is OPEN';
+                panelElement.classList.add('open');
             } else {
-                indicator.innerHTML = '<div class="motion-dot"></div><span>✅ Không phát hiện chuyển động</span>';
-                indicator.className = 'motion-indicator inactive';
+                statusElement.className = 'door-status-text closed';
+                statusElement.innerHTML = '<i class="fas fa-lock"></i> Door is SECURED';
+                panelElement.classList.remove('open');
             }
         }
-
-        // Camera Functions
+        
+        // Update motion status
+        function updateMotionStatus(motion) {
+            motionDetected = (motion === 1);
+            const indicator = document.getElementById('motion-indicator');
+            const radarSweep = document.getElementById('radar-sweep');
+            
+            if (motionDetected) {
+                indicator.className = 'motion-indicator detected';
+                indicator.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Motion Detected!';
+                radarSweep.classList.add('active');
+                
+                // Add random radar blips
+                addRadarBlips();
+            } else {
+                indicator.className = 'motion-indicator clear';
+                indicator.innerHTML = '<i class="fas fa-shield-alt"></i> Perimeter Secure';
+                radarSweep.classList.remove('active');
+                
+                // Remove radar blips
+                removeRadarBlips();
+            }
+        }
+        
+        // Add radar blips for motion detection
+        function addRadarBlips() {
+            const radar = document.querySelector('.radar');
+            const existingBlips = radar.querySelectorAll('.radar-blip');
+            
+            // Remove existing blips
+            existingBlips.forEach(blip => blip.remove());
+            
+            // Add new blips
+            for (let i = 0; i < 3; i++) {
+                setTimeout(() => {
+                    const blip = document.createElement('div');
+                    blip.className = 'radar-blip';
+                    
+                    // Random position within radar circle
+                    const angle = Math.random() * 360;
+                    const distance = Math.random() * 80 + 20; // 20-100% from center
+                    const x = 50 + (distance * Math.cos(angle * Math.PI / 180) / 2);
+                    const y = 50 + (distance * Math.sin(angle * Math.PI / 180) / 2);
+                    
+                    blip.style.left = x + '%';
+                    blip.style.top = y + '%';
+                    
+                    radar.appendChild(blip);
+                    
+                    // Remove blip after animation
+                    setTimeout(() => {
+                        if (blip.parentNode) {
+                            blip.remove();
+                        }
+                    }, 2000);
+                }, i * 300);
+            }
+        }
+        
+        // Remove radar blips
+        function removeRadarBlips() {
+            const radar = document.querySelector('.radar');
+            const blips = radar.querySelectorAll('.radar-blip');
+            blips.forEach(blip => {
+                blip.style.animation = 'none';
+                blip.style.opacity = '0';
+                setTimeout(() => {
+                    if (blip.parentNode) {
+                        blip.remove();
+                    }
+                }, 300);
+            });
+        }
+        
+        // Update camera stream
         function updateCameraStream(ip) {
-            if (ip && ip !== "Đang kết nối...") {
+            if (ip) {
                 const streamUrl = `http://${ip}/stream`;
-                document.getElementById('cameraStream').src = streamUrl;
-                document.getElementById('cameraStream').onerror = function() {
-                    this.src = "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAwIiBoZWlnaHQ9IjYwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjQ0MzM2Ii8+CiAgPHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIyNCIgZmlsbD0iI2ZmZiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkNhbWVyYSBraMO0bmcga+G6v3QgbuG7k2k8L3RleHQ+Cjwvc3ZnPg==";
-                };
+                document.getElementById('camera-stream').src = streamUrl;
+                console.log('📹 Camera stream updated:', streamUrl);
             }
         }
-
-        // Access Log Functions
-        function addAccessLogEntry(logData) {
-            // Add to log data array
-            accessLogData.unshift(logData);
+        
+        // Add access log entry
+        function addAccessLogEntry(logEntry) {
+            accessHistory.unshift(logEntry);
             
-            // Keep only last 50 entries
-            if (accessLogData.length > 50) {
-                accessLogData = accessLogData.slice(0, 50);
+            if (accessHistory.length > 100) {
+                accessHistory = accessHistory.slice(0, 100);
             }
             
-            // Update access count if successful
-            if (logData.access === true || logData.access === "true") {
-                accessCountToday++;
-            }
-            
-            updateAccessLog();
-            updateStats();
+            updateAccessHistoryDisplay();
         }
-
-        function updateAccessLog() {
-            const container = document.getElementById('logContainer');
+        
+        // Update access history display
+        function updateAccessHistoryDisplay() {
+            const historyContainer = document.getElementById('access-history');
             
-            if (accessLogData.length === 0) {
-                container.innerHTML = `
-                    <div style="text-align: center; color: #666; padding: 40px;">
-                        <p>📋 Chưa có lịch sử truy cập nào</p>
+            if (accessHistory.length === 0) {
+                historyContainer.innerHTML = `
+                    <div style="text-align: center; color: #6b7280; padding: 40px;">
+                        <i class="fas fa-clock" style="font-size: 2rem; margin-bottom: 15px; opacity: 0.5;"></i>
+                        <p>No access events recorded yet</p>
                     </div>
                 `;
                 return;
             }
             
-            container.innerHTML = accessLogData.map(log => {
-                let statusClass = 'success';
-                let statusText = 'Thành công';
-                let icon = '✅';
-                
-                if (log.type === 'heartbeat') {
-                    statusClass = 'info';
-                    statusText = 'Heartbeat';
-                    icon = '💓';
-                } else if (log.access === false || log.access === "false") {
-                    statusClass = 'failed';
-                    statusText = 'Thất bại';
-                    icon = '❌';
-                } else if (log.type === 'alert') {
-                    statusClass = 'alert';
-                    statusText = 'Cảnh báo';
-                    icon = '⚠️';
-                }
+            historyContainer.innerHTML = accessHistory.map(entry => {
+                const statusIcon = entry.status === 'success' ? 'check-circle' : 
+                                 entry.status === 'failed' ? 'times-circle' : 'info-circle';
+                const statusText = entry.status === 'success' ? 'ACCESS GRANTED' : 
+                                 entry.status === 'failed' ? 'ACCESS DENIED' : 'SYSTEM EVENT';
                 
                 return `
-                    <div class="log-item ${statusClass}">
-                        <div class="log-info">
-                            <div class="log-time">${log.time || 'N/A'}</div>
-                            <div class="log-action">${icon} ${getLogActionText(log)}</div>
-                            ${log.uid ? `<div class="log-uid">UID: ${log.uid}</div>` : ''}
+                    <div class="history-item ${entry.status}">
+                        <div class="history-info">
+                            <div class="history-uid">
+                                <i class="fas fa-${statusIcon}" style="margin-right: 8px;"></i>
+                                ${entry.uid}
+                            </div>
+                            <div class="history-name">
+                                <i class="fas fa-user" style="margin-right: 8px;"></i>
+                                ${entry.name}
+                            </div>
+                            <div class="history-time">
+                                <i class="fas fa-clock" style="margin-right: 8px;"></i>
+                                ${entry.timestamp}
+                            </div>
                         </div>
-                        <div class="log-status ${statusClass}">${statusText}</div>
+                        <div class="history-status ${entry.status}">
+                            ${statusText}
+                        </div>
                     </div>
                 `;
             }).join('');
         }
-
-        function getLogActionText(log) {
-            if (log.type === 'heartbeat') {
-                return 'Hệ thống hoạt động bình thường';
-            } else if (log.type === 'alert') {
-                return 'Phát hiện xâm nhập';
-            } else if (log.uid) {
-                return log.access === true || log.access === "true" ? 
-                    'Truy cập được phép' : 'Truy cập bị từ chối';
-            }
-            return 'Hoạt động hệ thống';
-        }
-
-        // Statistics Functions
-        function updateStats() {
-            document.getElementById('alertCount').textContent = alertCountToday;
-            document.getElementById('accessCount').textContent = accessCountToday;
-        }
-
-        // Utility Functions
+        
+        // Show alert message
         function showAlert(message, type = 'success') {
-            const alert = document.createElement('div');
-            alert.className = `alert ${type}`;
-            alert.textContent = message;
-            document.body.appendChild(alert);
+            const alertContainer = document.body;
+            const alertId = 'alert-' + Date.now();
+            
+            const alertElement = document.createElement('div');
+            alertElement.id = alertId;
+            alertElement.className = `alert ${type}`;
+            
+            const icon = type === 'success' ? 'check-circle' : 
+                        type === 'error' ? 'exclamation-circle' : 'exclamation-triangle';
+            
+            alertElement.innerHTML = `<i class="fas fa-${icon}" style="margin-right: 10px;"></i>${message}`;
+            alertElement.style.display = 'block';
+            
+            alertContainer.appendChild(alertElement);
             
             setTimeout(() => {
-                alert.style.animation = 'slideIn 0.3s ease reverse';
-                setTimeout(() => {
-                    document.body.removeChild(alert);
-                }, 300);
-            }, 3000);
+                const element = document.getElementById(alertId);
+                if (element) {
+                    element.style.animation = 'slideInRight 0.3s ease reverse';
+                    setTimeout(() => element.remove(), 300);
+                }
+            }, 5000);
         }
-
+        
         // Initialize dashboard
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('Smart Door Dashboard loaded');
+            console.log('🚀 Smart Door Dashboard initialized');
             
-            // Set today's date for statistics reset
-            const today = new Date().toDateString();
-            if (localStorage.getItem('lastStatsDate') !== today) {
-                alertCountToday = 0;
-                accessCountToday = 0;
-                localStorage.setItem('lastStatsDate', today);
-            } else {
-                alertCountToday = parseInt(localStorage.getItem('alertCount') || '0');
-                accessCountToday = parseInt(localStorage.getItem('accessCount') || '0');
-            }
-            
-            updateStats();
-            
-            // Auto-refresh camera stream every 30 seconds
-            setInterval(() => {
-                const img = document.getElementById('cameraStream');
-                if (img.src && !img.src.includes('data:image/svg+xml')) {
-                    const newSrc = img.src.split('?')[0] + '?t=' + Date.now();
-                    img.src = newSrc;
+            // Set default camera placeholder with better styling
+            setTimeout(() => {
+                const cameraElement = document.getElementById('camera-stream');
+                if (!cameraElement.src) {
+                    updateCameraStream('192.168.1.100'); // Default IP
                 }
-            }, 30000);
+            }, 3000);
+            
+            // Add some sample data for empty state
+            console.log('✅ Dashboard ready for E-Ra connection');
         });
-
-        // Save statistics to localStorage periodically
-        setInterval(() => {
-            localStorage.setItem('alertCount', alertCountToday.toString());
-            localStorage.setItem('accessCount', accessCountToday.toString());
-        }, 60000); // Save every minute
-
-        // Auto-refresh functions
-        function refreshData() {
-            // Request latest data from E-Ra
-            console.log('Refreshing dashboard data...');
-        }
-
-        // Refresh data every 5 minutes
-        setInterval(refreshData, 300000);
     </script>
 </body>
 </html>
