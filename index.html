@@ -1314,6 +1314,8 @@
             const uid = document.getElementById('uid-input').value.trim();
             const name = document.getElementById('name-input').value.trim();
             
+            console.log('🔧 Adding card - UID:', uid, 'Name:', name);
+            
             if (!uid || !name) {
                 showAlert('Please enter both UID and cardholder name', 'error');
                 return;
@@ -1321,21 +1323,30 @@
             
             if (!configAddCard) {
                 showAlert('System not ready. Please wait for connection...', 'error');
+                console.error('❌ configAddCard is null');
                 return;
             }
             
             const cardData = JSON.stringify({ uid: uid, name: name });
-            eraWidget.virtualWrite(configAddCard.pin, cardData);
+            console.log('📡 Sending card data:', cardData);
+            console.log('📍 Using config:', configAddCard);
             
-            document.getElementById('uid-input').value = '';
-            document.getElementById('name-input').value = '';
-            
-            showAlert(`Card added successfully: ${name}`, 'success');
-            console.log('📡 Sent add card data:', cardData);
-            
-            setTimeout(() => {
-                switchTab('list');
-            }, 1000);
+            try {
+                eraWidget.virtualWrite(configAddCard.pin, cardData);
+                console.log('✅ Card data sent successfully via pin:', configAddCard.pin);
+                
+                document.getElementById('uid-input').value = '';
+                document.getElementById('name-input').value = '';
+                
+                showAlert(`Card added successfully: ${name}`, 'success');
+                
+                setTimeout(() => {
+                    switchTab('list');
+                }, 1000);
+            } catch (error) {
+                console.error('❌ Error sending card data:', error);
+                showAlert('Error adding card. Please try again.', 'error');
+            }
         }
         
         // Delete card
